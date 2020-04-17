@@ -1,0 +1,2 @@
+# allure-server
+Allure Server
