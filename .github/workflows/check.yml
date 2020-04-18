@@ -1,0 +1,37 @@
+name: Build / Test / Check
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - v*
+  pull_request:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fast checkout
+        uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          java-package: jdk
+          architecture: x64
+      - name: Build with Gradle
+        uses: eskatos/gradle-command-action@v1
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          release.customUsername: kochetkov-ma
+          release.customPassword: ${{ secrets.GIT_HUB_TOKEN }}
+        with:
+          gradle-version: current
+          arguments: '--stacktrace
+        -PossrhUsername=kochetkov-ma
+        -PossrhPassword=${{ secrets.ossrhPassword }}
+        -Psigning.key="${{ secrets.GPG_SIGNING_KEY }}"
+        -Psigning.password="${{ secrets.GPG_SIGNING_PASSWORD }}"
+        check coveralls build'

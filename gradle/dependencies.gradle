@@ -1,0 +1,60 @@
+repositories {
+    mavenCentral()
+}
+ext {
+    qaLibVersion = '1.1.0'
+    vaadinVersion = '14.1.25'
+    junit4Version = '4.13'
+    mockitoVersion = '3.3.3'
+    assertjVersion = '3.15.0'
+    slf4jVersion = '1.7.30'
+    commonsLangVersion = '3.9'
+    classgraphVersion = '4.8.65'
+    joorVersion = '0.9.12'
+    guavaVersion = '29.0-jre'
+    logbackVersion = '1.2.3'
+    apacheIoVersion = '2.6'
+    openApiVersion = '1.3.2'
+    allureVersion = '2.13.2'
+}
+//dependencyManagement {
+//    imports {
+//        mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
+//    }
+//}
+dependencies {
+    /* Allure Generator */
+    implementation "io.qameta.allure:allure-plugin-api:$allureVersion"
+    // implementation "io.qameta.allure:allure-java-commons:$allureVersion"
+    implementation "io.qameta.allure:allure-generator:$allureVersion"
+    /* QA lib */
+    implementation("ru.iopump.qa:qa-tools:$qaLibVersion") { transitive false }
+    /* Guava */
+    implementation "com.google.guava:guava:$guavaVersion"
+    /* Open API */
+    implementation "org.springdoc:springdoc-openapi-ui:$openApiVersion"
+    /* Spring Boot */
+    implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
+    /* Reflection lib */
+    // implementation "org.jooq:joor:$joorVersion"
+    /* Classpath scanner */
+    // implementation "io.github.classgraph:classgraph:$classgraphVersion"
+    /* Apache commons */
+    // implementation "org.apache.commons:commons-lang3:$commonsLangVersion"
+    /* Apache commons */
+    implementation "commons-io:commons-io:$apacheIoVersion"
+    /* Logging API*/
+    implementation "org.slf4j:slf4j-api:$slf4jVersion"
+    /* Logging IMPL*/
+    runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
+
+    /* Testing */
+    testImplementation("junit:junit:$junit4Version") { transitive = false }
+    // testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.assertj:assertj-core:$assertjVersion"
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage'
+        exclude group: 'org.junit.jupiter'
+        exclude group: 'ch.qos.logback'
+    }
+}

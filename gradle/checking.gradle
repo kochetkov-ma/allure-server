@@ -1,0 +1,33 @@
+////// checkstyle //////
+checkstyle {
+    toolVersion = '8.30'
+}
+////// pmd //////
+pmd {
+    rulePriority = 4 // 5 is default
+    ruleSetFiles "$rootDir/config/pmd/pmd-rules.xml"
+    ruleSets = []
+}
+pmdTest {
+    rulePriority = 1
+}
+////// spotbugs //////
+spotbugs {
+    toolVersion '4.0.0'
+    ignoreFailures false
+    effort 'default'
+    reportLevel 'high'
+    excludeFilter file("$rootDir/config/spotbug/spotbugs-exclude.xml")
+}
+spotbugsTest {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
+spotbugsMain {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+}
