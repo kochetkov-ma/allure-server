@@ -3,6 +3,7 @@
 **/wrapper
 /build
 /keys
+/allure
 
 # Gradle
 gradlew

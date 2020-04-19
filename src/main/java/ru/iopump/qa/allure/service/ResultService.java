@@ -8,32 +8,43 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.iopump.qa.util.FileUtil;
 
 @Component
 @Slf4j
-public class ZipService {
+public class ResultService {
     private static final String STORAGE_PATH_DEFAULT = "./allure/results";
-    private final String storagePath;
+    @Getter
+    private final Path storagePath;
 
-    public ZipService(@Value("${allure.results.dir:" + STORAGE_PATH_DEFAULT + "}") String storagePath) {
-        this.storagePath = storagePath;
+    public ResultService(@Value("${allure.results.dir:" + STORAGE_PATH_DEFAULT + "}") String storagePath) {
+        this.storagePath = Paths.get(storagePath);
     }
 
-    public ZipService() {
+    public ResultService() {
         this(STORAGE_PATH_DEFAULT);
     }
 
+    public void deleteAll() throws IOException {
+        FileUtils.deleteDirectory(storagePath.toFile());
+    }
+
     public Collection<Path> getAll() throws IOException {
-        return Files.walk(Paths.get(storagePath), 1).skip(1).collect(Collectors.toUnmodifiableSet());
+        if (!Files.exists(storagePath)) {
+            return Collections.emptySet();
+        }
+        return Files.walk(storagePath, 1).skip(1).collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -52,8 +63,8 @@ public class ZipService {
         final Path resultDirectory;
         try (InputStream io = archiveInputStream) {
             final String uuid = UUID.randomUUID().toString();
-            tmpResultDirectory = Paths.get(storagePath, uuid + "_tmp");
-            resultDirectory = Paths.get(storagePath, uuid);
+            tmpResultDirectory = storagePath.resolve(uuid + "_tmp");
+            resultDirectory = storagePath.resolve(uuid);
             Files.createDirectories(resultDirectory);
             checkAndUnzipTo(io, tmpResultDirectory);
             move(tmpResultDirectory, resultDirectory);

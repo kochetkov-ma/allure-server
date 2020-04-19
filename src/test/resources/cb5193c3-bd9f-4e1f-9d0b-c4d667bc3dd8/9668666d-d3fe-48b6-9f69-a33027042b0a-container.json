@@ -1,0 +1,64 @@
+{
+  "uuid": "9668666d-d3fe-48b6-9f69-a33027042b0a",
+  "name": "Сценарий: Открыть приложение 'Мнемосхемы' и проверить доступность",
+  "children": [
+    "f288da16-5270-4919-bce4-4baae308931d"
+  ],
+  "befores": [
+    {
+      "name": "MainHook.fetchNewFeature(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048547081,
+      "stop": 1587048547083
+    },
+    {
+      "name": "MainHook.skip(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048547083,
+      "stop": 1587048547084
+    },
+    {
+      "name": "MainHook.checkEnv(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048547084,
+      "stop": 1587048547085
+    },
+    {
+      "name": "MainHook.setEnvironment(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048547085,
+      "stop": 1587048547085
+    }
+  ],
+  "afters": [
+    {
+      "name": "MainHook.screenOnFail(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550098,
+      "stop": 1587048550098
+    }
+  ],
+  "links": [],
+  "start": 1587048547081,
+  "stop": 1587048550098
+}

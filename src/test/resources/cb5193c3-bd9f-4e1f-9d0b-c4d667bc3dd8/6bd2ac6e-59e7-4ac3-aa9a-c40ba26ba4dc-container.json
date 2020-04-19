@@ -1,0 +1,75 @@
+{
+  "uuid": "6bd2ac6e-59e7-4ac3-aa9a-c40ba26ba4dc",
+  "name": "Сценарий: UAA Авторизация - Неуспешная - Появляется ошибка",
+  "children": [
+    "818bd326-92cf-4219-af2f-5ff0ec922a37"
+  ],
+  "befores": [
+    {
+      "name": "MainHook.fetchNewFeature(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250166,
+      "stop": 1586782250305
+    },
+    {
+      "name": "MainHook.skip(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250306,
+      "stop": 1586782250307
+    },
+    {
+      "name": "MainHook.checkEnv(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250307,
+      "stop": 1586782250308
+    },
+    {
+      "name": "MainHook.setEnvironment(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250309,
+      "stop": 1586782250310
+    }
+  ],
+  "afters": [
+    {
+      "name": "MainHook.screenOnFail(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [
+        {
+          "name": "Screenshot",
+          "source": "4a4805c1-228d-4bd6-bacd-7e6046eb9242-attachment.png",
+          "type": "image/png"
+        },
+        {
+          "name": "Configuration",
+          "source": "f92f926b-55ee-4a49-8d06-f3637466f8e9-attachment.txt",
+          "type": "text/plain"
+        }
+      ],
+      "parameters": [],
+      "start": 1586782257415,
+      "stop": 1586782257595
+    }
+  ],
+  "links": [],
+  "start": 1586782250056,
+  "stop": 1586782257597
+}

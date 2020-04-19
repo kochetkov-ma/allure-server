@@ -1,0 +1,100 @@
+Loaded TypeSafe  config: [base.conf, swarm.conf]
+   Sourced files: {
+    "__idea" : {
+        "mac" : {
+            "env" : {
+                "lock" : "unlocked"
+            }
+        }
+    },
+    "allure" : {
+        "results" : {
+            "directory" : "G:\\ws-home\\SCPDR\\qa\\e2e-tests\\build\\allure-results"
+        }
+    },
+    "com" : {
+        "jetbrains" : {
+            "suppressWindowRaise" : "false"
+        }
+    },
+    "console" : {
+        "encoding" : "UTF-8"
+    },
+    "ide" : {
+        "native" : {
+            "launcher" : "true"
+        }
+    },
+    "jb" : {
+        "vmOptionsFile" : "C:\\Users\\User\\AppData\\Roaming\\JetBrains\\IntelliJIdea2020.1\\idea64.exe.vmoptions"
+    },
+    "jnidispatch" : {
+        "path" : "C:\\Users\\User\\AppData\\Local\\JetBrains\\IntelliJIdea2020.1\\tmp\\jna16072327646372941630.dll"
+    },
+    "kotlinx" : {
+        "coroutines" : {
+            "debug" : "off"
+        }
+    },
+    "log4j" : {
+        "defaultInitOverride" : "true"
+    },
+    "os" : {
+        "arch" : "amd64",
+        "name" : "Windows 10",
+        "version" : "10.0"
+    },
+    "pty4j" : {
+        "preferred" : {
+            "native" : {
+                "folder" : "C:\\Program Files\\JetBrains\\IntelliJ IDEA 2019.3.4\\lib\\pty4j-native"
+            }
+        },
+        "tmpdir" : "C:\\Users\\User\\AppData\\Local\\JetBrains\\IntelliJIdea2020.1/tmp"
+    },
+    "selenide" : {
+        "test" : {
+            "container" : true
+        }
+    },
+    "spring" : {
+        "profiles" : {
+            "active" : "ci_local"
+        }
+    },
+    "srv" : {
+        "apphub" : {
+            "url" : "http://localhost:9002"
+        },
+        "uaa" : {
+            "url" : "http://localhost:8100"
+        }
+    },
+    "user" : {
+        "country" : "RU",
+        "dir" : "G:\\ws-home\\SCPDR\\qa",
+        "home" : "C:\\Users\\User",
+        "language" : "ru",
+        "name" : "User",
+        "script" : "",
+        "timezone" : "Europe/Moscow",
+        "variant" : ""
+    },
+    "winp" : {
+        "folder" : {
+            "preferred" : "C:\\Users\\User\\AppData\\Local\\JetBrains\\IntelliJIdea2020.1/tmp"
+        }
+    }
+}
+
+
+   Loaded Groovy config: [base.groovy]
+   Sourced files: selenide {
+	start {
+	}
+	proxy {
+	}
+	remote {
+	}
+}
+

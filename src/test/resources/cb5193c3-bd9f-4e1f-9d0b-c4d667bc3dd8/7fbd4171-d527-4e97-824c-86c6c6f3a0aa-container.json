@@ -1,0 +1,75 @@
+{
+  "uuid": "7fbd4171-d527-4e97-824c-86c6c6f3a0aa",
+  "name": "Сценарий: Открыть приложение 'Карта' и проверить доступность",
+  "children": [
+    "79a83547-d5d0-4b16-8b5a-21022d1b3914"
+  ],
+  "befores": [
+    {
+      "name": "MainHook.fetchNewFeature(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048513462,
+      "stop": 1587048513464
+    },
+    {
+      "name": "MainHook.skip(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048513464,
+      "stop": 1587048513464
+    },
+    {
+      "name": "MainHook.checkEnv(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048513465,
+      "stop": 1587048513465
+    },
+    {
+      "name": "MainHook.setEnvironment(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048513465,
+      "stop": 1587048513465
+    }
+  ],
+  "afters": [
+    {
+      "name": "MainHook.screenOnFail(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [
+        {
+          "name": "Screenshot",
+          "source": "267fe70f-f409-4914-b5d0-6f8d5c8c222b-attachment.png",
+          "type": "image/png"
+        },
+        {
+          "name": "Configuration",
+          "source": "ab2d6ed3-1873-4a24-8aa2-f4ad700a845f-attachment.txt",
+          "type": "text/plain"
+        }
+      ],
+      "parameters": [],
+      "start": 1587048546418,
+      "stop": 1587048546762
+    }
+  ],
+  "links": [],
+  "start": 1587048513462,
+  "stop": 1587048546763
+}

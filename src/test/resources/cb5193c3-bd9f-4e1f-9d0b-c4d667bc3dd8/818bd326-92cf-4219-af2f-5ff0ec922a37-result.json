@@ -1,0 +1,201 @@
+{
+  "name": "UAA Авторизация - Неуспешная - Появляется ошибка",
+  "status": "broken",
+  "statusDetails": {
+    "known": false,
+    "muted": false,
+    "flaky": false,
+    "message": "Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nselenide.remote: http://localhost:32781/wd/hub\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nselenide.url: http://10.10.3.86:8100/login\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nselenide.baseUrl: http://10.10.3.86:8100\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2",
+    "trace": "org.openqa.selenium.WebDriverException: Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nselenide.remote: http://localhost:32781/wd/hub\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nselenide.url: http://10.10.3.86:8100/login\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nselenide.baseUrl: http://10.10.3.86:8100\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n\tat java.lang.reflect.Constructor.newInstance(Constructor.java:423)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.createException(W3CHttpResponseCodec.java:187)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:122)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:49)\r\n\tat org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.java:158)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:552)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.get(RemoteWebDriver.java:277)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver$RemoteNavigation.to(RemoteWebDriver.java:857)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.navigateTo(Navigator.java:67)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.open(Navigator.java:28)\r\n\tat com.codeborne.selenide.SelenideDriver.open(SelenideDriver.java:66)\r\n\tat com.codeborne.selenide.Selenide.open(Selenide.java:41)\r\n\tat com.smartdigit.qa.selenide.BasePage.open(BasePage.java:39)\r\n\tat com.smartdigit.qa.cucumber.step.SelenideStep.openPageUrl(SelenideStep.java:176)\r\n\tat ✽.страница 'UAA авторизация' открылась(classpath:features/smoke.feature:9)\r\n"
+  },
+  "stage": "finished",
+  "steps": [
+    {
+      "name": "Дано  базовый url для страниц = '{config{srv.uaa.url}}'",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250314,
+      "stop": 1586782250451
+    },
+    {
+      "name": "И  страница 'UAA авторизация' открылась",
+      "status": "broken",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false,
+        "message": "Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nselenide.remote: http://localhost:32781/wd/hub\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nselenide.url: http://10.10.3.86:8100/login\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nselenide.baseUrl: http://10.10.3.86:8100\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2",
+        "trace": "org.openqa.selenium.WebDriverException: Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nselenide.remote: http://localhost:32781/wd/hub\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nselenide.url: http://10.10.3.86:8100/login\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nselenide.baseUrl: http://10.10.3.86:8100\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n\tat java.lang.reflect.Constructor.newInstance(Constructor.java:423)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.createException(W3CHttpResponseCodec.java:187)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:122)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:49)\r\n\tat org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.java:158)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:552)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.get(RemoteWebDriver.java:277)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver$RemoteNavigation.to(RemoteWebDriver.java:857)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.navigateTo(Navigator.java:67)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.open(Navigator.java:28)\r\n\tat com.codeborne.selenide.SelenideDriver.open(SelenideDriver.java:66)\r\n\tat com.codeborne.selenide.Selenide.open(Selenide.java:41)\r\n\tat com.smartdigit.qa.selenide.BasePage.open(BasePage.java:39)\r\n\tat com.smartdigit.qa.cucumber.step.SelenideStep.openPageUrl(SelenideStep.java:176)\r\n\tat ✽.страница 'UAA авторизация' открылась(classpath:features/smoke.feature:9)\r\n"
+      },
+      "stage": "finished",
+      "steps": [
+        {
+          "name": "$(open) http://10.10.3.86:8100/login",
+          "status": "broken",
+          "statusDetails": {
+            "known": false,
+            "muted": false,
+            "flaky": false,
+            "message": "Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2",
+            "trace": "org.openqa.selenium.WebDriverException: Reached error page: about:neterror?e=connectionFailure&u=http%3A//10.10.3.86%3A8100/login&c=UTF-8&f=regular&d=Firefox%20can%E2%80%99t%20establish%20a%20connection%20to%20the%20server%20at%2010.10.3.86%3A8100.\nBuild info: version: '3.141.59', revision: 'e82be7d358', time: '2018-11-14T08:17:03'\nSystem info: host: 'WIN-8SNBL6I3CF7', ip: '10.10.3.86', os.name: 'Windows 10', os.arch: 'amd64', os.version: '10.0', java.version: '1.8.0_241'\nDriver info: org.openqa.selenium.remote.RemoteWebDriver\nCapabilities {acceptInsecureCerts: true, browserName: firefox, browserVersion: 75.0, javascriptEnabled: true, moz:accessibilityChecks: false, moz:buildID: 20200403170909, moz:geckodriverVersion: 0.26.0, moz:headless: false, moz:processID: 227, moz:profile: /tmp/rust_mozprofileS4Bbfw, moz:shutdownTimeout: 60000, moz:useNonSpecCompliantPointerOrigin: false, moz:webdriverClick: true, pageLoadStrategy: normal, platform: LINUX, platformName: LINUX, platformVersion: 4.19.76-linuxkit, rotatable: false, setWindowRect: true, strictFileInteractability: false, timeouts: {implicit: 0, pageLoad: 300000, script: 30000}, unhandledPromptBehavior: dismiss and notify, webdriver.remote.sessionid: ae12cc4d-111f-4325-be34-0ae...}\nSession ID: ae12cc4d-111f-4325-be34-0ae3e69116a2\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)\r\n\tat sun.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)\r\n\tat java.lang.reflect.Constructor.newInstance(Constructor.java:423)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.createException(W3CHttpResponseCodec.java:187)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:122)\r\n\tat org.openqa.selenium.remote.http.W3CHttpResponseCodec.decode(W3CHttpResponseCodec.java:49)\r\n\tat org.openqa.selenium.remote.HttpCommandExecutor.execute(HttpCommandExecutor.java:158)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.execute(RemoteWebDriver.java:552)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver.get(RemoteWebDriver.java:277)\r\n\tat org.openqa.selenium.remote.RemoteWebDriver$RemoteNavigation.to(RemoteWebDriver.java:857)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.navigateTo(Navigator.java:67)\r\n\tat com.codeborne.selenide.drivercommands.Navigator.open(Navigator.java:28)\r\n\tat com.codeborne.selenide.SelenideDriver.open(SelenideDriver.java:66)\r\n\tat com.codeborne.selenide.Selenide.open(Selenide.java:41)\r\n\tat com.smartdigit.qa.selenide.BasePage.open(BasePage.java:39)\r\n\tat com.smartdigit.qa.cucumber.step.SelenideStep.openPageUrl(SelenideStep.java:176)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.lang.reflect.Method.invoke(Method.java:498)\r\n\tat cucumber.runtime.Utils$1.call(Utils.java:26)\r\n\tat cucumber.runtime.Timeout.timeout(Timeout.java:16)\r\n\tat cucumber.runtime.Utils.invoke(Utils.java:20)\r\n\tat cucumber.runtime.java.JavaStepDefinition.execute(JavaStepDefinition.java:57)\r\n\tat cucumber.runner.PickleStepDefinitionMatch.runStep(PickleStepDefinitionMatch.java:50)\r\n\tat cucumber.runner.TestStep.executeStep(TestStep.java:65)\r\n\tat cucumber.runner.TestStep.run(TestStep.java:50)\r\n\tat cucumber.runner.PickleStepTestStep.run(PickleStepTestStep.java:43)\r\n\tat cucumber.runner.TestCase.run(TestCase.java:46)\r\n\tat cucumber.runner.Runner.runPickle(Runner.java:50)\r\n\tat io.cucumber.junit.PickleRunners$WithStepDescriptions.run(PickleRunners.java:97)\r\n\tat io.cucumber.junit.FeatureRunner.runChild(FeatureRunner.java:68)\r\n\tat io.cucumber.junit.FeatureRunner.runChild(FeatureRunner.java:23)\r\n\tat org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)\r\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)\r\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)\r\n\tat org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)\r\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)\r\n\tat org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)\r\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:413)\r\n\tat io.cucumber.junit.Cucumber.runChild(Cucumber.java:144)\r\n\tat io.cucumber.junit.Cucumber.runChild(Cucumber.java:65)\r\n\tat org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)\r\n\tat org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)\r\n\tat org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)\r\n\tat org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)\r\n\tat org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)\r\n\tat io.cucumber.junit.Cucumber$RunCucumber.evaluate(Cucumber.java:174)\r\n\tat org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)\r\n\tat org.junit.runners.ParentRunner.run(ParentRunner.java:413)\r\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.runTestClass(JUnitTestClassExecutor.java:110)\r\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:58)\r\n\tat org.gradle.api.internal.tasks.testing.junit.JUnitTestClassExecutor.execute(JUnitTestClassExecutor.java:38)\r\n\tat org.gradle.api.internal.tasks.testing.junit.AbstractJUnitTestClassProcessor.processTestClass(AbstractJUnitTestClassProcessor.java:62)\r\n\tat org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.processTestClass(SuiteTestClassProcessor.java:51)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.lang.reflect.Method.invoke(Method.java:498)\r\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)\r\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)\r\n\tat org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)\r\n\tat org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:94)\r\n\tat com.sun.proxy.$Proxy2.processTestClass(Unknown Source)\r\n\tat org.gradle.api.internal.tasks.testing.worker.TestWorker.processTestClass(TestWorker.java:118)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\r\n\tat sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)\r\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\r\n\tat java.lang.reflect.Method.invoke(Method.java:498)\r\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)\r\n\tat org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)\r\n\tat org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:182)\r\n\tat org.gradle.internal.remote.internal.hub.MessageHubBackedObjectConnection$DispatchWrapper.dispatch(MessageHubBackedObjectConnection.java:164)\r\n\tat org.gradle.internal.remote.internal.hub.MessageHub$Handler.run(MessageHub.java:412)\r\n\tat org.gradle.internal.concurrent.ExecutorPolicy$CatchAndRecordFailures.onExecute(ExecutorPolicy.java:64)\r\n\tat org.gradle.internal.concurrent.ManagedExecutorImpl$1.run(ManagedExecutorImpl.java:48)\r\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\r\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\r\n\tat org.gradle.internal.concurrent.ThreadFactoryImpl$ManagedThreadRunnable.run(ThreadFactoryImpl.java:56)\r\n\tat java.lang.Thread.run(Thread.java:748)\r\n"
+          },
+          "stage": "finished",
+          "steps": [],
+          "attachments": [
+            {
+              "name": "Screenshot",
+              "source": "5098fd0d-ca53-4e5e-b09a-043b0cab71c7-attachment.png",
+              "type": "image/png"
+            },
+            {
+              "name": "Page source",
+              "source": "42c4c9d6-b6d9-4f0e-9f97-9f60e83b04dd-attachment.html",
+              "type": "text/html"
+            }
+          ],
+          "parameters": [],
+          "start": 1586782254879,
+          "stop": 1586782257403
+        }
+      ],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782250451,
+      "stop": 1586782257407
+    },
+    {
+      "name": "И  на странице найден элемент 'emailInput' и выполнено действие 'val \"username\"'",
+      "status": "skipped",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782257408,
+      "stop": 1586782257411
+    },
+    {
+      "name": "И  на странице найден элемент 'passwordInput' и выполнено действие 'val \"password\"'",
+      "status": "skipped",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782257411,
+      "stop": 1586782257412
+    },
+    {
+      "name": "Когда  на странице найден элемент 'signInButton' и выполнено действие 'click'",
+      "status": "skipped",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782257412,
+      "stop": 1586782257413
+    },
+    {
+      "name": "Тогда  на странице найден элемент 'alertError' и он 'matchText \"Unable to verify email or password. Please try again\"'",
+      "status": "skipped",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1586782257414,
+      "stop": 1586782257415
+    }
+  ],
+  "attachments": [],
+  "parameters": [],
+  "start": 1586782250081,
+  "stop": 1586782257596,
+  "uuid": "818bd326-92cf-4219-af2f-5ff0ec922a37",
+  "historyId": "47701d9f4521fa3f1cad5895753709ef",
+  "fullName": "E2E Тестирование: UAA Авторизация - Неуспешная - Появляется ошибка",
+  "labels": [
+    {
+      "name": "owner",
+      "value": "Maxim_Kochetkov"
+    },
+    {
+      "name": "tag",
+      "value": "smoke"
+    },
+    {
+      "name": "tag",
+      "value": "NOT_READY"
+    },
+    {
+      "name": "tag",
+      "value": "AUTHOR=Maxim_Kochetkov"
+    },
+    {
+      "name": "host",
+      "value": "WIN-8SNBL6I3CF7"
+    },
+    {
+      "name": "thread",
+      "value": "6312@WIN-8SNBL6I3CF7.Test worker(11)"
+    },
+    {
+      "name": "feature",
+      "value": "E2E Тестирование"
+    },
+    {
+      "name": "story",
+      "value": "UAA Авторизация - Неуспешная - Появляется ошибка"
+    },
+    {
+      "name": "package",
+      "value": "features.E2E Тестирование"
+    },
+    {
+      "name": "suite",
+      "value": "E2E Тестирование"
+    },
+    {
+      "name": "testClass",
+      "value": "UAA Авторизация - Неуспешная - Появляется ошибка"
+    },
+    {
+      "name": "framework",
+      "value": "cucumber4jvm"
+    },
+    {
+      "name": "language",
+      "value": "java"
+    },
+    {
+      "name": "gherkin_uri",
+      "value": "classpath:features/smoke.feature"
+    }
+  ],
+  "links": []
+}

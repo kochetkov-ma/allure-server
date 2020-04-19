@@ -1,0 +1,64 @@
+{
+  "uuid": "5e0e1c2d-3ab2-44bf-b74a-637e8882cd37",
+  "name": "Сценарий: Открыть приложение 'Отчеты' и проверить доступность",
+  "children": [
+    "b94cb890-d842-4781-afd5-48e78782ed4d"
+  ],
+  "befores": [
+    {
+      "name": "MainHook.fetchNewFeature(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550114,
+      "stop": 1587048550116
+    },
+    {
+      "name": "MainHook.skip(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550116,
+      "stop": 1587048550116
+    },
+    {
+      "name": "MainHook.checkEnv(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550117,
+      "stop": 1587048550117
+    },
+    {
+      "name": "MainHook.setEnvironment(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550117,
+      "stop": 1587048550117
+    }
+  ],
+  "afters": [
+    {
+      "name": "MainHook.screenOnFail(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048554470,
+      "stop": 1587048554471
+    }
+  ],
+  "links": [],
+  "start": 1587048550114,
+  "stop": 1587048554471
+}

@@ -1,0 +1,64 @@
+{
+  "uuid": "8abcbc0b-1e1d-4724-aff6-3546cf511266",
+  "name": "Сценарий: UAA Авторизация",
+  "children": [
+    "b3f67e21-d0bf-4c78-907e-a530107e81f5"
+  ],
+  "befores": [
+    {
+      "name": "MainHook.fetchNewFeature(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048507576,
+      "stop": 1587048507579
+    },
+    {
+      "name": "MainHook.skip(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048507579,
+      "stop": 1587048507579
+    },
+    {
+      "name": "MainHook.checkEnv(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048507579,
+      "stop": 1587048507580
+    },
+    {
+      "name": "MainHook.setEnvironment(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048507580,
+      "stop": 1587048507580
+    }
+  ],
+  "afters": [
+    {
+      "name": "MainHook.screenOnFail(Scenario)",
+      "status": "passed",
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048513443,
+      "stop": 1587048513443
+    }
+  ],
+  "links": [],
+  "start": 1587048507576,
+  "stop": 1587048513443
+}

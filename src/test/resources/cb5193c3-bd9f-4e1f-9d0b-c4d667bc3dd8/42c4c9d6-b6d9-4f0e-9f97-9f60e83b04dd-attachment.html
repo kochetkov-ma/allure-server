@@ -1,0 +1,135 @@
+<html dir="ltr" lang="en-US" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta content="default-src chrome:; object-src 'none'" http-equiv="Content-Security-Policy"/>
+    <title>Problem loading page</title>
+    <link href="chrome://browser/skin/aboutNetError.css" media="all" rel="stylesheet" type="text/css"/>
+    <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
+         toolkit/components/places/src/nsFaviconService.h should be updated. -->
+    <link href="chrome://global/skin/icons/warning.svg" id="favicon" rel="icon"/>
+    <link href="browser/aboutCertError.ftl" rel="localization"/>
+    <link href="browser/nsserrors.ftl" rel="localization"/>
+    <link href="branding/brand.ftl" rel="localization"/>
+</head>
+
+<body class="illustrated connectionFailure neterror" dir="ltr">
+<!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
+
+
+<!-- PAGE CONTAINER (for styling purposes only) -->
+<div class="container" id="errorPageContainer">
+    <div id="text-container">
+        <!-- Error Title -->
+        <div class="title">
+            <h1 class="title-text">Unable to connect</h1>
+        </div>
+
+        <!-- LONG CONTENT (the section most likely to require scrolling) -->
+        <div id="errorLongContent">
+
+            <!-- Short Description -->
+            <div id="errorShortDesc">
+                <p id="errorShortDescText">Firefox can’t establish a connection to the server at 10.10.3.86:8100.</p>
+            </div>
+
+            <div id="errorShortDesc2">
+                <p id="errorShortDescText2"></p>
+            </div>
+
+            <div id="errorWhatToDoTitle">
+                <p id="errorWhatToDoTitleText"></p>
+            </div>
+
+            <div id="errorWhatToDo">
+                <p hidden="true" id="badStsCertExplanation"><span class="hostname"></span> has a security policy called HTTP Strict
+                    Transport Security (HSTS), which means that Firefox can only connect to it securely. You can’t add an exception to visit
+                    this site.</p>
+                <p id="errorWhatToDoText"></p>
+            </div>
+
+            <div id="errorWhatToDo2">
+                <p id="errorWhatToDoText2"></p>
+                <p hidden="true" id="badStsCertExplanation"><span class="hostname"></span> has a security policy called HTTP Strict
+                    Transport Security (HSTS), which means that Firefox can only connect to it securely. You can’t add an exception to visit
+                    this site.</p>
+            </div>
+
+            <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+            <div id="errorLongDesc">
+                <ul xmlns="http://www.w3.org/1999/xhtml">
+                    <li>The site could be temporarily unavailable or too busy. Try again in a few
+                        moments.
+                    </li>
+                    <li>If you are unable to load any pages, check your computer’s network
+                        connection.
+                    </li>
+                    <li>If your computer or network is protected by a firewall or proxy, make sure
+                        that Firefox is permitted to access the Web.
+                    </li>
+                </ul>
+            </div>
+
+            <div id="learnMoreContainer">
+                <p><a href="https://support.mozilla.org/1/firefox/75.0/Linux/en-US/connection-not-secure" id="learnMoreLink" target="new">Learn
+                    more…</a></p>
+            </div>
+        </div>
+
+        <!-- UI to temporarily re-enable TLS 1.0 and 1.1.
+             This should be removed after March 2020, see bug 1579285.  -->
+        <div class="button-container" id="enableTls10Container">
+            <p>This website might not support the TLS 1.2 protocol, which is the minimum version supported by Firefox. Enabling TLS 1.0 and
+                TLS 1.1 might allow this connection to succeed.</p>
+            <p>TLS 1.0 and TLS 1.1 will be permanently disabled in a future release.</p>
+            <button class="primary" id="enableTls10Button">Enable TLS 1.0 and 1.1</button>
+        </div>
+
+        <!-- UI for option to report certificate errors to Mozilla. Removed on
+             init for other error types .-->
+        <div class="button-container" id="prefChangeContainer">
+            <p>It looks like your network security settings might be causing this. Do you want the default settings to be restored?</p>
+            <button class="primary" id="prefResetButton">Restore default settings</button>
+        </div>
+
+        <div class="button-container" id="certErrorAndCaptivePortalButtonContainer">
+            <button class="primary" id="returnButton">Go Back (Recommended)</button>
+            <button class="primary" id="openPortalLoginPageButton">Open Network Login Page</button>
+            <button class="primary try-again">Try Again</button>
+            <button id="advancedButton">Advanced…</button>
+        </div>
+    </div>
+
+    <div class="button-container" id="netErrorButtonContainer">
+        <button autofocus="true" class="primary try-again">Try Again</button>
+
+    </div>
+
+    <div id="advancedPanelContainer">
+        <div class="advanced-panel" id="badCertAdvancedPanel">
+            <p id="badCertTechnicalInfo"></p>
+            <a href="javascript:void(0)" id="viewCertificate">View Certificate</a>
+            <div class="button-container" id="advancedPanelButtonContainer">
+                <button class="primary" id="advancedPanelReturnButton">Go Back (Recommended)</button>
+                <button class="primary try-again">Try Again</button>
+                <div class="exceptionDialogButtonContainer">
+                    <button id="exceptionDialogButton">Accept the Risk and Continue</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="certificateErrorReporting">
+            <p class="toggle-container-with-text">
+                <input id="automaticallyReportInFuture" role="checkbox" type="checkbox"/>
+                <label for="automaticallyReportInFuture">Report errors like this to help Mozilla identify and block malicious sites</label>
+            </p>
+        </div>
+
+        <div id="certificateErrorDebugInformation">
+            <button id="copyToClipboardTop">Copy text to clipboard</button>
+            <div id="certificateErrorText"></div>
+            <button id="copyToClipboardBottom">Copy text to clipboard</button>
+        </div>
+    </div>
+</div>
+</body>
+<script src="chrome://browser/content/aboutNetError.js"></script>
+</html>

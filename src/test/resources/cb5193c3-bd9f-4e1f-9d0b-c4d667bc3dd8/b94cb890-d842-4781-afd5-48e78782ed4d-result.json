@@ -1,0 +1,202 @@
+{
+  "name": "Открыть приложение 'Отчеты' и проверить доступность",
+  "status": "passed",
+  "stage": "finished",
+  "steps": [
+    {
+      "name": "Дано  страница 'AppHub' загрузилась",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550118,
+      "stop": 1587048550826
+    },
+    {
+      "name": "Когда  на странице найден элемент 'applicationMenu.application(\"Отчёты\")' и выполнено действие 'click'",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [
+        {
+          "name": "$(div.pxh-drawer) find elements(By.cssSelector: a.pxh-navigation__link)",
+          "status": "passed",
+          "stage": "finished",
+          "steps": [],
+          "attachments": [],
+          "parameters": [],
+          "start": 1587048550850,
+          "stop": 1587048550891
+        },
+        {
+          "name": "$(div.pxh-drawer/a.pxh-navigation__link.findBy(match text '(?i).*Отчёты.*')) click()",
+          "status": "passed",
+          "stage": "finished",
+          "steps": [
+            {
+              "name": "$(div.pxh-drawer) find elements(By.cssSelector: a.pxh-navigation__link)",
+              "status": "passed",
+              "stage": "finished",
+              "steps": [],
+              "attachments": [],
+              "parameters": [],
+              "start": 1587048551349,
+              "stop": 1587048551382
+            }
+          ],
+          "attachments": [],
+          "parameters": [],
+          "start": 1587048551349,
+          "stop": 1587048553029
+        }
+      ],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048550826,
+      "stop": 1587048553030
+    },
+    {
+      "name": "Тогда  страница 'Отчеты' загрузилась",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048553031,
+      "stop": 1587048553646
+    },
+    {
+      "name": "И  на странице найден элемент 'selectReports' и он 'visible'",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [
+        {
+          "name": "$(By.xpath: //a[text() = 'Отчёты']) wait until([visible, 10000])",
+          "status": "passed",
+          "stage": "finished",
+          "steps": [],
+          "attachments": [],
+          "parameters": [],
+          "start": 1587048553704,
+          "stop": 1587048553870
+        }
+      ],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048553646,
+      "stop": 1587048554161
+    },
+    {
+      "name": "И  на странице найден элемент 'selectAdminReports' и он 'visible'",
+      "status": "passed",
+      "statusDetails": {
+        "known": false,
+        "muted": false,
+        "flaky": false
+      },
+      "stage": "finished",
+      "steps": [
+        {
+          "name": "$(By.xpath: //a[text() = 'Адм: отчёты']) wait until([visible, 10000])",
+          "status": "passed",
+          "stage": "finished",
+          "steps": [],
+          "attachments": [],
+          "parameters": [],
+          "start": 1587048554219,
+          "stop": 1587048554331
+        }
+      ],
+      "attachments": [],
+      "parameters": [],
+      "start": 1587048554162,
+      "stop": 1587048554470
+    }
+  ],
+  "attachments": [],
+  "parameters": [],
+  "start": 1587048550114,
+  "stop": 1587048554471,
+  "uuid": "b94cb890-d842-4781-afd5-48e78782ed4d",
+  "historyId": "d2664dd8e86d1751982c44e339228a08",
+  "fullName": "E2E Тестирование: Открыть приложение 'Отчеты' и проверить доступность",
+  "labels": [
+    {
+      "name": "owner",
+      "value": "Maxim_Kochetkov"
+    },
+    {
+      "name": "tag",
+      "value": "smoke"
+    },
+    {
+      "name": "tag",
+      "value": "NOT_READY"
+    },
+    {
+      "name": "tag",
+      "value": "AUTHOR=Maxim_Kochetkov"
+    },
+    {
+      "name": "host",
+      "value": "WIN-8SNBL6I3CF7"
+    },
+    {
+      "name": "thread",
+      "value": "5616@WIN-8SNBL6I3CF7.Test worker(11)"
+    },
+    {
+      "name": "feature",
+      "value": "E2E Тестирование"
+    },
+    {
+      "name": "story",
+      "value": "Открыть приложение 'Отчеты' и проверить доступность"
+    },
+    {
+      "name": "package",
+      "value": "features.E2E Тестирование"
+    },
+    {
+      "name": "suite",
+      "value": "E2E Тестирование"
+    },
+    {
+      "name": "testClass",
+      "value": "Открыть приложение 'Отчеты' и проверить доступность"
+    },
+    {
+      "name": "framework",
+      "value": "cucumber4jvm"
+    },
+    {
+      "name": "language",
+      "value": "java"
+    },
+    {
+      "name": "gherkin_uri",
+      "value": "classpath:features/smoke.feature"
+    }
+  ],
+  "links": []
+}

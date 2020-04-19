@@ -20,29 +20,42 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.model.UploadResponse;
-import ru.iopump.qa.allure.service.ZipService;
+import ru.iopump.qa.allure.service.ResultService;
 import ru.iopump.qa.util.StreamUtil;
 
 @RequiredArgsConstructor
 @RestController
 @Slf4j
 @Validated
-public class AllureRestController {
+@RequestMapping(path = "/api/result")
+public class AllureResultController {
     public final static String UUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}";
-    private final ZipService zipService;
+    final static String CACHE = "results";
+    private final ResultService resultService;
 
-    @Operation(summary = "Get concrete allure result by uuid")
-    @GetMapping(path = "/result/{uuid}")
+    @Operation(summary = "Delete all allure results")
+    @DeleteMapping(path = "/result")
+    @CacheEvict(value = CACHE, allEntries = true) // clear cache
+    public Collection<ResultResponse> deleteAllResults() throws IOException {
+        var res = getAllResult();
+        resultService.deleteAll();
+        return res;
+    }
+
+    @Operation(summary = "Get allure result by uuid")
+    @GetMapping(path = "/{uuid}")
     public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = UUID_PATTERN) String uuid) throws IOException {
         return StreamUtil.stream(getAllResult())
             .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
@@ -51,10 +64,10 @@ public class AllureRestController {
     }
 
     @Operation(summary = "Get all uploaded allure results archives")
-    @GetMapping(path = "/result")
-    @Cacheable("results") // caching results
+    @GetMapping
+    @Cacheable(CACHE) // caching results
     public Collection<ResultResponse> getAllResult() throws IOException {
-        return StreamUtil.stream(zipService.getAll()).map(p -> {
+        return StreamUtil.stream(resultService.getAll()).map(p -> {
             long size;
             try {
                 size = Files.walk(p, 1).skip(1).count();
@@ -69,9 +82,9 @@ public class AllureRestController {
     @Operation(summary = "Upload allure-results.zip with allure results files before generating report. " +
         "Don't forgot memorize uuid from response for further report generation"
     )
-    @PostMapping(path = "/result/upload", consumes = {"multipart/form-data"})
+    @PostMapping(consumes = {"multipart/form-data"})
     @ResponseStatus(HttpStatus.CREATED)
-    @CacheEvict("results") // update results cache
+    @CacheEvict(value = CACHE, allEntries = true) // update results cache
     public UploadResponse uploadResults(
         @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
             name = "allureResults",
@@ -97,7 +110,7 @@ public class AllureRestController {
         }
 
         // Unzip and save
-        Path path = zipService.unzipAndStore(allureResults.getInputStream());
+        Path path = resultService.unzipAndStore(allureResults.getInputStream());
         log.info("File saved to file system '{}'", allureResults);
         return UploadResponse.builder().fileName(allureResults.getOriginalFilename()).uuid(path.getFileName().toString()).build();
     }

@@ -1,0 +1,703 @@
+<html lang="en"><!-- ui-app-hub build version: ##BUILDVERSION##  (DO NOT DELETE THIS BLOCK) -->
+<head>
+    <title>AppHub Demo</title>
+    <meta charset="utf-8">
+    <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <link href="/ui-hub-assets/bower_components/pxh-chrome/dist/favicon.ico" rel="shortcut icon" type="image/png">
+    <link href="/ui-hub-assets/bower_components/pxh-chrome/dist/css/pxh-chrome.min.css" rel="stylesheet">
+    <!-- custom-global scripts and styles -->
+
+
+    <style data-rbd-always="0" type="text/css"> [data-rbd-drag-handle-context-id="0"] {
+          -webkit-touch-callout: none;
+          -webkit-tap-highlight-color: rgba(0,0,0,0);
+          touch-action: manipulation;
+         } [data-rbd-droppable-context-id="0"] { overflow-anchor: none; }
+    </style>
+    <style data-rbd-dynamic="0" type="text/css"> [data-rbd-drag-handle-context-id="0"] {
+      cursor: -webkit-grab;
+      cursor: grab;
+     }
+    </style>
+</head>
+<body class="pxh-chromeful">
+
+
+<script>
+      // put the nav object on the window, so it's available in javascript
+      window.nav = {"main":{"items":[{"label":"Адм: Каталог ИД","icon":"fa-database","path":"/source-data-catalog/#/","id":"source-data-catalog.0"},{"label":"Адм: Мэппинг ИД","icon":"fa-refresh","path":"/mapping/#/","id":"mapping.0"},{"label":"Карта","icon":"fa-refresh","path":"/mis/#/","id":"mis.0"},{"label":"Мнемосхемы","icon":"fa-refresh","path":"/jv-blobstore-frontend/#/","id":"jv-blobstore-frontend.0"},{"label":"Отчёты","icon":"fa-table","path":"/reports-frontend/#/","id":"reports-frontend.0"},{"label":"Управление доступом","icon":"fa-user","path":"/acm/#/","id":"acm.0"}]},"profile":{"items":[]},"settings":{"items":[]},"paths":{"source-data-catalog":"/source-data-catalog","mapping":"/mapping","mis":"/mis","jv-blobstore-frontend":"/jv-blobstore-frontend","reports-frontend":"/reports-frontend","acm":"/acm"},"contextPath":"","user":{"name":"Edison1879","firstName":"Thomas","lastName":"Edison","picture":"/ui-hub-assets/images/avatar.jpg","user_id":"23137308-5c1d-45dc-83fc-1cacad604dd5","user_name":"admin","email":"scpdr.admin@sm-digit.ru"},"preferences":{"preferredLocale":"en"},"appName":"AppHub Demo","localeData":{"logOut":"Log Out","toastTextDefault":"You received a new notification.","toastActionLabelDefault":"Action"}};
+
+
+</script>
+
+<div class="pxh-drawer pxh-drawer--hidden-until@md pxh-drawer--narrow@md pxh-drawer--wide@lg" id="js-drawer">
+    <div class="pxh-drawer-toggle">
+        <a class="pxh-drawer-toggle__link" href="#" title="Toggle drawer">
+            <svg class="pxh-drawer-toggle__icon" height="20" viewBox="291 489.4 20 16" width="20" xmlns="http://www.w3.org/2000/svg">
+                <path d="M291 489.4v4h20v-4h-20zm0 10h20v-4h-20v4zm0 6h20v-4h-20v4z"></path>
+            </svg>
+        </a>
+    </div>
+    <h1 class="pxh-drawer-header">
+        <a class="pxh-drawer-header__link pxh-drawer-header__link--narrow@md pxh-drawer-header__link--wide@lg" href="#" title="AppHub Demo">
+            AppHub Demo
+        </a>
+    </h1>
+    <div class="pxh-navigation pxh-navigation--narrow@md pxh-navigation--wide@lg">
+        <ul class="pxh-navigation__list" id="js-navigation__list">
+            <li class="pxh-navigation__item" id="js-navigation-source-data-catalog.0"><a class="pxh-navigation__link"
+                                                                                         href="/source-data-catalog/#/"
+                                                                                         title="Адм: Каталог ИД"><i
+                    class="fa fa-database pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Адм: Каталог ИД</div>
+            </a></li>
+            <li class="pxh-navigation__item" id="js-navigation-mapping.0"><a class="pxh-navigation__link" href="/mapping/#/"
+                                                                             title="Адм: Мэппинг ИД"><i
+                    class="fa fa-refresh pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Адм: Мэппинг ИД</div>
+            </a></li>
+            <li class="pxh-navigation__item" id="js-navigation-mis.0"><a class="pxh-navigation__link pxh-navigation__link--selected"
+                                                                         href="/mis/#/" title="Карта"><i
+                    class="fa fa-refresh pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Карта</div>
+            </a></li>
+            <li class="pxh-navigation__item" id="js-navigation-jv-blobstore-frontend.0"><a class="pxh-navigation__link"
+                                                                                           href="/jv-blobstore-frontend/#/"
+                                                                                           title="Мнемосхемы"><i
+                    class="fa fa-refresh pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Мнемосхемы</div>
+            </a></li>
+            <li class="pxh-navigation__item" id="js-navigation-reports-frontend.0"><a class="pxh-navigation__link"
+                                                                                      href="/reports-frontend/#/" title="Отчёты"><i
+                    class="fa fa-table pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Отчёты</div>
+            </a></li>
+            <li class="pxh-navigation__item" id="js-navigation-acm.0"><a class="pxh-navigation__link" href="/acm/#/"
+                                                                         title="Управление доступом"><i
+                    class="fa fa-user pxh-navigation__item-icon"></i>
+                <div class="pxh-navigation__item-text">Управление доступом</div>
+            </a></li>
+        </ul>
+    </div>
+    <div class="pxh-login pxh-login--narrow@md pxh-login--wide@lg" id="pxh-user-menu"><a class="pxh-login__profile-link" href="#"
+                                                                                         title="Thomas Edison">
+        <div class="pxh-login__avatar"><img class="pxh-login__avatar-image" src="/ui-hub-assets/images/avatar.jpg"></div>
+        <div class="pxh-login__name pxh-login__name--narrow@md pxh-login__name--wide@lg">Thomas Edison</div>
+        <div class="pxh-login__caret pxh-login__caret--narrow@md pxh-login__caret--wide@lg"><i
+                class="fa fa-angle-up pxh-login__caret-icon"></i></div>
+    </a>
+        <div class="pxh-login-menu pxh-login-menu--profile">
+            <ul class="pxh-login-menu__list">
+                <li class="pxh-login-menu__item"><a class="pxh-login-menu__link" href="/logout" title="Log Out">Log Out</a></li>
+            </ul>
+        </div>
+        <div class="pxh-login__notifications pxh-login__notifications--narrow@md pxh-login__notifications--wide@lg pxh-display-none"
+             id="js-login__notifications"><a
+                class="pxh-login__notifications-badge pxh-login__notifications-badge--red pxh-login__notifications-badge--hidden" href="#"
+                id="js-login__notifications-badge">0</a><a class="pxh-login__notifications-link" href="#" title="Notifications"><i
+                class="fa fa-bell"></i></a></div>
+    </div>
+</div>
+<!-- DOM is ready for nav now. Build nav asynchronously -->
+<script async="" src="/ui-hub-assets/nav.js"></script>
+
+<div class="pxh-overlay pxh-overlay--hidden pxh-overlay--hidden@lg"></div>
+<div class="pxh-view-header-drawer-toggle pxh-view-header-drawer-toggle--hidden@md">
+    <a class="pxh-view-header-drawer-toggle__link" href="#" title="Toggle drawer">
+        <svg class="pxh-view-header-drawer-toggle__icon" height="20" viewBox="291 489.4 20 16" width="20"
+             xmlns="http://www.w3.org/2000/svg">
+            <path d="M291 489.4v4h20v-4h-20zm0 10h20v-4h-20v4zm0 6h20v-4h-20v4z"></path>
+        </svg>
+    </a>
+</div>
+<link href="static/css/vendors.a188c37f.chunk.css" rel="stylesheet">
+<link href="static/css/main.b03b8b0e.chunk.css" rel="stylesheet">
+<div class="pxh-wrapper" id="js-content">
+    <div class="pxh-view pxh-view--wide@md pxh-view--narrow@lg">
+        <div id="root">
+            <article class="Container_component__1P0rm ">
+                <section
+                        class="Container_body__1Qcxl Container_fixMapHeight__2RJqF Container_fixFlexShrinking__3SGqS MapContainer_body__2hT5h">
+                    <main class="Dashboard_component__3rWiO Dashboard_collapsed__3HweJ" data-node-type="dashboard">
+                        <button class="Dashboard_toggle__23cuo">
+                            <svg class="Dashboard_toggleIcon__FR7BT" height="24" viewBox="0 0 24 24" width="24">
+                                <path d="M12 10.14L17.275 15l.725-.668-5.638-5.194a.544.544 0 0 0-.724 0L6 14.332l.725.668L12 10.14z"></path>
+                            </svg>
+                        </button>
+                        <div class="Dashboard_dashboardWrapper__2Sa3i">
+                            <header><h2 class="Dashboard_title__32o0i"> Нефтехимия</h2>
+                                <div class="Dashboard_createSection__2Dgge">
+                                    <button class="Dashboard_createButton__YPMu5">
+                                        <svg class="Dashboard_createButtonIcon__bqoHq" height="9" viewBox="0 0 9 9" width="9">
+                                            <g fill="none">
+                                                <path d="M4.5.5v8M8.5 4.5h-8"></path>
+                                            </g>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </header>
+                            <section>
+                                <div class="TypesFilter_component__2vSWv">
+                                    <button class="TypesFilter_button__1V7Zd index_reset-button__MNPph TypesFilter_border__3e7b9 TypesFilter_active__2XREl">
+                                        <div class="WordTruncate_truncate__2wWGg" title="Все">Все</div>
+                                    </button>
+                                    <button class="TypesFilter_button__1V7Zd index_reset-button__MNPph TypesFilter_border__3e7b9">
+                                        <div class="WordTruncate_truncate__2wWGg" title="Коммерческие">Коммерческие</div>
+                                    </button>
+                                    <button class="TypesFilter_button__1V7Zd index_reset-button__MNPph TypesFilter_border__3e7b9">
+                                        <div class="WordTruncate_truncate__2wWGg" title="Внутренние">Внутренние</div>
+                                    </button>
+                                </div>
+                                <section>
+                                    <div data-rbd-droppable-context-id="0" data-rbd-droppable-id="draggableIndicators">
+                                        <div class="UserIndicators_dragabbleIndicator__BS6f4" data-rbd-draggable-context-id="0"
+                                             data-rbd-draggable-id="1">
+                                            <article class="Indicator_component__34mN0">
+                                                <header class="Header_component__1S8VJ">
+                                                    <button aria-labelledby="rbd-lift-instruction-0"
+                                                            class="Header_dragAndDropButton__28ec3 index_reset-button__MNPph"
+                                                            data-rbd-drag-handle-context-id="0" data-rbd-drag-handle-draggable-id="1"
+                                                            draggable="false" tabindex="0">
+                                                        <svg height="16" viewBox="0 0 16 16" width="16">
+                                                            <g fill="#A0A3B1">
+                                                                <g transform="matrix(-1 0 0 1 12 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                                <g transform="matrix(-1 0 0 1 6 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="Header_headline__3-yR7"><h3
+                                                            class="Title_subtitle__2cQP8 Title_heading__3yKxY Header_title__3Q3fy">
+                                                        Достоверность</h3><span class="Text_gray__2-l6j Text_text__2q4HG "></span></div>
+                                                    <div class="Dropdown_component__1-QdG">
+                                                        <button class="Header_settingButton__8HnC1 index_reset-button__MNPph">
+                                                            <svg height="16" viewBox="0 0 16 16" width="16">
+                                                                <g fill="none">
+                                                                    <path d="M1 3V2h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="2.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 8V7h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="5.5" cy="7.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 13v-1h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="12.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                </g>
+                                                            </svg>
+                                                        </button>
+                                                        <section class="Menu_component__29YWR Dropdown_hidden__3QIVc">
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Редактировать</span>
+                                                            </button>
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Удалить</span></button>
+                                                        </section>
+                                                    </div>
+                                                </header>
+                                                <main class="IndicatorValue_body__vdafo">
+                                                    <div class="LoadHandler_component__3-bFo"><span
+                                                            class="Text_gray__2-l6j Text_text__2q4HG ">Нет данных</span></div>
+                                                </main>
+                                            </article>
+                                        </div>
+                                        <div class="UserIndicators_dragabbleIndicator__BS6f4" data-rbd-draggable-context-id="0"
+                                             data-rbd-draggable-id="2">
+                                            <article class="Indicator_component__34mN0">
+                                                <header class="Header_component__1S8VJ">
+                                                    <button aria-labelledby="rbd-lift-instruction-0"
+                                                            class="Header_dragAndDropButton__28ec3 index_reset-button__MNPph"
+                                                            data-rbd-drag-handle-context-id="0" data-rbd-drag-handle-draggable-id="2"
+                                                            draggable="false" tabindex="0">
+                                                        <svg height="16" viewBox="0 0 16 16" width="16">
+                                                            <g fill="#A0A3B1">
+                                                                <g transform="matrix(-1 0 0 1 12 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                                <g transform="matrix(-1 0 0 1 6 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="Header_headline__3-yR7"><h3
+                                                            class="Title_subtitle__2cQP8 Title_heading__3yKxY Header_title__3Q3fy">
+                                                        Достоверность</h3><span class="Text_gray__2-l6j Text_text__2q4HG "></span></div>
+                                                    <div class="Dropdown_component__1-QdG">
+                                                        <button class="Header_settingButton__8HnC1 index_reset-button__MNPph">
+                                                            <svg height="16" viewBox="0 0 16 16" width="16">
+                                                                <g fill="none">
+                                                                    <path d="M1 3V2h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="2.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 8V7h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="5.5" cy="7.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 13v-1h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="12.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                </g>
+                                                            </svg>
+                                                        </button>
+                                                        <section class="Menu_component__29YWR Dropdown_hidden__3QIVc">
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Редактировать</span>
+                                                            </button>
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Удалить</span></button>
+                                                        </section>
+                                                    </div>
+                                                </header>
+                                                <main class="IndicatorList_body__2_Xtg">
+                                                    <div class="LoadHandler_component__3-bFo"><span
+                                                            class="Text_gray__2-l6j Text_text__2q4HG ">Нет данных</span></div>
+                                                </main>
+                                            </article>
+                                        </div>
+                                        <div class="UserIndicators_dragabbleIndicator__BS6f4" data-rbd-draggable-context-id="0"
+                                             data-rbd-draggable-id="3">
+                                            <article class="Indicator_component__34mN0">
+                                                <header class="Header_component__1S8VJ">
+                                                    <button aria-labelledby="rbd-lift-instruction-0"
+                                                            class="Header_dragAndDropButton__28ec3 index_reset-button__MNPph"
+                                                            data-rbd-drag-handle-context-id="0" data-rbd-drag-handle-draggable-id="3"
+                                                            draggable="false" tabindex="0">
+                                                        <svg height="16" viewBox="0 0 16 16" width="16">
+                                                            <g fill="#A0A3B1">
+                                                                <g transform="matrix(-1 0 0 1 12 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                                <g transform="matrix(-1 0 0 1 6 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="Header_headline__3-yR7"><h3
+                                                            class="Title_subtitle__2cQP8 Title_heading__3yKxY Header_title__3Q3fy">
+                                                        Работоспособность</h3><span class="Text_gray__2-l6j Text_text__2q4HG "></span></div>
+                                                    <div class="Dropdown_component__1-QdG">
+                                                        <button class="Header_settingButton__8HnC1 index_reset-button__MNPph">
+                                                            <svg height="16" viewBox="0 0 16 16" width="16">
+                                                                <g fill="none">
+                                                                    <path d="M1 3V2h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="2.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 8V7h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="5.5" cy="7.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 13v-1h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="12.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                </g>
+                                                            </svg>
+                                                        </button>
+                                                        <section class="Menu_component__29YWR Dropdown_hidden__3QIVc">
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Редактировать</span>
+                                                            </button>
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Удалить</span></button>
+                                                        </section>
+                                                    </div>
+                                                </header>
+                                                <main class="IndicatorValue_body__vdafo">
+                                                    <div class="LoadHandler_component__3-bFo"><span
+                                                            class="Text_gray__2-l6j Text_text__2q4HG ">Нет данных</span></div>
+                                                </main>
+                                            </article>
+                                        </div>
+                                        <div class="UserIndicators_dragabbleIndicator__BS6f4" data-rbd-draggable-context-id="0"
+                                             data-rbd-draggable-id="4">
+                                            <article class="Indicator_component__34mN0">
+                                                <header class="Header_component__1S8VJ">
+                                                    <button aria-labelledby="rbd-lift-instruction-0"
+                                                            class="Header_dragAndDropButton__28ec3 index_reset-button__MNPph"
+                                                            data-rbd-drag-handle-context-id="0" data-rbd-drag-handle-draggable-id="4"
+                                                            draggable="false" tabindex="0">
+                                                        <svg height="16" viewBox="0 0 16 16" width="16">
+                                                            <g fill="#A0A3B1">
+                                                                <g transform="matrix(-1 0 0 1 12 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                                <g transform="matrix(-1 0 0 1 6 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="Header_headline__3-yR7"><h3
+                                                            class="Title_subtitle__2cQP8 Title_heading__3yKxY Header_title__3Q3fy">
+                                                        Работоспособность</h3><span class="Text_gray__2-l6j Text_text__2q4HG "></span></div>
+                                                    <div class="Dropdown_component__1-QdG">
+                                                        <button class="Header_settingButton__8HnC1 index_reset-button__MNPph">
+                                                            <svg height="16" viewBox="0 0 16 16" width="16">
+                                                                <g fill="none">
+                                                                    <path d="M1 3V2h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="2.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 8V7h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="5.5" cy="7.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 13v-1h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="12.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                </g>
+                                                            </svg>
+                                                        </button>
+                                                        <section class="Menu_component__29YWR Dropdown_hidden__3QIVc">
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Редактировать</span>
+                                                            </button>
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Удалить</span></button>
+                                                        </section>
+                                                    </div>
+                                                </header>
+                                                <main class="IndicatorList_body__2_Xtg">
+                                                    <div class="LoadHandler_component__3-bFo"><span
+                                                            class="Text_gray__2-l6j Text_text__2q4HG ">Нет данных</span></div>
+                                                </main>
+                                            </article>
+                                        </div>
+                                        <div class="UserIndicators_dragabbleIndicator__BS6f4" data-rbd-draggable-context-id="0"
+                                             data-rbd-draggable-id="5">
+                                            <article class="Indicator_component__34mN0">
+                                                <header class="Header_component__1S8VJ">
+                                                    <button aria-labelledby="rbd-lift-instruction-0"
+                                                            class="Header_dragAndDropButton__28ec3 index_reset-button__MNPph"
+                                                            data-rbd-drag-handle-context-id="0" data-rbd-drag-handle-draggable-id="5"
+                                                            draggable="false" tabindex="0">
+                                                        <svg height="16" viewBox="0 0 16 16" width="16">
+                                                            <g fill="#A0A3B1">
+                                                                <g transform="matrix(-1 0 0 1 12 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                                <g transform="matrix(-1 0 0 1 6 0)">
+                                                                    <ellipse cx="1.5" cy="1.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="13.545" rx="1.5" ry="1.545"></ellipse>
+                                                                    <ellipse cx="1.5" cy="7.545" rx="1.5" ry="1.545"></ellipse>
+                                                                </g>
+                                                            </g>
+                                                        </svg>
+                                                    </button>
+                                                    <div class="Header_headline__3-yR7"><h3
+                                                            class="Title_subtitle__2cQP8 Title_heading__3yKxY Header_title__3Q3fy">Аномалии
+                                                        достоверности</h3><span class="Text_gray__2-l6j Text_text__2q4HG "></span></div>
+                                                    <div class="Dropdown_component__1-QdG">
+                                                        <button class="Header_settingButton__8HnC1 index_reset-button__MNPph">
+                                                            <svg height="16" viewBox="0 0 16 16" width="16">
+                                                                <g fill="none">
+                                                                    <path d="M1 3V2h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="2.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 8V7h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="5.5" cy="7.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                    <path d="M1 13v-1h14.027v1z" fill="#A0A3B1"></path>
+                                                                    <circle cx="10.5" cy="12.5" fill="#F1F2F7" r="1.5"
+                                                                            stroke="#A0A3B1"></circle>
+                                                                </g>
+                                                            </svg>
+                                                        </button>
+                                                        <section class="Menu_component__29YWR Dropdown_hidden__3QIVc">
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Редактировать</span>
+                                                            </button>
+                                                            <button class="Item_component__3GpXp index_reset-button__MNPph" disabled="">
+                                                                <span class="Text_black__3Wgo1 Text_text__2q4HG ">Удалить</span></button>
+                                                        </section>
+                                                    </div>
+                                                </header>
+                                                <main class="IndicatorEvent_body___QHzC">
+                                                    <div class="LoadHandler_component__3-bFo"><span
+                                                            class="Text_gray__2-l6j Text_text__2q4HG ">Нет данных</span></div>
+                                                </main>
+                                            </article>
+                                        </div>
+                                    </div>
+                                </section>
+                            </section>
+                        </div>
+                    </main>
+                    <div class="GIS_component__3IhNw">
+                        <div></div>
+                        <section class="GIS_widgetContainerLeftTop__8pm-t">
+                            <section class="Widget_component__3t5yv ">
+                                <button class="Button_component__14WeF " disabled="">
+                                    <svg class="BackButtonWidget_icon__6bLYa" height="24" viewBox="0 0 24 24" width="24">
+                                        <path d="M12 10.14L17.275 15l.725-.668-5.638-5.194a.544.544 0 0 0-.724 0L6 14.332l.725.668L12 10.14z"></path>
+                                    </svg>
+                                </button>
+                            </section>
+                            <section class="Search_component__6Yvxl">
+                                <section class="Widget_component__3t5yv ">
+                                    <section class="Search_searchField__3_Exk">
+                                        <section><input
+                                                class="Search_searchField__3_Exk Search_inputField__eJZlB InputField_component__2belS"
+                                                placeholder="Поиск" value=""></section>
+                                        <div class="Icons_icon__2yUqd">
+                                            <svg height="16" viewBox="0 0 16 16" width="16" xmlns="http://www.w3.org/2000/svg">
+                                                <g>
+                                                    <path d="M6 12A6 6 0 1 1 6 0a6 6 0 0 1 0 12zm0-1.126A4.881 4.881 0 0 0 10.888 6 4.881 4.881 0 0 0 6 1.126 4.881 4.881 0 0 0 1.112 6 4.881 4.881 0 0 0 6 10.874z"></path>
+                                                    <path d="M10.282 10.635a.961.961 0 0 1-.01-1.35.94.94 0 0 1 1.338-.01l4.108 4.09c.372.37.376.975.01 1.35a.94.94 0 0 1-1.338.01l-4.108-4.09z"></path>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                    </section>
+                                </section>
+                                <div class="Search_searchResultsWrapper__2MOWj">
+                                    <ul class="Search_searchResults__2k36S Results_component__1SJPo Results_hidden__31ZdF">
+                                        <div class="LoadHandler_component__3-bFo"><span class="Text_gray__2-l6j Text_text__2q4HG ">Объект  не найден</span>
+                                        </div>
+                                    </ul>
+                                </div>
+                            </section>
+                            <section class="Widget_component__3t5yv ">
+                                <section>
+                                    <div class="Filters_component__RJq1v">
+                                        <div class="FilterButton_component__1qDah ">
+                                            <button class="FilterButton_filterButton__36QOy " title="Газопереработка"><span
+                                                    class="FilterButtonIcon_component__1ZDvr">Г</span></button>
+                                        </div>
+                                        <div class="FilterButton_component__1qDah ">
+                                            <button class="FilterButton_filterButton__36QOy " title="Нефтедобыча"><span
+                                                    class="FilterButtonIcon_component__1ZDvr">Н</span></button>
+                                        </div>
+                                        <div class="FilterButton_component__1qDah ">
+                                            <button class="FilterButton_filterButton__36QOy " title="Нефтепереработка"><span
+                                                    class="FilterButtonIcon_component__1ZDvr">Н</span></button>
+                                        </div>
+                                        <div class="FilterButton_component__1qDah FilterButton_active__CLt6z">
+                                            <button class="FilterButton_filterButton__36QOy FilterButton_active__CLt6z" title="Нефтехимия">
+                                                <span class="FilterButtonIcon_component__1ZDvr">Н</span></button>
+                                        </div>
+                                    </div>
+                                </section>
+                            </section>
+                        </section>
+                        <section class="GIS_widgetContainerLeft__3cTwO">
+                            <section class="Widget_component__3t5yv ZoomButtonsWidget_component__1iqXh">
+                                <button class="Button_component__14WeF ZoomButtonsWidget_button__18eCE">
+                                    <svg height="16" viewBox="0 0 16 16" width="16">
+                                        <g fill="none">
+                                            <g fill="#313450">
+                                                <path d="M0 8a1 1 0 0 1 1-1h14a1 1 0 0 1 0 2H1a1 1 0 0 1-1-1z"></path>
+                                                <path d="M8 0a1 1 0 0 1 1 1v14a1 1 0 0 1-2 0V1a1 1 0 0 1 1-1z"></path>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </button>
+                                <button class="Button_component__14WeF ZoomButtonsWidget_button__18eCE" disabled="">
+                                    <svg height="16" viewBox="0 0 16 16" width="16">
+                                        <g fill="none">
+                                            <path d="M0 0h16v16H0z"></path>
+                                            <path d="M0 8a1 1 0 0 1 1-1h14a1 1 0 0 1 0 2H1a1 1 0 0 1-1-1z" fill="#313450"></path>
+                                        </g>
+                                    </svg>
+                                </button>
+                            </section>
+                        </section>
+                        <section class="GIS_widgetContainerRightTop__wlrhf"></section>
+                        <div class="GIS_mapContainer__1k-K7 leaflet-container leaflet-touch leaflet-fade-anim leaflet-grab leaflet-touch-drag leaflet-touch-zoom"
+                             style="position: relative;" tabindex="0">
+                            <div class="leaflet-pane leaflet-map-pane" style="transform: translate3d(0px, 0px, 0px);">
+                                <div class="leaflet-pane leaflet-tile-pane">
+                                    <div class="leaflet-layer " style="z-index: 1; opacity: 1;">
+                                        <div class="leaflet-tile-container leaflet-zoom-animated"
+                                             style="z-index: 12; transform: translate3d(0px, 0px, 0px) scale(1);"><img alt=""
+                                                                                                                       class="leaflet-tile leaflet-tile-loaded"
+                                                                                                                       role="presentation"
+                                                                                                                       src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=7514065.628545968,7514065.628545967,10018754.171394622,10018754.171394628"
+                                                                                                                       style="width: 256px; height: 256px; transform: translate3d(563px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=10018754.171394622,7514065.628545967,12523442.714243278,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(819px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=7514065.628545968,10018754.171394628,10018754.171394622,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(563px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=10018754.171394622,10018754.171394628,12523442.714243278,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(819px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=7514065.628545968,5009377.085697314,10018754.171394622,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(563px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=10018754.171394622,5009377.085697314,12523442.714243278,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(819px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=5009377.085697311,7514065.628545967,7514065.628545968,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(307px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=12523442.714243278,7514065.628545967,15028131.257091936,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(1075px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=5009377.085697311,10018754.171394628,7514065.628545968,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(307px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=12523442.714243278,10018754.171394628,15028131.257091936,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(1075px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=5009377.085697311,5009377.085697314,7514065.628545968,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(307px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=12523442.714243278,5009377.085697314,15028131.257091936,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(1075px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=7514065.628545968,12523442.714243283,10018754.171394622,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(563px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=10018754.171394622,12523442.714243283,12523442.714243278,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(819px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=7514065.628545968,2504688.542848655,10018754.171394622,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(563px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=10018754.171394622,2504688.542848655,12523442.714243278,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(819px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=5009377.085697311,12523442.714243283,7514065.628545968,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(307px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=12523442.714243278,12523442.714243283,15028131.257091936,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(1075px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=2504688.5428486555,7514065.628545967,5009377.085697311,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(51px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=15028131.257091936,7514065.628545967,17532819.79994059,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(1331px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=5009377.085697311,2504688.542848655,7514065.628545968,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(307px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=12523442.714243278,2504688.542848655,15028131.257091936,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(1075px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=2504688.5428486555,10018754.171394628,5009377.085697311,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(51px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=15028131.257091936,10018754.171394628,17532819.79994059,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(1331px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=2504688.5428486555,5009377.085697314,5009377.085697311,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(51px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=15028131.257091936,5009377.085697314,17532819.79994059,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(1331px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=2504688.5428486555,12523442.714243283,5009377.085697311,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(51px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=15028131.257091936,12523442.714243283,17532819.79994059,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(1331px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=2504688.5428486555,2504688.542848655,5009377.085697311,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(51px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=15028131.257091936,2504688.542848655,17532819.79994059,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(1331px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=0,7514065.628545967,2504688.5428486555,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(-205px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=17532819.79994059,7514065.628545967,20037508.342789244,10018754.171394628"
+                                                style="width: 256px; height: 256px; transform: translate3d(1587px, 444px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=0,10018754.171394628,2504688.5428486555,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(-205px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=17532819.79994059,10018754.171394628,20037508.342789244,12523442.714243283"
+                                                style="width: 256px; height: 256px; transform: translate3d(1587px, 188px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=0,5009377.085697314,2504688.5428486555,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(-205px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=17532819.79994059,5009377.085697314,20037508.342789244,7514065.628545967"
+                                                style="width: 256px; height: 256px; transform: translate3d(1587px, 700px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=0,12523442.714243283,2504688.5428486555,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(-205px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=17532819.79994059,12523442.714243283,20037508.342789244,15028131.257091928"
+                                                style="width: 256px; height: 256px; transform: translate3d(1587px, -68px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=0,2504688.542848655,2504688.5428486555,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(-205px, 956px, 0px); opacity: 1;"><img
+                                                alt="" class="leaflet-tile leaflet-tile-loaded" role="presentation"
+                                                src="http://swarm.dev.sm-digit.ru:9536/geoserver/sm-digit/wms?&amp;service=WMS&amp;request=GetMap&amp;layers=sm-digit%3Asm-digit-map&amp;styles=&amp;format=image%2Fjpeg&amp;transparent=false&amp;version=1.1.1&amp;buffer=50&amp;width=256&amp;height=256&amp;srs=EPSG%3A3857&amp;bbox=17532819.79994059,2504688.542848655,20037508.342789244,5009377.085697314"
+                                                style="width: 256px; height: 256px; transform: translate3d(1587px, 956px, 0px); opacity: 1;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="leaflet-pane leaflet-shadow-pane"></div>
+                                <div class="leaflet-pane leaflet-overlay-pane"></div>
+                                <div class="leaflet-pane leaflet-marker-pane"></div>
+                                <div class="leaflet-pane leaflet-tooltip-pane"></div>
+                                <div class="leaflet-pane leaflet-popup-pane"></div>
+                                <div class="leaflet-proxy leaflet-zoom-animated"></div>
+                            </div>
+                            <div class="leaflet-control-container">
+                                <div class="leaflet-top leaflet-left"></div>
+                                <div class="leaflet-top leaflet-right"></div>
+                                <div class="leaflet-bottom leaflet-left"></div>
+                                <div class="leaflet-bottom leaflet-right"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </article>
+        </div>
+    </div>
+</div>
+<script src="static/js/runtime~main.6069c60c.js"></script>
+<script src="static/js/vendors.b878fb63.chunk.js"></script>
+<script src="static/js/main.71f5fb0f.chunk.js"></script>
+<div aria-atomic="true" aria-live="assertive" id="rbd-announcement-0" role="log"
+     style="position: absolute; width: 1px; height: 1px; margin: -1px; border: 0px none; padding: 0px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); clip-path: inset(100%);"></div>
+<div id="rbd-lift-instruction-0" style="display: none;">Draggable item. Ensure your screen reader is not in browse mode and then press space
+    bar to lift.
+</div>
+<div class="pxh-notifications pxh-notifications@md pxh-notifications--narrow@md pxh-notifications--wide@lg" id="js-notifications">
+    <div class="pxh-notifications__header">
+        <div class="pxh-notifications__action">
+        </div>
+        <div class="pxh-notifications__title">
+            Notifications
+        </div>
+        <div class="pxh-notifications__clear">
+            <a class="pxh-notifications__link" href="#" id="js-notifications__link--clear" title="Clear all notifications">Clear</a>
+        </div>
+    </div>
+    <div class="pxh-notifications__list pxh-notifications__list@md" id="js-notifications__list">
+        <div class="pxh-notifications__empty">There are no new notifications.</div>
+    </div>
+</div>
+<div class="pxh-toasts pxh-toasts--narrow@md pxh-toasts--wide@lg" id="js-toasts">
+</div>
+<script src="/ui-hub-assets/bower_components/pxh-chrome/dist/js/pxh-chrome.min.js"></script>
+
+
+</body>
+</html>
