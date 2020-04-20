@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
       - name: Fast checkout
