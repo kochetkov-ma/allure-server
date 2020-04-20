@@ -9,7 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 public class MoveFileVisitor extends SimpleFileVisitor<Path> {
     private final Path targetPath;
-    private Path sourcePath = null;
+    private Path sourcePath;
 
     public MoveFileVisitor(Path targetPath) {
         this.targetPath = targetPath;

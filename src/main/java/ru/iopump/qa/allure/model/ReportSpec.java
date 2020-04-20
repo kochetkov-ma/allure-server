@@ -16,7 +16,7 @@ public class ReportSpec {
     String[] path;
     ExecutorInfo executorInfo;
 
-    public static Path toPath(String[] paths) {
+    public static Path toPath(String... paths) {
         return Paths.get(paths[0], ArrayUtils.subarray(paths, 1, paths.length));
     }
 

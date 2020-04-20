@@ -22,7 +22,7 @@ public class ExecutorCiPlugin extends ExecutorPlugin {
                 final ExecutorInfo info = context.getValue().readValue(is, ExecutorInfo.class);
                 visitor.visitExtra(EXECUTORS_BLOCK_NAME, info);
             } catch (IOException e) {
-                visitor.error("Could not read executor file " + executorFile, e);
+                visitor.error("Could not read executor file " + executorFile, e); //NOPMD
             }
         }
     }

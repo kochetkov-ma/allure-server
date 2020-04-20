@@ -82,12 +82,12 @@ public class ResultService {
         }
         while (zipEntry != null) {
             final Path newFile = fromZip(unzipTo, zipEntry);
-            final OutputStream fos = Files.newOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
+            try (final OutputStream fos = Files.newOutputStream(newFile)) {
+                int len;
+                while ((len = zis.read(buffer)) > 0) { //NOPMD
+                    fos.write(buffer, 0, len);
+                }
             }
-            fos.close();
             log.info("Unzip new entry '{}'", newFile);
             zipEntry = zis.getNextEntry();
         }
@@ -107,7 +107,7 @@ public class ResultService {
                     try {
                         Files.walkFileTree(nestedResultDir, new MoveFileVisitor(to));
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new RuntimeException("Walk error " + nestedResultDir, e); //NOPMD
                     }
                 }
             );

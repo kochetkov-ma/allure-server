@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.controller;
+package ru.iopump.qa.allure.controller; //NOPMD
 
 import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.Operation;

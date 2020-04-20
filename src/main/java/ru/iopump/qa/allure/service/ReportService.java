@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.service;
+package ru.iopump.qa.allure.service; //NOPMD
 
 import static ru.iopump.qa.allure.service.ExecutorCiPlugin.JSON_FILE_NAME;
 
@@ -184,10 +184,8 @@ public class ReportService {
         }
     }
 
-    private void addExecutionInfo(Path resultPathWithInfo, @Nullable ExecutorInfo executorInfo) throws IOException {
-        if (executorInfo == null) {
-            executorInfo = new ExecutorInfo();
-        }
+    private void addExecutionInfo(Path resultPathWithInfo, @Nullable ExecutorInfo executor) throws IOException {
+        var executorInfo = Optional.ofNullable(executor).orElse(new ExecutorInfo());
         if (StringUtils.isBlank(executorInfo.getName())) {
             executorInfo.setName("Remote executor");
         }
