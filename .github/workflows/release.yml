@@ -2,14 +2,11 @@ name: Upload Release Asset
 
 on:
   push:
-    branches:
-      - master
     tags:
       - 'v*'
 
 jobs:
   build:
-    name: Upload Release Asset
     runs-on: ubuntu-latest
     steps:
       - name: Fast checkout

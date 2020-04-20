@@ -1,37 +1,24 @@
-buildscript {
-    dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:5.2.0'
-    }
-}
 plugins {
     id 'java'
     id 'jacoco'
     id 'idea'
-    id 'signing'
-    id 'maven'
     id 'pmd'
     id 'checkstyle'
 
     id 'com.github.spotbugs' version '3.0.0'
     id 'info.solidsoft.pitest' version '1.4.7'
     id 'io.freefair.lombok' version '5.0.0-rc4'
-    id 'io.codearte.nexus-staging' version '0.21.2'
-    id 'pl.allegro.tech.build.axion-release' version '1.11.0'
     id 'com.github.ben-manes.versions' version '0.28.0'
-    id 'com.github.kt3k.coveralls' version '2.10.1'
 
     id 'org.springframework.boot' version '2.2.6.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 }
 apply from: './gradle/dependencies.gradle'
-apply from: './gradle/publishing.gradle'
-apply from: './gradle/versioning.gradle'
 apply from: './gradle/checking.gradle'
 apply from: './gradle/testing.gradle'
 
 generateLombokConfig.enabled = false
 
-version = scmVersion.version
 group = theGroup
 archivesBaseName = theArchivesBaseName
 idea {
