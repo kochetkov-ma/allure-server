@@ -23,7 +23,12 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           gradle-version: current
-          arguments: ' -Pversion=${{ secrets.GITHUB_TOKEN }} --stacktrace bootJar'
+          arguments: ' -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar'
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v1
+        with:
+          name: allure-server-${{ env.RELEASE_VERSION }}.jar
+          path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -44,6 +49,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
+          asset_path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
           asset_name: allure-server.jar
           asset_content_type: application/jar
