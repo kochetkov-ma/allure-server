@@ -3,7 +3,10 @@ name: Upload Release Asset
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
+
+env:
+  GIT_TAG: ${GITHUB_REF##*/}
 
 jobs:
   build:
@@ -11,6 +14,8 @@ jobs:
     steps:
       - name: Fast checkout
         uses: actions/checkout@v2
+      - name: Set RELEASE_VERSION
+        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
@@ -29,7 +34,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: Release ${{ env.RELEASE_VERSION }}
           body: |
             Changes in this Release
             - First Change
@@ -42,6 +47,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./build/allure-server-${{ github.ref }}.jar
+          asset_path: ./build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
           asset_name: allure-server.jar
           asset_content_type: application/jar
