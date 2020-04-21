@@ -46,7 +46,7 @@ public class AllureResultController {
     private final ResultService resultService;
 
     @Operation(summary = "Delete all allure results")
-    @DeleteMapping(path = "/result")
+    @DeleteMapping
     @CacheEvict(value = CACHE, allEntries = true) // clear cache
     public Collection<ResultResponse> deleteAllResults() throws IOException {
         var res = getAllResult();

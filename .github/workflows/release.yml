@@ -52,3 +52,10 @@ jobs:
           asset_path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
           asset_name: allure-server.jar
           asset_content_type: application/jar
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: kochetkovma/allure-server
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: "latest,${{ env.RELEASE_VERSION }}"
