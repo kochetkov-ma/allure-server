@@ -1,0 +1,7 @@
+version: '3.7'
+services:
+  allure-server:
+    container_name: allure-server
+    image: kochetkovma/allure-server:latest
+    ports:
+      - 8080:8080
