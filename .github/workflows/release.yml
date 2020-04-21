@@ -5,9 +5,6 @@ on:
     tags:
       - 'v*.*.*'
 
-env:
-  GIT_TAG: ${GITHUB_REF##*/}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,7 +12,7 @@ jobs:
       - name: Fast checkout
         uses: actions/checkout@v2
       - name: Set RELEASE_VERSION
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:10}
+        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
@@ -26,7 +23,7 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           gradle-version: current
-          arguments: ' -Pversion=${{ github.ref }} --stacktrace bootJar'
+          arguments: ' -Pversion=${{ secrets.GITHUB_TOKEN }} --stacktrace bootJar'
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
