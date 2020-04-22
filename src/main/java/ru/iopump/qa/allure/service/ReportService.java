@@ -19,6 +19,7 @@ import io.qameta.allure.context.RandomUidContext;
 import io.qameta.allure.core.AttachmentsPlugin;
 import io.qameta.allure.core.Configuration;
 import io.qameta.allure.core.MarkdownDescriptionsPlugin;
+import io.qameta.allure.core.Plugin;
 import io.qameta.allure.core.ReportWebPlugin;
 import io.qameta.allure.core.TestsResultsPlugin;
 import io.qameta.allure.duration.DurationPlugin;
@@ -30,6 +31,7 @@ import io.qameta.allure.history.HistoryTrendPlugin;
 import io.qameta.allure.launch.LaunchPlugin;
 import io.qameta.allure.mail.MailPlugin;
 import io.qameta.allure.owner.OwnerPlugin;
+import io.qameta.allure.plugin.DefaultPluginLoader;
 import io.qameta.allure.retry.RetryPlugin;
 import io.qameta.allure.retry.RetryTrendPlugin;
 import io.qameta.allure.severity.SeverityPlugin;
@@ -48,12 +50,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -80,8 +84,9 @@ public class ReportService {
         this(REPORT_PATH_DEFAULT, new ObjectMapper());
     }
 
-    private static Configuration configuration() {
+    private Configuration configuration() {
         return new ConfigurationBuilder()
+            .fromPlugins(loadPlugins())
             .fromExtensions(
                 Arrays.asList(
                     new JacksonContext(),
@@ -199,5 +204,23 @@ public class ReportService {
         final Path executorPath = resultPathWithInfo.resolve(JSON_FILE_NAME);
         writer.writeValue(executorPath.toFile(), executorInfo);
         log.info("Executor information added to '{}' : {}", executorPath, executorInfo);
+    }
+
+    @SneakyThrows
+    private List<Plugin> loadPlugins() {
+        final Path pluginsDirectory = Optional.ofNullable(System.getProperty("allure.plugins.directory"))
+            .map(Paths::get)
+            .filter(Files::isDirectory)
+            .orElse(Paths.get(Objects.requireNonNull(getClass().getResource("/plugins")).toURI()));
+        log.info("Found plugins directory {}", pluginsDirectory);
+        final DefaultPluginLoader loader = new DefaultPluginLoader();
+        final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        return Files.list(pluginsDirectory)
+            .filter(Files::isDirectory)
+            .map(pluginDir -> loader.loadPlugin(classLoader, pluginDir))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .peek(p -> log.info("Found {} plugin", p.getConfig()))
+            .collect(Collectors.toList());
     }
 }

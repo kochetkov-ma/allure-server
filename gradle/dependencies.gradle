@@ -25,7 +25,6 @@ ext {
 dependencies {
     /* Allure Generator */
     implementation "io.qameta.allure:allure-plugin-api:$allureVersion"
-    // implementation "io.qameta.allure:allure-java-commons:$allureVersion"
     implementation "io.qameta.allure:allure-generator:$allureVersion"
     /* QA lib */
     implementation("ru.iopump.qa:qa-tools:$qaLibVersion") { transitive false }
