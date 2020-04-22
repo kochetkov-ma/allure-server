@@ -36,6 +36,7 @@ id_rsa
 
 #exclude
 !**/resources
-!**/resources/*.7z
-!**/resources/*.json
-!**/resources/*.zip
+!**/resources/**/*.7z
+!**/resources/**/*.json
+!**/resources/**/*.zip
+!**/resources/**/*.jar
