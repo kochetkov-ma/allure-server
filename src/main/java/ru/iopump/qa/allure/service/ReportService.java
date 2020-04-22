@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -62,6 +61,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -206,12 +207,17 @@ public class ReportService {
         log.info("Executor information added to '{}' : {}", executorPath, executorInfo);
     }
 
+    private static String pluginRelPath(String string) {
+        return StringUtils.substringAfterLast(string, "plugins/");
+    }
+
     @SneakyThrows
     private List<Plugin> loadPlugins() {
         final Path pluginsDirectory = Optional.ofNullable(System.getProperty("allure.plugins.directory"))
             .map(Paths::get)
             .filter(Files::isDirectory)
-            .orElse(Paths.get(Objects.requireNonNull(getClass().getResource("/plugins")).toURI()));
+            .orElseGet(this::extractDefaultPlugin);
+
         log.info("Found plugins directory {}", pluginsDirectory);
         final DefaultPluginLoader loader = new DefaultPluginLoader();
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -222,5 +228,21 @@ public class ReportService {
             .map(Optional::get)
             .peek(p -> log.info("Found {} plugin", p.getConfig()))
             .collect(Collectors.toList());
+    }
+
+    private Path extractDefaultPlugin() {
+        try {
+            final Resource[] resources = new PathMatchingResourcePatternResolver().getResources("/plugins/**");
+            final Path to = Paths.get("allure/plugins");
+            for (Resource resource : resources) {
+                Path targetItem = to.resolve(pluginRelPath(resource.getURL().getPath()));
+                if (resource.exists() && resource.isReadable()) {
+                    FileUtils.copyInputStreamToFile(resource.getInputStream(), targetItem.toFile());
+                }
+            }
+            return to;
+        } catch (Exception exception) { //NOPMD
+            throw new IllegalStateException("Error default plugins loading from resources '/plugins/**'", exception);
+        }
     }
 }
