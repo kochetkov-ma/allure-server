@@ -21,7 +21,7 @@ Works on WebUI is in progress to next major (2.0.0) version.
 
 ## Get Started
 ### Docker
-Running as Docker container look at: [readme](https://hub.docker.com/repository/docker/kochetkovma/allure-server)
+Running as Docker container look at: [readme](https://hub.docker.com/r/kochetkovma/allure-server)
 ### Jar 
 Get the latest release [Releases](https://github.com/kochetkov-ma/allure-server/releases)   
 Download `allure-server.jar`  
