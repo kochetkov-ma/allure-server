@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.service;
+package ru.iopump.qa.allure.helper;
 
 import io.qameta.allure.context.JacksonContext;
 import io.qameta.allure.core.Configuration;
@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ExecutorCiPlugin extends ExecutorPlugin {
-    static final String JSON_FILE_NAME = "ci-executor.json";
+    public static final String JSON_FILE_NAME = "ci-executor.json";
 
     @Override
     public void readResults(Configuration configuration, ResultsVisitor visitor, Path directory) {

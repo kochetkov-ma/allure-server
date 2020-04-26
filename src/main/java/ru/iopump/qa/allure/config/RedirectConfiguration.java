@@ -1,6 +1,6 @@
 package ru.iopump.qa.allure.config;
 
-import static ru.iopump.qa.allure.service.ReportService.REPORT_PATH_DEFAULT;
+import static ru.iopump.qa.allure.service.JpaReportService.REPORT_PATH_DEFAULT;
 
 import java.io.IOException;
 import java.nio.file.Files;

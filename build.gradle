@@ -5,9 +5,9 @@ plugins {
     id 'pmd'
     id 'checkstyle'
 
-    id 'com.github.spotbugs' version '3.0.0'
-    id 'info.solidsoft.pitest' version '1.4.7'
-    id 'io.freefair.lombok' version '5.0.0-rc4'
+    id 'com.github.spotbugs' version '4.0.5'
+    id 'info.solidsoft.pitest' version '1.4.9'
+    id 'io.freefair.lombok' version '5.0.0'
     id 'com.github.ben-manes.versions' version '0.28.0'
 
     id 'org.springframework.boot' version '2.2.6.RELEASE'
@@ -36,5 +36,5 @@ java {
 }
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = '6.2.2'
+    gradleVersion = '6.3'
 }
