@@ -1,6 +1,8 @@
 package ru.iopump.qa.allure.service; //NOPMD
 
+import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
+import static ru.iopump.qa.allure.service.PathUtil.str;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,9 +28,9 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
@@ -42,38 +44,53 @@ public class JpaReportService {
     public static final String REPORT_PATH_DEFAULT = "allure/reports/";
 
     @Getter
-    private final Path reportsPath;
+    private final Path reportsDir;
+    private final AppCfg cfg;
     private final ObjectMapper objectMapper;
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
     private final JpaReportRepository repository;
-    private final String reportPathBaseDir;
 
-    public JpaReportService(@Value("${allure.reports.dir:" + REPORT_PATH_DEFAULT + "}") String reportsPath,
+    public JpaReportService(AppCfg cfg,
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
                             ServeRedirectHelper redirection
     ) {
-        this.reportsPath = Paths.get(reportsPath);
+        this.reportsDir = Paths.get(cfg.reportsDir());
+        this.cfg = cfg;
         this.objectMapper = objectMapper;
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
-        this.reportPathBaseDir = redirection.getReportsBase();
     }
 
     @PostConstruct
     protected void initRedirection() {
         repository.findAll().forEach(
-            e -> redirection.mapRequestTo(e.getPath(), reportsPath.resolve(e.getUuid().toString()).toString())
+            e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString())
         );
+    }
+
+    public Collection<ReportEntity> clearAllHistory() {
+        final Collection<ReportEntity> entitiesActive = repository.findByActiveTrue();
+        final Collection<ReportEntity> entitiesInactive = repository.deleteByActiveFalse();
+
+        // delete active history
+        entitiesActive
+            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).resolve("history").toFile()));
+
+        // delete active history
+        entitiesInactive
+            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()));
+
+        return entitiesInactive;
     }
 
     public Collection<ReportEntity> deleteAll() throws IOException {
         var res = getAll();
         repository.deleteAll();
-        FileUtils.deleteDirectory(reportsPath.toFile());
+        FileUtils.deleteDirectory(reportsDir.toFile());
         return res;
     }
 
@@ -94,20 +111,26 @@ public class JpaReportService {
         // New report destination and entity
         final UUID uuid = UUID.randomUUID();
 
-        final ReportEntity newEntity = ReportEntity.builder()
-            .uuid(uuid)
-            .path(reportPath)
-            .url(baseUrl + reportPathBaseDir + reportPath)
-            .active(true).build();
-        final Optional<ReportEntity> prevEntity = repository.findByPathAndActiveTrueOrderByCreatedDateTimeDesc(reportPath)
+        // Find prev report if present
+        final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
             .stream()
             .findFirst();
 
-        final Path destination = reportsPath.resolve(uuid.toString());
+        // New report entity
+        final ReportEntity newEntity = ReportEntity.builder()
+            .uuid(uuid)
+            .path(reportPath)
+            .createdDateTime(LocalDateTime.now())
+            .url(baseUrl + cfg.reportsPath() + reportPath)
+            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+            .active(true).build();
+
+        // New uuid directory
+        final Path destination = reportsDir.resolve(uuid.toString());
 
         // Copy history from prev report
         final Optional<Path> historyO = prevEntity
-            .flatMap(e -> copyHistory(reportsPath.resolve(e.getUuid().toString()), uuid.toString()))
+            .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
             .or(Optional::empty);
 
         try {
@@ -121,7 +144,7 @@ public class JpaReportService {
                 resultDirs.get(0),
                 executorInfo,
                 prevEntity
-                    .map(e -> baseUrl + reportsPath.resolve(e.getUuid().toString()).toString() + "/index.html")
+                    .map(e -> baseUrl + str(reportsDir.resolve(e.getUuid().toString())) + "/index.html")
                     .orElse(null)
             );
 
@@ -129,20 +152,23 @@ public class JpaReportService {
             reportGenerator.generate(destination, resultDirsToGenerate);
             log.info("Report '{}' generated according to results '{}'", destination, resultDirsToGenerate);
         } finally {
+
             // Delete tmp history
-            historyO.ifPresent(h -> FileUtils.deleteQuietly(h.toFile()));
+            historyO.ifPresent(h -> deleteQuietly(h.toFile()));
             if (clearResults) {
-                resultDirs.forEach(r -> FileUtils.deleteQuietly(r.toFile()));
+                resultDirs.forEach(r -> deleteQuietly(r.toFile()));
             }
         }
 
-        redirection.mapRequestTo(newEntity.getPath(), reportsPath.resolve(uuid.toString()).toString());
+        // Add request mapping
+        redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
 
-        try {
-            repository.save(newEntity);
-        } finally {
-            prevEntity.ifPresent(e -> e.setActive(false));
-        }
+        // Persist
+        handleMaxHistory(newEntity);
+        repository.save(newEntity);
+
+        // Disable prev report
+        prevEntity.ifPresent(e -> e.setActive(false));
 
         return newEntity;
     }
@@ -150,6 +176,34 @@ public class JpaReportService {
     ///// PRIVATE /////
 
     //region Private
+    private void handleMaxHistory(ReportEntity created) {
+        var max = cfg.maxReportHistoryLevel();
+
+        if (created.getLevel() >= max) { // Check reports count in history
+            // Get all sorted reports
+            var allReports = repository.findByPathOrderByCreatedDateTimeDesc(created.getPath());
+
+            // If size more than max history
+            if (allReports.size() >= max) {
+                log.info("Current report count '{}' exceed max history report count '{}'",
+                    allReports.size(),
+                    max
+                );
+
+                // Delete last after max history
+                long deleted = allReports.stream()
+                    .skip(max)
+                    .peek(e -> log.info("Report '{}' will be deleted", e))
+                    .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
+                    .peek(repository::delete)
+                    .count();
+
+                // Update level (safety)
+                created.setLevel(Math.max(created.getLevel() - deleted, 0));
+            }
+        }
+    }
+
     @SneakyThrows
     private Optional<Path> copyHistory(Path reportPath, String prevReportWithHistoryUuid) {
         // History dir in report dir
@@ -158,7 +212,7 @@ public class JpaReportService {
         // If History dir exists
         if (Files.exists(sourceHistory) && Files.isDirectory(sourceHistory)) {
             // Create tmp history dir
-            final Path tmpHistory = reportsPath.resolve("history").resolve(prevReportWithHistoryUuid);
+            final Path tmpHistory = reportsDir.resolve("history").resolve(prevReportWithHistoryUuid);
             FileUtils.moveDirectoryToDirectory(sourceHistory.toFile(), tmpHistory.toFile(), true);
             log.info("Report '{}' history is '{}'", reportPath, tmpHistory);
             return Optional.of(tmpHistory);
@@ -180,7 +234,7 @@ public class JpaReportService {
             executorInfo.setName("Allure server generated " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
         if (StringUtils.isNotBlank(prevReportUrl)) {
-            executorInfo.setReportUrl(prevReportUrl);
+            executorInfo.setReportUrl(prevReportUrl); // Support history moving
         }
         final ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());
         final Path executorPath = resultPathWithInfo.resolve(JSON_FILE_NAME);

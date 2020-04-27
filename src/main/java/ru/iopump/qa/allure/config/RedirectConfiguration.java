@@ -8,9 +8,9 @@ import java.nio.file.Path;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -20,25 +20,19 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
+import ru.iopump.qa.allure.AppCfg;
 
+@RequiredArgsConstructor
 @Configuration
 @Slf4j
 public class RedirectConfiguration implements WebMvcConfigurer {
 
-    public final String swaggerPath;
-    public final String reportsPath;
-
-    public RedirectConfiguration(@Value("${springdoc.swagger-ui.path}") String swaggerPath,
-                                 @Value("${allure.reports.dir:" + REPORT_PATH_DEFAULT + "}") String reportsPath) {
-
-        this.swaggerPath = swaggerPath;
-        this.reportsPath = reportsPath;
-    }
+    private final AppCfg cfg;
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/", swaggerPath); // Will redirect to UI
-        registry.addRedirectViewController("/api", swaggerPath);
+        registry.addRedirectViewController("/", cfg.swaggerPath()); // Will redirect to UI
+        registry.addRedirectViewController("/api", cfg.swaggerPath());
     }
 
     @Override
@@ -50,7 +44,7 @@ public class RedirectConfiguration implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
             .addResourceHandler("/" + REPORT_PATH_DEFAULT + "**")
-            .addResourceLocations("file:" + reportsPath)
+            .addResourceLocations("file:" + cfg.reportsDir())
             .resourceChain(true)
             .addResolver(new PathResourceResolver() {
 

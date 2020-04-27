@@ -3,29 +3,24 @@ package ru.iopump.qa.allure.helper;
 import com.google.common.collect.Maps;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
+import ru.iopump.qa.allure.AppCfg;
 
+@RequiredArgsConstructor
 @Controller
 @Slf4j
 public class ServeRedirectHelper {
-
+    private final AppCfg cfg;
     private final Map<String, String> redirectReportPaths = Maps.newConcurrentMap();
-    @Getter
-    private final String reportsBase;
 
-    public ServeRedirectHelper(@Value("${allure.reports.path:reports/}") String reportsBase) {
-        this.reportsBase = reportsBase;
-    }
-
-    @GetMapping("${allure.reports.path:reports/}" + "**")
+    @GetMapping("${allure.reports.path}**")
     public View reportPathRedirectToUuid(HttpServletRequest request) {
         final String from = handleFrom(request.getServletPath());
         final String to = redirectReportPaths.get(from);
@@ -57,8 +52,8 @@ public class ServeRedirectHelper {
         result = StringUtils.strip(result, "/");
 
         // Add base url if not
-        if (!result.startsWith(reportsBase)) {
-            result = reportsBase + result;
+        if (!result.startsWith(cfg.reportsPath())) {
+            result = cfg.reportsPath() + result;
         }
 
         // Remove '/index.html' if exists

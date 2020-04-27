@@ -17,24 +17,19 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.helper.MoveFileVisitor;
 import ru.iopump.qa.util.FileUtil;
 
+@Getter
 @Component
 @Slf4j
 public class ResultService {
-    private static final String STORAGE_PATH_DEFAULT = "./allure/results";
-    @Getter
     private final Path storagePath;
 
-    public ResultService(@Value("${allure.results.dir:" + STORAGE_PATH_DEFAULT + "}") String storagePath) {
-        this.storagePath = Paths.get(storagePath);
-    }
-
-    public ResultService() {
-        this(STORAGE_PATH_DEFAULT);
+    public ResultService(final AppCfg cfg) {
+        this.storagePath = Paths.get(cfg.resultsDir());
     }
 
     public void deleteAll() throws IOException {

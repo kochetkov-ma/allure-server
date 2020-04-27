@@ -39,7 +39,6 @@ public class AllureReportController {
     private final JpaReportService reportService;
     private final ResultService resultService;
 
-
     private String baseUrl(final HttpServletRequest request) {
         return String.format("%s://%s:%d/", request.getScheme(), request.getServerName(), request.getServerPort());
     }
@@ -76,6 +75,15 @@ public class AllureReportController {
         );
 
         return new ReportResponse(reportEntity.getUuid(), reportEntity.getPath(), reportEntity.getUrl());
+    }
+
+    @Operation(summary = "Clear all history reports")
+    @DeleteMapping("/history")
+    @CacheEvict(value = CACHE, allEntries = true)
+    public Collection<ReportResponse> deleteAllHistory() {
+        return reportService.clearAllHistory().stream()
+            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.getUrl()))
+            .collect(Collectors.toUnmodifiableList());
     }
 
     @Operation(summary = "Delete all reports")

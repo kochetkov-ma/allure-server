@@ -17,5 +17,17 @@ public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
     Collection<ReportEntity> findByPath(@NonNull final String path);
 
     @NonNull
+    Collection<ReportEntity> findByPathOrderByCreatedDateTimeDesc(@NonNull final String path);
+
+    @NonNull
+    Collection<ReportEntity> findByPathAndActiveFalseOrderByCreatedDateTimeDesc(@NonNull final String path);
+
+    @NonNull
     Collection<ReportEntity> findByPathAndActiveTrueOrderByCreatedDateTimeDesc(@NonNull final String path);
+
+    @NonNull
+    Collection<ReportEntity> deleteByActiveFalse();
+
+    @NonNull
+    Collection<ReportEntity> findByActiveTrue();
 }
