@@ -11,7 +11,7 @@ import javax.validation.constraints.Pattern;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import ru.iopump.qa.allure.controller.AllureResultController;
+import ru.iopump.qa.allure.service.PathUtil;
 
 @Data
 @NoArgsConstructor
@@ -25,7 +25,7 @@ public class ReportGenerateRequest {
      * Result UUID collection to generate new report.
      */
     @NotEmpty
-    List<@Pattern(regexp = AllureResultController.UUID_PATTERN) String> results;
+    List<@Pattern(regexp = PathUtil.UUID_PATTERN) String> results;
     /**
      * Delete result after generation.
      */

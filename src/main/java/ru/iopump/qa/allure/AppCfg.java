@@ -25,4 +25,6 @@ public class AppCfg {
     String swaggerPath;
     @Value("${allure.reports.history.level}")
     long maxReportHistoryLevel;
+    @Value("${allure.support.old.format}")
+    boolean supportOldFormat;
 }

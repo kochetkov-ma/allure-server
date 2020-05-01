@@ -32,6 +32,10 @@ public class ResultService {
         this.storagePath = Paths.get(cfg.resultsDir());
     }
 
+    ResultService(final Path storagePath) {
+        this.storagePath = storagePath;
+    }
+
     public void deleteAll() throws IOException {
         FileUtils.deleteDirectory(storagePath.toFile());
     }

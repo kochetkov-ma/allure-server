@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
+import ru.iopump.qa.allure.helper.OldReportsFormatConverterHelper;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
 import ru.iopump.qa.allure.repo.JpaReportRepository;
 
@@ -49,13 +50,15 @@ public class JpaReportService {
     private final ObjectMapper objectMapper;
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
+    private final OldReportsFormatConverterHelper fallback;
     private final JpaReportRepository repository;
 
     public JpaReportService(AppCfg cfg,
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
-                            ServeRedirectHelper redirection
+                            ServeRedirectHelper redirection,
+                            OldReportsFormatConverterHelper fallback
     ) {
         this.reportsDir = Paths.get(cfg.reportsDir());
         this.cfg = cfg;
@@ -63,13 +66,18 @@ public class JpaReportService {
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
+        this.fallback = fallback;
     }
 
     @PostConstruct
-    protected void initRedirection() {
+    protected void initRedirection() throws IOException {
         repository.findAll().forEach(
             e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString())
         );
+        if (cfg.supportOldFormat()) {
+            var old = fallback.convertOldFormat();
+            repository.saveAll(old);
+        }
     }
 
     public Collection<ReportEntity> clearAllHistory() {
@@ -145,7 +153,8 @@ public class JpaReportService {
                 executorInfo,
                 prevEntity
                     .map(e -> baseUrl + str(reportsDir.resolve(e.getUuid().toString())) + "/index.html")
-                    .orElse(null)
+                    .orElse(null),
+                uuid
             );
 
             // Generate new report with history
@@ -222,19 +231,23 @@ public class JpaReportService {
         }
     }
 
-    private void addExecutionInfo(Path resultPathWithInfo, @Nullable ExecutorInfo executor, String prevReportUrl) throws IOException {
+    private void addExecutionInfo(Path resultPathWithInfo, @Nullable ExecutorInfo executor, String prevReportUrl, UUID uuid)
+        throws IOException {
         var executorInfo = Optional.ofNullable(executor).orElse(new ExecutorInfo());
         if (StringUtils.isBlank(executorInfo.getName())) {
             executorInfo.setName("Remote executor");
         }
         if (StringUtils.isBlank(executorInfo.getType())) {
-            executorInfo.setName("CI");
+            executorInfo.setType("CI");
         }
         if (StringUtils.isBlank(executorInfo.getReportName())) {
             executorInfo.setName("Allure server generated " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         }
         if (StringUtils.isNotBlank(prevReportUrl)) {
             executorInfo.setReportUrl(prevReportUrl); // Support history moving
+        }
+        if (StringUtils.isBlank(executorInfo.getReportName())) {
+            executorInfo.setReportName(uuid.toString());
         }
         final ObjectWriter writer = objectMapper.writer(new DefaultPrettyPrinter());
         final Path executorPath = resultPathWithInfo.resolve(JSON_FILE_NAME);
