@@ -13,14 +13,12 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
-import org.springframework.stereotype.Component;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.service.PathUtil;
 import ru.iopump.qa.util.Str;
 
 @Slf4j
-@Component
 public class OldReportsFormatConverterHelper {
 
     private final Path reportsDir;

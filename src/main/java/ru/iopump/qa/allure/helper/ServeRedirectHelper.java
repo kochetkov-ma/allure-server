@@ -48,6 +48,9 @@ public class ServeRedirectHelper {
     private String handleFrom(@NonNull String candidate) {
         String result = candidate;
 
+        // Replace Windows '\'
+        result = result.replaceAll("\\\\", "/");
+
         // Remove all '/'
         result = StringUtils.strip(result, "/");
 

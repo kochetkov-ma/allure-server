@@ -17,6 +17,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.helper.MoveFileVisitor;
@@ -28,8 +29,9 @@ import ru.iopump.qa.util.FileUtil;
 public class ResultService {
     private final Path storagePath;
 
-    public ResultService(final AppCfg cfg) {
-        this.storagePath = Paths.get(cfg.resultsDir());
+    @Autowired
+    public ResultService(AppCfg cfg) {
+        this(Paths.get(cfg.resultsDir()));
     }
 
     ResultService(final Path storagePath) {

@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import lombok.Getter;
@@ -50,15 +51,15 @@ public class JpaReportService {
     private final ObjectMapper objectMapper;
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
-    private final OldReportsFormatConverterHelper fallback;
     private final JpaReportRepository repository;
+
+    private final AtomicBoolean init = new AtomicBoolean();
 
     public JpaReportService(AppCfg cfg,
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
-                            ServeRedirectHelper redirection,
-                            OldReportsFormatConverterHelper fallback
+                            ServeRedirectHelper redirection
     ) {
         this.reportsDir = Paths.get(cfg.reportsDir());
         this.cfg = cfg;
@@ -66,18 +67,13 @@ public class JpaReportService {
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
-        this.fallback = fallback;
     }
 
     @PostConstruct
     protected void initRedirection() throws IOException {
-        repository.findAll().forEach(
+        repository.findByActiveTrue().forEach(
             e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString())
         );
-        if (cfg.supportOldFormat()) {
-            var old = fallback.convertOldFormat();
-            repository.saveAll(old);
-        }
     }
 
     public Collection<ReportEntity> clearAllHistory() {
@@ -112,6 +108,11 @@ public class JpaReportService {
                                  @Nullable ExecutorInfo executorInfo,
                                  String baseUrl
     ) throws IOException {
+        if (cfg.supportOldFormat() && init.compareAndSet(false, true)) {
+            var old = new OldReportsFormatConverterHelper(cfg, baseUrl).convertOldFormat();
+            repository.saveAll(old);
+            old.forEach(e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString()));
+        }
         // Preconditions
         Preconditions.checkArgument(!resultDirs.isEmpty());
         resultDirs.forEach(i -> Preconditions.checkArgument(Files.exists(i), "Result '%s' doesn't exist", i));
