@@ -26,9 +26,6 @@ jacocoTestReport {
         html.enabled true
     }
 }
-check {
-    finalizedBy 'pitest'
-}
 jacocoTestCoverageVerification {
     mustRunAfter jacocoTestReport
     violationRules {
@@ -38,10 +35,4 @@ jacocoTestCoverageVerification {
             }
         }
     }
-}
-////// mutation testing //////
-pitest {
-    verbose.set true
-    timestampedReports = false
-    outputFormats = ['XML', 'HTML']
 }
