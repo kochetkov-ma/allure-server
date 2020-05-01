@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.helper;
+package ru.iopump.qa.allure.helper; //NOPMD
 
 import io.qameta.allure.ConfigurationBuilder;
 import io.qameta.allure.ReportGenerator;

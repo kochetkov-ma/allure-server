@@ -36,5 +36,5 @@ public class ReportEntity {
 
     @Builder.Default
     @PositiveOrZero
-    private long level = 0L;
+    private long level = 0L; //NOPMD
 }

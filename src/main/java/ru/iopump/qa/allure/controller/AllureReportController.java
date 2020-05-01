@@ -96,7 +96,7 @@ public class AllureReportController {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    private void constraintViolationException(HttpServletResponse response) throws IOException {
+    private void constraintViolationException(HttpServletResponse response) throws IOException { //NOPMD
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 }

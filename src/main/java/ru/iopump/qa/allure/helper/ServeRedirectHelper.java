@@ -17,6 +17,8 @@ import ru.iopump.qa.allure.AppCfg;
 @Controller
 @Slf4j
 public class ServeRedirectHelper {
+    public static final String INDEX_HTML = "/index.html";
+    public static final char CHAR = '/';
     private final AppCfg cfg;
     private final Map<String, String> redirectReportPaths = Maps.newConcurrentMap();
 
@@ -31,7 +33,7 @@ public class ServeRedirectHelper {
         }
 
         log.info("Redirect NOT evaluated: '{}'", from);
-        throw new RuntimeException();
+        throw new RuntimeException("Redirect NOT evaluated " + from); //NOPMD
     }
 
     public void mapRequestTo(String urlPath, String staticResourcePath) {
@@ -56,12 +58,12 @@ public class ServeRedirectHelper {
 
         // Add base url if not
         if (!result.startsWith(cfg.reportsPath())) {
-            result = cfg.reportsPath() + result;
+            result = cfg.reportsPath() + result; //NOPMD
         }
 
         // Remove '/index.html' if exists
-        if (result.endsWith("/index.html")) {
-            result = StringUtils.removeEnd(result, "/index.html");
+        if (result.endsWith(INDEX_HTML)) {
+            result = StringUtils.removeEnd(result, INDEX_HTML);
         }
 
         // Must be 'reports/test'
@@ -75,13 +77,13 @@ public class ServeRedirectHelper {
         result = result.replaceAll("\\\\", "/");
 
         // Add first '/' if not
-        if (!result.startsWith("/")) {
-            result = "/" + result;
+        if (result.charAt(0) != CHAR) {
+            result = CHAR + result; //NOPMD
         }
 
         // Add '/index.html' if not
-        if (!result.endsWith("/index.html")) {
-            result = result + "/index.html";
+        if (!result.endsWith(INDEX_HTML)) {
+            result = result + INDEX_HTML; //NOPMD
         }
 
         // Must be '/allure/123456890/index.html'
