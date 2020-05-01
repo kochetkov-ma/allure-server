@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.model.UploadResponse;
+import ru.iopump.qa.allure.service.PathUtil;
 import ru.iopump.qa.allure.service.ResultService;
 import ru.iopump.qa.util.StreamUtil;
 
@@ -41,7 +42,6 @@ import ru.iopump.qa.util.StreamUtil;
 @Validated
 @RequestMapping(path = "/api/result")
 public class AllureResultController {
-    public final static String UUID_PATTERN = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}";
     final static String CACHE = "results";
     private final ResultService resultService;
 
@@ -56,7 +56,7 @@ public class AllureResultController {
 
     @Operation(summary = "Get allure result by uuid")
     @GetMapping(path = "/{uuid}")
-    public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = UUID_PATTERN) String uuid) throws IOException {
+    public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid) throws IOException {
         return StreamUtil.stream(getAllResult())
             .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
             .findFirst()

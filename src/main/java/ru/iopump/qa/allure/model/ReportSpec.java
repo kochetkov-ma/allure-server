@@ -1,13 +1,11 @@
 package ru.iopump.qa.allure.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.base.Joiner;
 import io.qameta.allure.entity.ExecutorInfo;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import javax.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.ArrayUtils;
 
 @Data
 @NoArgsConstructor
@@ -16,13 +14,12 @@ public class ReportSpec {
     String[] path;
     ExecutorInfo executorInfo;
 
-    public static Path toPath(String... paths) {
-        return Paths.get(paths[0], ArrayUtils.subarray(paths, 1, paths.length));
+    public static String toPath(String... paths) {
+        return Joiner.on("/").join(paths);
     }
 
     @JsonIgnore
-    public Path getPathsAsPath() {
+    public String getPathsAsPath() {
         return toPath(path);
     }
-
 }

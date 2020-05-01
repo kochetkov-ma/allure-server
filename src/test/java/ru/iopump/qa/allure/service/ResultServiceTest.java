@@ -18,7 +18,9 @@ public class ResultServiceTest {
 
     @Before
     public void setUp() {
-        resultService = new ResultService(FileUtil.getClassPathMainDir().resolve("test").toString());
+        resultService = new ResultService(
+            FileUtil.getClassPathMainDir().resolve("test")
+        );
     }
 
     @Test

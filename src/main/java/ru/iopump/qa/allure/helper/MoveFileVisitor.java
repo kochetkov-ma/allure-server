@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.service;
+package ru.iopump.qa.allure.helper;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;

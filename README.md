@@ -21,6 +21,7 @@ Works on WebUI is in progress to next major (2.0.0) version.
 
 ## Get Started
 ### Docker
+There is a docker image on Docker Hub: [allure-server](https://hub.docker.com/r/kochetkovma/allure-server)
 Running as Docker container look at: [readme](https://hub.docker.com/r/kochetkovma/allure-server)
 ### Jar 
 Get the latest release [Releases](https://github.com/kochetkov-ma/allure-server/releases)   
@@ -97,5 +98,12 @@ Clear results or reports:
 curl --location --request DELETE 'http://localhost:8080/api/result'
 curl --location --request DELETE 'http://localhost:8080/api/report'
 ```
+### Special options
+From version `1.2.0` all reports manage with Database and have unic uuids.
+Old format is no longer supported, but you can convert reports created before 1.2.0 - just set 'allure.support.old.format' to 'true' in
+Spring Configutaion:
+- system vars (JVM option) `-Dallure.support.old.format=true`
+- environment vars `export allure.support.old.format=true` 
+- in docker environment vars `-e allure.support.old.format=true`
 
 ### Work on the documentation in progress ...
