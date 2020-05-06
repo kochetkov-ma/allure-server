@@ -91,6 +91,11 @@ public class JpaReportService {
         return entitiesInactive;
     }
 
+    public void internalDeleteByUUID(UUID uuid) throws IOException {
+        repository.deleteById(uuid);
+        FileUtils.deleteDirectory(reportsDir.resolve(uuid.toString()).toFile());
+    }
+
     public Collection<ReportEntity> deleteAll() throws IOException {
         var res = getAll();
         repository.deleteAll();

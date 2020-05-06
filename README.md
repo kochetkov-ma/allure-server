@@ -106,4 +106,13 @@ Spring Configutaion:
 - environment vars `export allure.support.old.format=true` 
 - in docker environment vars `-e allure.support.old.format=true`
 
-### Work on the documentation in progress ...
+### GUI
+Allure Server provide WEB UI to access to reports and results.  
+By default WEB UI is available on path `/ui` and there is redirection from `/` to `/ui`   
+Example: `http://localhost:8080/ui`  
+WEB UI provides the same functions as a REST API  
+WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)  
+
+*Main Page*
+![alt text](ui-example.png)  
+

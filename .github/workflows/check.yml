@@ -2,8 +2,12 @@ name: Build / Test / Check
 
 on: [push, pull_request]
 
+env:
+  NODE_VERSION: 12.x
+
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Fast checkout
@@ -14,8 +18,12 @@ jobs:
           java-version: '11'
           java-package: jdk
           architecture: x64
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
       - name: Build with Gradle
         uses: eskatos/gradle-command-action@v1
         with:
           gradle-version: current
-          arguments: '--stacktrace check'
+          arguments: '--stacktrace --info build'

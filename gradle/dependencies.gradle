@@ -3,10 +3,10 @@ repositories {
 }
 ext {
     qaLibVersion = '1.1.0'
-    vaadinVersion = '14.1.25'
+    vaadinVersion = '14.1.27'
     junit4Version = '4.13'
     mockitoVersion = '3.3.3'
-    assertjVersion = '3.15.0'
+    assertjVersion = '3.16.0'
     slf4jVersion = '1.7.30'
     commonsLangVersion = '3.9'
     classgraphVersion = '4.8.65'
@@ -14,15 +14,22 @@ ext {
     guavaVersion = '29.0-jre'
     logbackVersion = '1.2.3'
     apacheIoVersion = '2.6'
-    openApiVersion = '1.3.4'
+    openApiVersion = '1.3.9'
     allureVersion = '2.13.3'
     h2Version = '1.4.200'
+    joorVersion = '0.9.13'
 }
-//dependencyManagement {
-//    imports {
-//        mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
-//    }
-//}
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+}
+dependencyManagement {
+    imports {
+        mavenBom "com.vaadin:vaadin-bom:${vaadinVersion}"
+    }
+}
 dependencies {
     /* Allure Generator */
     implementation "io.qameta.allure:allure-plugin-api:$allureVersion"
@@ -36,6 +43,19 @@ dependencies {
     /* Spring Boot */
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    implementation "org.jooq:joor:$joorVersion"
+
+    implementation('com.vaadin:vaadin-spring-boot-starter') {
+        ["com.vaadin.webjar",
+         "org.webjars.bowergithub.insites",
+         "org.webjars.bowergithub.polymer",
+         "org.webjars.bowergithub.polymerelements",
+         "org.webjars.bowergithub.vaadin",
+         "org.webjars.bowergithub.webcomponents"].forEach { group -> exclude(group: group) }
+    }
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
     /* Reflection lib */
     // implementation "org.jooq:joor:$joorVersion"
     /* Classpath scanner */

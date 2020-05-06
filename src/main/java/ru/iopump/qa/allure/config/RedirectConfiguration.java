@@ -31,8 +31,9 @@ public class RedirectConfiguration implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/", cfg.swaggerPath()); // Will redirect to UI
+        registry.addRedirectViewController("/swagger", cfg.swaggerPath()); // Will redirect to UI
         registry.addRedirectViewController("/api", cfg.swaggerPath());
+        registry.addRedirectViewController("/", "/ui"); // To Vaadin UI
     }
 
     @Override

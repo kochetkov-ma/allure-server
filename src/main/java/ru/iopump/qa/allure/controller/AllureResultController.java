@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
@@ -15,6 +18,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -54,6 +58,15 @@ public class AllureResultController {
         return res;
     }
 
+    @Operation(summary = "Delete allure result by uuid")
+    @DeleteMapping(path = "/{uuid}")
+    @CacheEvict(value = CACHE, allEntries = true)
+    public ResultResponse deleteResult(
+        @PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid
+    ) throws IOException {
+        return resultService.internalDeleteByUUID(uuid);
+    }
+
     @Operation(summary = "Get allure result by uuid")
     @GetMapping(path = "/{uuid}")
     public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid) throws IOException {
@@ -68,13 +81,18 @@ public class AllureResultController {
     @Cacheable(CACHE) // caching results
     public Collection<ResultResponse> getAllResult() throws IOException {
         return StreamUtil.stream(resultService.getAll()).map(p -> {
-            long size;
+            long size = FileUtils.sizeOfDirectory(p.toFile()) / 1024;
+            LocalDateTime localDateTime = LocalDateTime.MIN;
             try {
-                size = Files.walk(p, 1).skip(1).count();
+                BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
+                localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneId.systemDefault());
             } catch (IOException e) {
-                size = Long.MIN_VALUE;
+                if (log.isErrorEnabled()) {
+                    log.error("Error getting created date time of " + p, e);
+                }
             }
-            return ResultResponse.builder().uuid(p.getFileName().toString()).size(size).build();
+
+            return ResultResponse.builder().uuid(p.getFileName().toString()).created(localDateTime).size(size).build();
 
         }).collect(Collectors.toUnmodifiableSet());
     }
@@ -99,7 +117,7 @@ public class AllureResultController {
 
         // Check Content-Type
         if (StringUtils.isNotBlank(contentType)) {
-            Preconditions.checkArgument("application/zip".equals(contentType),
+            Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
                 "Content-Type must be '%s' but '%s'", "application/zip", contentType);
         }
 
