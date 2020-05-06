@@ -2,6 +2,9 @@ name: Build / Test / Check
 
 on: [push, pull_request]
 
+env:
+  NODE_VERSION: 12.x
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,6 +17,10 @@ jobs:
           java-version: '11'
           java-package: jdk
           architecture: x64
+      - name: Use Node.js $NODE_VERSION
+        uses: actions/setup-node@v1
+          with:
+            node-version: $NODE_VERSION
       - name: Build with Gradle
         uses: eskatos/gradle-command-action@v1
         with:
