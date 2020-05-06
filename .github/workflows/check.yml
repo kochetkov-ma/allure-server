@@ -7,6 +7,7 @@ env:
 
 jobs:
   build:
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Fast checkout
@@ -25,4 +26,4 @@ jobs:
         uses: eskatos/gradle-command-action@v1
         with:
           gradle-version: current
-          arguments: '--stacktrace check build'
+          arguments: '--stacktrace --info build'
