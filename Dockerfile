@@ -1,6 +1,6 @@
 FROM gradle:jdk11 as build
 COPY . .
-RUN gradle -Pversion=docker --no-daemon bootJar
+RUN gradle -Pversion=docker --no-daemon -PnodeVersion=12.16.3 vaadinPrepareNode bootJar
 
 FROM openjdk:11-jre-slim as production
 COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-server-docker.jar
