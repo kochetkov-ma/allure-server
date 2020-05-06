@@ -19,8 +19,8 @@ jobs:
           architecture: x64
       - name: Use Node.js $NODE_VERSION
         uses: actions/setup-node@v1
-          with:
-            node-version: $NODE_VERSION
+        with:
+          node-version: $NODE_VERSION
       - name: Build with Gradle
         uses: eskatos/gradle-command-action@v1
         with:
