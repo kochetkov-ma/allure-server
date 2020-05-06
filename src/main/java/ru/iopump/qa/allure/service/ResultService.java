@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.service;
 
+import static java.nio.file.Files.isDirectory;
+
 import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,6 +9,9 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
@@ -21,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.helper.MoveFileVisitor;
+import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.util.FileUtil;
 
 @Getter
@@ -38,6 +44,24 @@ public class ResultService {
         this.storagePath = storagePath;
     }
 
+    public ResultResponse internalDeleteByUUID(String uuid) throws IOException {
+        var p = storagePath.resolve(uuid);
+        long size = FileUtils.sizeOfDirectory(p.toFile()) / 1024;
+        LocalDateTime localDateTime = LocalDateTime.MIN;
+        try {
+            BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
+            localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneId.systemDefault());
+        } catch (IOException e) {
+            if (log.isErrorEnabled()) {
+                log.error("Error getting created date time of " + p, e);
+            }
+        }
+        var res = ResultResponse.builder().uuid(p.getFileName().toString()).created(localDateTime).size(size).build();
+
+        FileUtils.deleteDirectory(storagePath.resolve(uuid).toFile());
+        return res;
+    }
+
     public void deleteAll() throws IOException {
         FileUtils.deleteDirectory(storagePath.toFile());
     }
@@ -46,7 +70,9 @@ public class ResultService {
         if (!Files.exists(storagePath)) {
             return Collections.emptySet();
         }
-        return Files.walk(storagePath, 1).skip(1).collect(Collectors.toUnmodifiableSet());
+        return Files.walk(storagePath, 1).skip(1)
+            .filter(p -> isDirectory(p))
+            .collect(Collectors.toUnmodifiableSet());
     }
 
     /**
@@ -120,7 +146,7 @@ public class ResultService {
         final Path entryPath = Paths.get(zipEntry.getName());
         final Path destinationFileOrDir = unzipTo.resolve(entryPath);
 
-        if (Files.isDirectory(destinationFileOrDir)) {
+        if (isDirectory(destinationFileOrDir)) {
             FileUtil.createDir(destinationFileOrDir);
         } else {
             FileUtil.createFile(destinationFileOrDir);

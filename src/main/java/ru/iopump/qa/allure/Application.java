@@ -1,5 +1,6 @@
 package ru.iopump.qa.allure;
 
+import com.vaadin.flow.spring.annotation.EnableVaadin;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableCaching
 @EnableTransactionManagement
 @EnableConfigurationProperties(AppCfg.class)
+@EnableVaadin
 public class Application { //NOPMD
 
     public static void main(String[] args) { //NOPMD

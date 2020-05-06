@@ -6,11 +6,13 @@ plugins {
     id 'checkstyle'
 
     id 'com.github.spotbugs' version '4.0.5'
-    id 'io.freefair.lombok' version '5.0.0'
+    id 'io.freefair.lombok' version '5.0.1'
     id 'com.github.ben-manes.versions' version '0.28.0'
 
     id 'org.springframework.boot' version '2.2.6.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+
+    id "com.vaadin" version "0.6.0"
 }
 apply from: './gradle/dependencies.gradle'
 apply from: './gradle/checking.gradle'
@@ -36,4 +38,8 @@ java {
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
     gradleVersion = '6.3'
+}
+vaadin {
+    productionMode = true
+    // nodeVersion = "12.16.3"
 }
