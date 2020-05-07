@@ -1,15 +1,20 @@
 package ru.iopump.qa.allure.gui.component;
 
+import com.google.common.collect.Maps;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.grid.HeaderRow;
 import com.vaadin.flow.component.html.Anchor;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.Getter;
@@ -19,11 +24,14 @@ import ru.iopump.qa.util.Str;
 
 public class FilteredGrid<T> {
     private final static String GRID_CLASS = "report-grid";
+    public static final String FONT_FAMILY = "font-family";
+    public static final String GERMANIA_ONE = "Germania One";
 
     private final ListDataProvider<T> dataProvider;
     @Getter
     private final Grid<T> grid;
     private final List<Col<T>> columnSpecList;
+    private final Map<Grid.Column<T>, Supplier<String>> dynamicFooter = Maps.newHashMap();
 
     public FilteredGrid(
         @NonNull final Class<T> rowClass,
@@ -34,8 +42,12 @@ public class FilteredGrid<T> {
         this.grid = new Grid<>(rowClass, false);
         this.columnSpecList = columnSpecList;
 
+        grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);
         baseConfigurationGrid();
         filterConfiguration();
+
+        updateFooters(); // Init footers
+        dataProvider.addDataProviderListener(event -> updateFooters()); // Update footers on change
     }
 
     public FilteredGrid<T> addTo(HasComponents parent) {
@@ -66,7 +78,6 @@ public class FilteredGrid<T> {
         filterField.setValueChangeMode(ValueChangeMode.LAZY);
         filterField.setClearButtonVisible(true);
         filterField.setPlaceholder("Filter contains ...");
-        // filterField.setSizeFull();
 
         headerCell.setComponent(filterField);
     }
@@ -81,8 +92,8 @@ public class FilteredGrid<T> {
         final List<Grid.Column<T>> cols = columnSpecList.stream()
             .map(this::addColumn)
             .collect(Collectors.toUnmodifiableList());
-        cols.stream().findFirst().ifPresent(c -> c.setFooter("Count: " + dataProvider.getItems().size()));
-
+        cols.stream().findFirst()
+            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + dataProvider.getItems().size()));
     }
 
     protected Grid.Column<T> addColumn(Col<T> columnSpec) {
@@ -90,17 +101,20 @@ public class FilteredGrid<T> {
 
         switch (columnSpec.getType()) {
             case LINK:
-                column = grid.addColumn(linkRenderer(columnSpec));
+                column = grid.addColumn(link(columnSpec));
                 break;
             case NUMBER:
-                column = grid.addColumn(linkRenderer(columnSpec));
-                long amount = dataProvider.getItems().stream()
-                    .mapToLong(item -> Long.parseLong(Str.toStr(columnSpec.getValue().apply(item))))
-                    .sum();
-                column.setFooter("Total: " + amount);
+                column = grid.addColumn(text(columnSpec));
+                final Supplier<String> footer = () -> {
+                    long amount = dataProvider.getItems().stream()
+                        .mapToLong(item -> Long.parseLong(Str.toStr(columnSpec.getValue().apply(item))))
+                        .sum();
+                    return "Total: " + amount;
+                };
+                dynamicFooter.put(column, footer);
                 break;
             default:
-                column = grid.addColumn(columnSpec.getValue());
+                column = grid.addColumn(text(columnSpec));
                 break;
         }
 
@@ -111,10 +125,25 @@ public class FilteredGrid<T> {
         return column;
     }
 
-    private Renderer<T> linkRenderer(Col<T> columnSpec) {
+    private Renderer<T> text(Col<T> columnSpec) {
+        return new ComponentRenderer<>(row -> {
+            var value = Str.toStr(columnSpec.getValue().apply(row));
+            var res = new Span(value);
+            res.getStyle().set(FONT_FAMILY, GERMANIA_ONE);
+            return res;
+        });
+    }
+
+    private Renderer<T> link(Col<T> columnSpec) {
         return new ComponentRenderer<>(row -> {
             var link = Str.toStr(columnSpec.getValue().apply(row));
-            return new Anchor(link, link);
+            var res = new Anchor(link, link);
+            res.getStyle().set(FONT_FAMILY, GERMANIA_ONE);
+            return res;
         });
+    }
+
+    private void updateFooters() {
+        dynamicFooter.forEach((col, sup) -> col.setFooter(sup.get()));
     }
 }

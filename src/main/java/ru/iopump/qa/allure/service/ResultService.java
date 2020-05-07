@@ -87,8 +87,8 @@ public class ResultService {
     public Path unzipAndStore(@NonNull InputStream archiveInputStream) throws IOException {
         Preconditions.checkArgument(archiveInputStream.available() > 0,
             "Passed InputStream is empty");
-        final Path tmpResultDirectory;
-        final Path resultDirectory;
+        Path tmpResultDirectory = null;
+        Path resultDirectory = null;
         try (InputStream io = archiveInputStream) {
             final String uuid = UUID.randomUUID().toString();
             tmpResultDirectory = storagePath.resolve(uuid + "_tmp");
@@ -96,6 +96,16 @@ public class ResultService {
             Files.createDirectories(resultDirectory);
             checkAndUnzipTo(io, tmpResultDirectory);
             move(tmpResultDirectory, resultDirectory);
+        } catch (Exception ex) { //NOPMD
+            if (resultDirectory != null) {
+                // Clean on error
+                FileUtils.deleteQuietly(resultDirectory.toFile());
+            }
+            if (tmpResultDirectory != null) {
+                // Clean on error
+                FileUtils.deleteQuietly(tmpResultDirectory.toFile());
+            }
+            throw ex; // And re-throw
         }
         log.info("Archive content saved to '{}'", resultDirectory);
         return resultDirectory;

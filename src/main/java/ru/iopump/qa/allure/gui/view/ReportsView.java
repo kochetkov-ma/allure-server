@@ -15,7 +15,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
@@ -61,13 +60,14 @@ public class ReportsView extends VerticalLayout {
                     try {
                         jpaReportService.internalDeleteByUUID(uuid);
                         Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                    } catch (IOException e) {
+                    } catch (Exception e) { //NOPMD
                         Notification.show("Deleting error: " + e.getLocalizedMessage(),
                             5000,
                             Notification.Position.TOP_START);
                         log.error("Deleting error", e);
                     }
                 }
+                reports.getGrid().deselectAll();
                 reports.getGrid().getDataProvider().refreshAll();
             });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
