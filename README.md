@@ -107,6 +107,8 @@ Spring Configutaion:
 - in docker environment vars `-e allure.support.old.format=true`
 
 ### GUI
+##### See example on [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
+
 Allure Server provide WEB UI to access to reports and results.  
 By default WEB UI is available on path `/ui` and there is redirection from `/` to `/ui`   
 Example: `http://localhost:8080/ui`  

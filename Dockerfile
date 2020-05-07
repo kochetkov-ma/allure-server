@@ -5,6 +5,6 @@ RUN gradle -Pversion=docker --no-daemon -PnodeVersion=12.16.3 vaadinPrepareNode 
 FROM openjdk:11-jre-slim as production
 COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-server-docker.jar
 # Set port
-EXPOSE 8080
+EXPOSE ${PORT:-8080}
 # Run application
-ENTRYPOINT ["java","-jar","-Dspring.profiles.active=${PROFILE:-default}","/allure-server-docker.jar"]
+ENTRYPOINT ["java","-jar","-XX:+UseContainerSupport","-Dspring.profiles.active=${PROFILE:default}","/allure-server-docker.jar"]
