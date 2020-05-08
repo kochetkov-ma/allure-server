@@ -33,6 +33,7 @@ public class ReportGenerateDialog extends Dialog {
 
     private final Label info = new Label();
     private final Label error = new Label();
+    @Getter
     private final FormPayload payload;
     private final Button generate = new Button("Generate", e -> onClickGenerate());
     private final Button close = new Button("Cancel", e -> onClickCloseAndDiscard());
@@ -96,7 +97,6 @@ public class ReportGenerateDialog extends Dialog {
 
     private void onClickOpenAndInit() {
         open();
-        payload.reset();
         cleanInfo();
     }
 
@@ -121,7 +121,7 @@ public class ReportGenerateDialog extends Dialog {
         add(title, form, info, error);
     }
 
-    private static class FormPayload implements Closeable {
+    public static class FormPayload implements Closeable {
         @PropertyId("resultUuid")
         private final TextField resultUuid = new TextField("Result uuid");
         @PropertyId("path")
@@ -162,7 +162,6 @@ public class ReportGenerateDialog extends Dialog {
 
         private void create() {
             binder.bindInstanceFields(this);
-            reset();
         }
 
         private void visitForm(final FormLayout form) {

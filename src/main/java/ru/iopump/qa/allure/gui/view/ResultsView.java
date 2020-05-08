@@ -27,7 +27,9 @@ import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
 import ru.iopump.qa.allure.gui.component.ReportGenerateDialog;
 import ru.iopump.qa.allure.gui.component.ResultUploadDialog;
+import ru.iopump.qa.allure.gui.dto.GenerateDto;
 import ru.iopump.qa.allure.model.ResultResponse;
+import ru.iopump.qa.util.StreamUtil;
 
 @Tag("results-view")
 @PageTitle("Results | " + ALLURE_SERVER)
@@ -86,6 +88,15 @@ public class ResultsView extends VerticalLayout {
                 results.getGrid().getDataProvider().refreshAll();
             });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+        // Add first selected item on open generation dialog or empty bind
+        generateDialog.addOpenedChangeListener(event -> {
+            StreamUtil.stream(results.getGrid().getSelectedItems()).findFirst()
+                .ifPresentOrElse(resultResponse -> generateDialog.getPayload().getBinder()
+                        .setBean(new GenerateDto(resultResponse.getUuid(), null, null, false)),
+                    () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
+                );
+        });
     }
 
     //// PRIVATE ////
