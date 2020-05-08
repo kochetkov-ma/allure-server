@@ -12,6 +12,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
+import com.vaadin.flow.function.ValueProvider;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -122,6 +123,8 @@ public class FilteredGrid<T> {
             .setHeader(columnSpec.getName())
             .setAutoWidth(true)
             .setSortable(columnSpec.isSortable());
+        //noinspection unchecked,rawtypes
+        column.setComparator((ValueProvider) columnSpec.getValue());
         return column;
     }
 
