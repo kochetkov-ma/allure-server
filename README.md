@@ -19,6 +19,8 @@ Just use Spring Boot Jar from Release Page.
    
 Works on WebUI is in progress to next major (2.0.0) version.
 
+Example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
+
 ## Get Started
 ### Docker
 There is a docker image on Docker Hub: [allure-server](https://hub.docker.com/r/kochetkovma/allure-server)
@@ -107,7 +109,7 @@ Spring Configutaion:
 - in docker environment vars `-e allure.support.old.format=true`
 
 ### GUI
-##### See example on [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
+##### See example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
 
 Allure Server provide WEB UI to access to reports and results.  
 By default WEB UI is available on path `/ui` and there is redirection from `/` to `/ui`   
