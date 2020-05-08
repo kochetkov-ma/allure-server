@@ -13,13 +13,13 @@ Allure Portal (Allure Report Server)
 ## About
 Allure server for store / aggregate / manage Allure results and generate / manage Allure Reports.
 
-There is only API in first major version with Swagger(OpenAPI) Description.
+There is simple API with Swagger(OpenAPI) Description.
 
 Just use Spring Boot Jar from Release Page.
    
-Works on WebUI is in progress to next major (2.0.0) version.
+Web GUI has been available from Release v2.0.0 
 
-Example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
+Example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/) _(unstable)_
 
 ## Get Started
 ### Docker
