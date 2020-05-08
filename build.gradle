@@ -41,5 +41,4 @@ wrapper {
 }
 vaadin {
     productionMode = true
-    // nodeVersion = "12.16.3"
 }
