@@ -3,7 +3,7 @@ repositories {
 }
 ext {
     qaLibVersion = '1.1.0'
-    vaadinVersion = '14.1.27'
+    vaadinVersion = '14.2.0'
     junit4Version = '4.13'
     mockitoVersion = '3.3.3'
     assertjVersion = '3.16.0'
@@ -43,6 +43,7 @@ dependencies {
     /* Spring Boot */
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     implementation "org.jooq:joor:$joorVersion"
 

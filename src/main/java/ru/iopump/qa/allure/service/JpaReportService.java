@@ -70,7 +70,7 @@ public class JpaReportService {
     }
 
     @PostConstruct
-    protected void initRedirection() throws IOException {
+    protected void initRedirection() {
         repository.findByActiveTrue().forEach(
             e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString())
         );
@@ -114,7 +114,7 @@ public class JpaReportService {
                                  String baseUrl
     ) throws IOException {
         if (cfg.supportOldFormat() && init.compareAndSet(false, true)) {
-            var old = new OldReportsFormatConverterHelper(cfg, baseUrl).convertOldFormat();
+            var old = new OldReportsFormatConverterHelper(cfg).convertOldFormat();
             repository.saveAll(old);
             old.forEach(e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString()));
         }
@@ -129,15 +129,6 @@ public class JpaReportService {
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
             .stream()
             .findFirst();
-
-        // New report entity
-        final ReportEntity newEntity = ReportEntity.builder()
-            .uuid(uuid)
-            .path(reportPath)
-            .createdDateTime(LocalDateTime.now())
-            .url(baseUrl + cfg.reportsPath() + reportPath)
-            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
-            .active(true).build();
 
         // New uuid directory
         final Path destination = reportsDir.resolve(uuid.toString());
@@ -157,14 +148,13 @@ public class JpaReportService {
             addExecutionInfo(
                 resultDirs.get(0),
                 executorInfo,
-                prevEntity
-                    .map(e -> baseUrl + str(reportsDir.resolve(e.getUuid().toString())) + "/index.html")
-                    .orElse(null),
+                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
                 uuid
             );
 
             // Generate new report with history
             reportGenerator.generate(destination, resultDirsToGenerate);
+
             log.info("Report '{}' generated according to results '{}'", destination, resultDirsToGenerate);
         } finally {
 
@@ -174,6 +164,17 @@ public class JpaReportService {
                 resultDirs.forEach(r -> deleteQuietly(r.toFile()));
             }
         }
+
+        // New report entity
+        final ReportEntity newEntity = ReportEntity.builder()
+            .uuid(uuid)
+            .path(reportPath)
+            .createdDateTime(LocalDateTime.now())
+            .url(cfg.reportsPath() + reportPath)
+            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+            .active(true)
+            .size(ReportEntity.sizeKB(destination))
+            .build();
 
         // Add request mapping
         redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
@@ -237,9 +238,14 @@ public class JpaReportService {
         }
     }
 
-    private void addExecutionInfo(Path resultPathWithInfo, @Nullable ExecutorInfo executor, String prevReportUrl, UUID uuid)
-        throws IOException {
+    private void addExecutionInfo(Path resultPathWithInfo,
+                                  ExecutorInfo executor,
+                                  String reportUrl,
+                                  UUID uuid) throws IOException {
+
         var executorInfo = Optional.ofNullable(executor).orElse(new ExecutorInfo());
+        executorInfo.setReportUrl(reportUrl);
+
         if (StringUtils.isBlank(executorInfo.getName())) {
             executorInfo.setName("Remote executor");
         }
@@ -248,9 +254,6 @@ public class JpaReportService {
         }
         if (StringUtils.isBlank(executorInfo.getReportName())) {
             executorInfo.setName("Allure server generated " + LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        }
-        if (StringUtils.isNotBlank(prevReportUrl)) {
-            executorInfo.setReportUrl(prevReportUrl); // Support history moving
         }
         if (StringUtils.isBlank(executorInfo.getReportName())) {
             executorInfo.setReportName(uuid.toString());

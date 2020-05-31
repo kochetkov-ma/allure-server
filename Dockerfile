@@ -7,4 +7,5 @@ COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-serve
 # Set port
 EXPOSE ${PORT:-8080}
 # Run application
-ENTRYPOINT ["java","-jar","-XX:+UseContainerSupport","-Dspring.profiles.active=${PROFILE:default}","/allure-server-docker.jar"]
+ENV JAVA_OPTS="-Xmx256m -Xmx2048m"
+ENTRYPOINT ["java","-jar","-XX:+UseContainerSupport", "-Dspring.profiles.active=${PROFILE:default}","/allure-server-docker.jar"]

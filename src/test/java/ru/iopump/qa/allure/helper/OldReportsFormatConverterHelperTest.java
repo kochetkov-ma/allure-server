@@ -13,9 +13,7 @@ public class OldReportsFormatConverterHelperTest {
     @Test
     public void convertFirstOldFormat() throws IOException {
         Resource resource = new ClassPathResource("old/allure/reports");
-        OldReportsFormatConverterHelper helper = new OldReportsFormatConverterHelper(resource.getFile().toPath(),
-            "reports",
-            "http://localhost");
+        OldReportsFormatConverterHelper helper = new OldReportsFormatConverterHelper(resource.getFile().toPath(), "reports");
         Collection<ReportEntity> collection = helper.convertOldFormat();
         Assertions.assertThat(collection).hasSizeGreaterThanOrEqualTo(4);
 
@@ -25,14 +23,11 @@ public class OldReportsFormatConverterHelperTest {
     public void hasOldFormatReports() throws IOException {
         Resource resource = new ClassPathResource("old/allure/reports");
         OldReportsFormatConverterHelper helper = new OldReportsFormatConverterHelper(resource.getFile().toPath(),
-            "reports",
-            "http://localhost");
+            "reports");
         Assertions.assertThat(helper.hasOldFormatReports()).isTrue();
 
         resource = new ClassPathResource("new");
-        helper = new OldReportsFormatConverterHelper(resource.getFile().toPath(),
-            "reports",
-            "http://localhost");
+        helper = new OldReportsFormatConverterHelper(resource.getFile().toPath(), "reports");
         Assertions.assertThat(helper.hasOldFormatReports()).isFalse();
 
     }

@@ -9,6 +9,7 @@ import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.ListDataProvider;
+import com.vaadin.flow.data.provider.Query;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
@@ -24,10 +25,9 @@ import org.apache.commons.lang3.StringUtils;
 import ru.iopump.qa.util.Str;
 
 public class FilteredGrid<T> {
-    private final static String GRID_CLASS = "report-grid";
     public static final String FONT_FAMILY = "font-family";
     public static final String GERMANIA_ONE = "Germania One";
-
+    private final static String GRID_CLASS = "report-grid";
     private final ListDataProvider<T> dataProvider;
     @Getter
     private final Grid<T> grid;
@@ -56,47 +56,6 @@ public class FilteredGrid<T> {
         return this;
     }
 
-    //// PRIVATE ////
-    private void filterConfiguration() {
-        var headerCells = grid.appendHeaderRow().getCells();
-
-        IntStream.range(0, headerCells.size())
-            .forEach(index -> {
-                final Col<T> spec = columnSpecList.get(index);
-                HeaderRow.HeaderCell headerCell = headerCells.get(index);
-                addFilter(spec, headerCell);
-            });
-    }
-
-    private void addFilter(Col<T> spec, HeaderRow.HeaderCell headerCell) {
-        final TextField filterField = new TextField();
-
-        filterField.addValueChangeListener(event -> dataProvider.addFilter(
-            row -> {
-                var value = spec.getValue().apply(row);
-                return StringUtils.containsIgnoreCase(Str.toStr(value), filterField.getValue());
-            }));
-        filterField.setValueChangeMode(ValueChangeMode.LAZY);
-        filterField.setClearButtonVisible(true);
-        filterField.setPlaceholder("Filter contains ...");
-
-        headerCell.setComponent(filterField);
-    }
-
-    private void baseConfigurationGrid() {
-        grid.addClassName(GRID_CLASS);
-        grid.setDataProvider(dataProvider);
-        grid.removeAllColumns();
-        grid.setHeightByRows(true);
-        grid.setSelectionMode(Grid.SelectionMode.MULTI);
-
-        final List<Grid.Column<T>> cols = columnSpecList.stream()
-            .map(this::addColumn)
-            .collect(Collectors.toUnmodifiableList());
-        cols.stream().findFirst()
-            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + dataProvider.getItems().size()));
-    }
-
     protected Grid.Column<T> addColumn(Col<T> columnSpec) {
         final Grid.Column<T> column;
 
@@ -107,7 +66,7 @@ public class FilteredGrid<T> {
             case NUMBER:
                 column = grid.addColumn(text(columnSpec));
                 final Supplier<String> footer = () -> {
-                    long amount = dataProvider.getItems().stream()
+                    long amount = dataProvider.fetch(new Query<>(dataProvider.getFilter()))
                         .mapToLong(item -> Long.parseLong(Str.toStr(columnSpec.getValue().apply(item))))
                         .sum();
                     return "Total: " + amount;
@@ -126,6 +85,53 @@ public class FilteredGrid<T> {
         //noinspection unchecked,rawtypes
         column.setComparator((ValueProvider) columnSpec.getValue());
         return column;
+    }
+
+    //region Private methods
+    //// PRIVATE ////
+    private void filterConfiguration() {
+        var headerCells = grid.appendHeaderRow().getCells();
+
+        IntStream.range(0, headerCells.size())
+            .forEach(index -> {
+                final Col<T> spec = columnSpecList.get(index);
+                HeaderRow.HeaderCell headerCell = headerCells.get(index);
+                addFilter(spec, headerCell);
+            });
+    }
+
+    private void addFilter(Col<T> spec, HeaderRow.HeaderCell headerCell) {
+        final TextField filterField = new TextField();
+        filterField.addValueChangeListener(event -> {
+            dataProvider.addFilter(
+                row -> {
+                    var value = spec.getValue().apply(row);
+                    return StringUtils.containsIgnoreCase(Str.toStr(value), filterField.getValue());
+                });
+            updateFooters();
+        });
+        filterField.setValueChangeMode(ValueChangeMode.LAZY);
+        filterField.setValueChangeTimeout(1000);
+        filterField.setClearButtonVisible(true);
+        filterField.setPlaceholder("Filter contains ...");
+
+        headerCell.setComponent(filterField);
+    }
+
+    private void baseConfigurationGrid() {
+        grid.addClassName(GRID_CLASS);
+        grid.setDataProvider(dataProvider);
+        grid.removeAllColumns();
+        grid.setHeightByRows(true);
+        grid.setSelectionMode(Grid.SelectionMode.MULTI);
+
+        final List<Grid.Column<T>> cols = columnSpecList.stream()
+            .map(this::addColumn)
+            .collect(Collectors.toUnmodifiableList());
+        cols.stream().findFirst()
+            .ifPresent(c -> dynamicFooter.put(c, () -> "Count: " + dataProvider
+                .size(new Query<>(dataProvider.getFilter())))
+            );
     }
 
     private Renderer<T> text(Col<T> columnSpec) {
@@ -150,4 +156,5 @@ public class FilteredGrid<T> {
     private void updateFooters() {
         dynamicFooter.forEach((col, sup) -> col.setFooter(sup.get()));
     }
+//endregion
 }

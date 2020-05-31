@@ -108,6 +108,17 @@ Spring Configutaion:
 - environment vars `export allure.support.old.format=true` 
 - in docker environment vars `-e allure.support.old.format=true`
 
+| ENV                          	| TYPE    	| DEFAULT                  	| DESCRIPTION                                                                   	|
+|------------------------------	|---------	|--------------------------	|-------------------------------------------------------------------------------	|
+| spring.datasource.url        	| string  	| jdbc:h2:file:./allure/db 	| H2 jdbc connection string. By default DB file will be created/read on startup 	|
+| PORT                         	| int     	| 8080                     	| Tomcat http port                                                              	|
+| allure.results.dir           	| string  	| allure/results/          	| Unzipped results store                                                        	|
+| allure.reports.dir           	| string  	| allure/reports/          	| Generated results store                                                       	|
+| allure.reports.path          	| string  	| reports/                 	| Url path (after base url) to acccess to reports                               	|
+| allure.reports.history.level 	| int     	| 20                       	| Number of reports in history                                                  	|
+| allure.support.old.format    	| boolean 	| false                    	| Auto-convert old format reports to new and add to db                          	|
+| JAVA_OPTS    	                | string 	| -Xmx256m -Xmx2048m     	| Java memory options for container                                              	|
+
 ### GUI
 ##### See example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
 

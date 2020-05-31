@@ -23,16 +23,14 @@ public class OldReportsFormatConverterHelper {
 
     private final Path reportsDir;
     private final String reportsPath;
-    private final String baseUrl;
 
-    public OldReportsFormatConverterHelper(AppCfg cfg, String baseUrl) {
-        this(Paths.get(cfg.reportsDir()), cfg.reportsPath(), baseUrl);
+    public OldReportsFormatConverterHelper(AppCfg cfg) {
+        this(Paths.get(cfg.reportsDir()), cfg.reportsPath());
     }
 
-    OldReportsFormatConverterHelper(Path reportsDir, String reportsPath, String baseUrl) {
+    OldReportsFormatConverterHelper(Path reportsDir, String reportsPath) {
         this.reportsDir = reportsDir;
         this.reportsPath = reportsPath;
-        this.baseUrl = baseUrl;
     }
 
     public Collection<ReportEntity> convertOldFormat() throws IOException {
@@ -62,7 +60,7 @@ public class OldReportsFormatConverterHelper {
                             .uuid(uuid)
                             .path(thisReportPath)
                             .createdDateTime(LocalDateTime.now())
-                            .url(baseUrl + reportsPath + thisReportPath)
+                            .url(reportsPath + thisReportPath)
                             .level(0)
                             .active(true)
                             .build();

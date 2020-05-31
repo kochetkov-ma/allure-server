@@ -2,6 +2,7 @@ package ru.iopump.qa.allure.gui.view;
 
 import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 import static ru.iopump.qa.allure.gui.component.Col.Type.LINK;
+import static ru.iopump.qa.allure.gui.component.Col.Type.NUMBER;
 import static ru.iopump.qa.allure.gui.component.Col.prop;
 
 import com.google.common.collect.ImmutableList;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
@@ -34,12 +36,13 @@ import ru.iopump.qa.allure.service.JpaReportService;
 public class ReportsView extends VerticalLayout {
     private static final long serialVersionUID = 5822017036734476962L;
 
-    private static final List<Col<ReportEntity>> COLUMNS = ImmutableList.<Col<ReportEntity>>builder()
+    private final List<Col<ReportEntity>> COLUMNS = ImmutableList.<Col<ReportEntity>>builder()
         .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
         .add(Col.<ReportEntity>with().name("Created").value(prop("createdDateTime")).build())
-        .add(Col.<ReportEntity>with().name("Url").value(prop("url")).type(LINK).build())
+        .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(baseUrl())).type(LINK).build())
         .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
         .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
+        .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
         .build();
 
     /* COMPONENTS */
@@ -88,5 +91,9 @@ public class ReportsView extends VerticalLayout {
     public void postConstruct() {
         add(deleteSelection);
         reports.addTo(this);
+    }
+
+    public String baseUrl() {
+        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
     }
 }
