@@ -42,3 +42,12 @@ wrapper {
 vaadin {
     productionMode = true
 }
+classes {
+    doLast {
+        def resourcesDir = sourceSets.main.output.resourcesDir as File
+        def releaseVersion = System.env.RELEASE_VERSION as String
+        if (releaseVersion) {
+            new File(resourcesDir, "version.info").text = releaseVersion
+        }
+    }
+}

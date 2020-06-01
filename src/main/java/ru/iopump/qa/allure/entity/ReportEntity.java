@@ -9,6 +9,7 @@ import javax.annotation.Nullable;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
 import javax.persistence.Basic;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.validation.constraints.NotEmpty;
@@ -45,6 +46,7 @@ public class ReportEntity {
     @Builder.Default
     @PositiveOrZero
     @Access(AccessType.PROPERTY)
+    @Column(columnDefinition = "bigint not null default '0'")
     private long size = 0L; //NOPMD
 
     public static long sizeKB(@Nullable Path path) {
