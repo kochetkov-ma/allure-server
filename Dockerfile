@@ -1,5 +1,6 @@
 FROM gradle:jdk11 as build
 COPY . .
+ENV RELEASE_VERSION=${RELEASE_VERSION:-0.0.0}
 RUN gradle -Pversion=docker --no-daemon -PnodeVersion=12.16.3 vaadinPrepareNode bootJar
 
 FROM openjdk:11-jre-slim as production
