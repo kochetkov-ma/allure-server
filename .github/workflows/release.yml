@@ -61,8 +61,11 @@ jobs:
           asset_content_type: application/jar
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@master
+        env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           name: kochetkovma/allure-server
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           tags: "latest,${{ env.RELEASE_VERSION }}"
+          buildargs: RELEASE_VERSION
