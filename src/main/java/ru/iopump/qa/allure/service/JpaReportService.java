@@ -30,6 +30,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.AppCfg;
@@ -105,7 +106,7 @@ public class JpaReportService {
     }
 
     public Collection<ReportEntity> getAll() {
-        return repository.findAll();
+        return repository.findAll(Sort.by("createdDateTime").descending());
     }
 
     public ReportEntity generate(@NonNull String reportPath,
