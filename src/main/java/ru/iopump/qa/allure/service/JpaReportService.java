@@ -1,6 +1,7 @@
 package ru.iopump.qa.allure.service; //NOPMD
 
 import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
 import static ru.iopump.qa.allure.service.PathUtil.str;
 
@@ -169,7 +170,7 @@ public class JpaReportService {
         final ReportEntity newEntity = ReportEntity.builder()
             .uuid(uuid)
             .path(reportPath)
-            .createdDateTime(LocalDateTime.now())
+            .createdDateTime(LocalDateTime.now(zeroZone()))
             .url(cfg.reportsPath() + reportPath)
             .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
             .active(true)

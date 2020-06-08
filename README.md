@@ -118,6 +118,7 @@ Spring Configutaion:
 | allure.reports.history.level 	| int     	| 20                       	| Number of reports in history                                                  	|
 | allure.support.old.format    	| boolean 	| false                    	| Auto-convert old format reports to new and add to db                          	|
 | JAVA_OPTS    	                | string 	| -Xms256m -Xmx2048m     	| Java memory options for container                                              	|
+| allure.date.format            | string    | yy/MM/dd HH:mm:ss         | Date Time format in grid                                                          |
 
 ### GUI
 ##### See example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)

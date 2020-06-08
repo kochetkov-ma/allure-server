@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.helper;
 
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -59,7 +61,7 @@ public class OldReportsFormatConverterHelper {
                         return ReportEntity.builder()
                             .uuid(uuid)
                             .path(thisReportPath)
-                            .createdDateTime(LocalDateTime.now())
+                            .createdDateTime(LocalDateTime.now(zeroZone()))
                             .url(reportsPath + thisReportPath)
                             .level(0)
                             .active(true)

@@ -35,12 +35,11 @@ public class FilteredGrid<T> {
     private final Map<Grid.Column<T>, Supplier<String>> dynamicFooter = Maps.newHashMap();
 
     public FilteredGrid(
-        @NonNull final Class<T> rowClass,
         @NonNull final ListDataProvider<T> dataProvider,
         @NonNull final List<Col<T>> columnSpecList
     ) {
         this.dataProvider = dataProvider;
-        this.grid = new Grid<>(rowClass, false);
+        this.grid = new Grid<>();
         this.columnSpecList = columnSpecList;
 
         grid.addThemeVariants(GridVariant.LUMO_COMPACT, GridVariant.LUMO_ROW_STRIPES);

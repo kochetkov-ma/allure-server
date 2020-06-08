@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import ru.iopump.qa.allure.entity.ReportEntity;
+import ru.iopump.qa.allure.gui.DateTimeResolver;
 import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
@@ -35,25 +36,19 @@ import ru.iopump.qa.allure.service.JpaReportService;
 @Slf4j
 public class ReportsView extends VerticalLayout {
     private static final long serialVersionUID = 5822017036734476962L;
-
-    private final List<Col<ReportEntity>> COLUMNS = ImmutableList.<Col<ReportEntity>>builder()
-        .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
-        .add(Col.<ReportEntity>with().name("Created").value(prop("createdDateTime")).build())
-        .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(baseUrl())).type(LINK).build())
-        .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
-        .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
-        .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
-        .build();
+    private final DateTimeResolver dateTimeResolver;
 
     /* COMPONENTS */
     private final FilteredGrid<ReportEntity> reports;
     private final Button deleteSelection;
 
-    public ReportsView(final JpaReportService jpaReportService) {
+    public ReportsView(final JpaReportService jpaReportService, final DateTimeResolver dateTimeResolver) {
+        this.dateTimeResolver = dateTimeResolver;
+        this.dateTimeResolver.retrieve();
+
         this.reports = new FilteredGrid<>(
-            ReportEntity.class,
             asProvider(jpaReportService),
-            COLUMNS
+            cols()
         );
         this.deleteSelection = new Button("Delete selection",
             new Icon(VaadinIcon.CLOSE_CIRCLE),
@@ -74,9 +69,27 @@ public class ReportsView extends VerticalLayout {
                 reports.getGrid().getDataProvider().refreshAll();
             });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
+
+        this.dateTimeResolver.onClientReady(() -> reports.getGrid().getDataProvider().refreshAll());
     }
 
     //// PRIVATE ////
+    private List<Col<ReportEntity>> cols() {
+        return ImmutableList.<Col<ReportEntity>>builder()
+            .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
+            .add(
+                Col.<ReportEntity>with()
+                    .name("Created")
+                    .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
+                    .build()
+            )
+            .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(baseUrl())).type(LINK).build())
+            .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
+            .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
+            .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
+            .build();
+    }
+
     private static ListDataProvider<ReportEntity> asProvider(final JpaReportService jpaReportService) {
         //noinspection unchecked
         final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy

@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.controller; //NOPMD
 
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
+
 import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
@@ -85,7 +86,7 @@ public class AllureResultController {
             LocalDateTime localDateTime = LocalDateTime.MIN;
             try {
                 BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
-                localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneId.systemDefault());
+                localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), zeroZone());
             } catch (IOException e) {
                 if (log.isErrorEnabled()) {
                     log.error("Error getting created date time of " + p, e);

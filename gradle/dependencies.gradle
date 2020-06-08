@@ -2,22 +2,23 @@ repositories {
     mavenCentral()
 }
 ext {
-    qaLibVersion = '1.1.0'
+    qaLibVersion = '1.2.0'
     vaadinVersion = '14.2.0'
     junit4Version = '4.13'
     mockitoVersion = '3.3.3'
-    assertjVersion = '3.16.0'
+    assertjVersion = '3.16.1'
     slf4jVersion = '1.7.30'
     commonsLangVersion = '3.9'
     classgraphVersion = '4.8.65'
     joorVersion = '0.9.12'
     guavaVersion = '29.0-jre'
     logbackVersion = '1.2.3'
-    apacheIoVersion = '2.6'
-    openApiVersion = '1.3.9'
+    apacheIoVersion = '2.7'
+    openApiVersion = '1.4.0'
     allureVersion = '2.13.3'
     h2Version = '1.4.200'
     joorVersion = '0.9.13'
+    jsr303 = '6.1.5.Final'
 }
 configurations {
     developmentOnly
@@ -44,6 +45,7 @@ dependencies {
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation "org.hibernate:hibernate-validator:$jsr303"
 
     implementation "org.jooq:joor:$joorVersion"
 
@@ -57,19 +59,12 @@ dependencies {
     }
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-    /* Reflection lib */
-    // implementation "org.jooq:joor:$joorVersion"
-    /* Classpath scanner */
-    // implementation "io.github.classgraph:classgraph:$classgraphVersion"
-    /* Apache commons */
-    // implementation "org.apache.commons:commons-lang3:$commonsLangVersion"
-    /* Apache commons */
     implementation "commons-io:commons-io:$apacheIoVersion"
     /* Logging API*/
     implementation "org.slf4j:slf4j-api:$slf4jVersion"
+
     /* Logging IMPL*/
     runtimeOnly "ch.qos.logback:logback-classic:$logbackVersion"
-
     runtimeOnly "com.h2database:h2:$h2Version"
     /* Testing */
     testImplementation("junit:junit:$junit4Version") { transitive = false }

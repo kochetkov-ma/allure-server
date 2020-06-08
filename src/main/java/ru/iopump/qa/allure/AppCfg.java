@@ -27,4 +27,6 @@ public class AppCfg {
     long maxReportHistoryLevel;
     @Value("${allure.support.old.format}")
     boolean supportOldFormat;
+    @Value("${allure.date.format}")
+    String dateFormat;
 }

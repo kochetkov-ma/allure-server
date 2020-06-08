@@ -4,6 +4,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 import javax.annotation.Nullable;
 import javax.persistence.Access;
@@ -48,6 +50,10 @@ public class ReportEntity {
     @Access(AccessType.PROPERTY)
     @Column(columnDefinition = "bigint not null default '0'")
     private long size = 0L; //NOPMD
+    @Builder.Default
+    @PositiveOrZero
+    @Column(columnDefinition = "int not null default '0'")
+    private int version = 1; //NOPMD
 
     public static long sizeKB(@Nullable Path path) {
         if (path == null || Files.notExists(path)) {
@@ -79,5 +85,14 @@ public class ReportEntity {
 
     public boolean isFullUrl() {
         return checkUrl(url);
+    }
+
+    public LocalDateTime getCreatedDateTime() {
+        // The newest version save data in zero UTC time zone
+        if (version <= 0) {
+            // Old versions save data in system time zone. Convert to zero UTC
+            return createdDateTime.atZone(ZoneOffset.systemDefault()).withZoneSameInstant(ZoneOffset.UTC).toLocalDateTime();
+        }
+        return createdDateTime;
     }
 }

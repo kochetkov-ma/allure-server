@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.gui.view;
+package ru.iopump.qa.allure.gui.view; //NOPMD
 
 import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 import static ru.iopump.qa.allure.gui.component.Col.prop;
@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import ru.iopump.qa.allure.controller.AllureReportController;
 import ru.iopump.qa.allure.controller.AllureResultController;
+import ru.iopump.qa.allure.gui.DateTimeResolver;
 import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
@@ -38,11 +39,6 @@ import ru.iopump.qa.util.StreamUtil;
 public class ResultsView extends VerticalLayout {
     private static final long serialVersionUID = 5822017036734416962L;
 
-    private static final List<Col<ResultResponse>> COLUMNS = ImmutableList.<Col<ResultResponse>>builder()
-        .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
-        .add(Col.<ResultResponse>with().name("Created").value(prop("created")).build())
-        .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
-        .build();
 
     /* COMPONENTS */
     private final FilteredGrid<ResultResponse> results;
@@ -52,14 +48,17 @@ public class ResultsView extends VerticalLayout {
     private final ResultUploadDialog uploadDialog;
 
     private final Button deleteSelection;
+    private final DateTimeResolver dateTimeResolver;
 
     public ResultsView(final AllureResultController allureResultController,
-                       final AllureReportController allureReportController) {
+                       final AllureReportController allureReportController,
+                       final DateTimeResolver dateTimeResolver) {
+        this.dateTimeResolver = dateTimeResolver;
+        this.dateTimeResolver.retrieve();
 
         this.results = new FilteredGrid<>(
-            ResultResponse.class,
             asProvider(allureResultController),
-            COLUMNS
+            cols()
         );
         this.generateButton = new Button("Generate report");
         this.uploadButton = new Button("Upload result");
@@ -97,9 +96,22 @@ public class ResultsView extends VerticalLayout {
                     () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
                 );
         });
+
+        this.dateTimeResolver.onClientReady(() -> results.getGrid().getDataProvider().refreshAll());
+    }
+    //// PRIVATE ////
+
+    private List<Col<ResultResponse>> cols() {
+        return ImmutableList.<Col<ResultResponse>>builder()
+            .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
+            .add(Col.<ResultResponse>with()
+                .name("Created")
+                .value(e -> dateTimeResolver.printDate(e.getCreated()))
+                .build())
+            .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
+            .build();
     }
 
-    //// PRIVATE ////
     private static ListDataProvider<ResultResponse> asProvider(final AllureResultController allureResultController) {
         //noinspection unchecked
         final Collection<ResultResponse> collection = (Collection<ResultResponse>) Proxy
