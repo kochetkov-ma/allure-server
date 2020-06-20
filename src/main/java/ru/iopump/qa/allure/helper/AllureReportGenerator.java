@@ -2,6 +2,7 @@ package ru.iopump.qa.allure.helper; //NOPMD
 
 import io.qameta.allure.ConfigurationBuilder;
 import io.qameta.allure.ReportGenerator;
+import io.qameta.allure.allure1.Allure1Plugin;
 import io.qameta.allure.allure2.Allure2Plugin;
 import io.qameta.allure.category.CategoriesPlugin;
 import io.qameta.allure.category.CategoriesTrendPlugin;
@@ -90,7 +91,8 @@ public final class AllureReportGenerator {
                     new ExecutorCiPlugin(),
                     new LaunchPlugin(),
                     new Allure2Plugin(),
-                    new Allure1EnvironmentPlugin()
+                    new Allure1EnvironmentPlugin(),
+                    new Allure1Plugin()
                 )
             ).build();
     }
