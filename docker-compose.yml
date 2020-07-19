@@ -2,7 +2,10 @@ version: '3.7'
 services:
   allure-server:
     container_name: allure-server
+    #    build: . # Local debug
     image: kochetkovma/allure-server:latest
+    #    environment: # Local debug
+    #      ALLURE_REPORT_URL_BASE: http://test.ru/ # Local debug
     ports:
       - 8080:8080
     volumes:

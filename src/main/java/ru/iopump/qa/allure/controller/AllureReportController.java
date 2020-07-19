@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.controller;
 
+import static ru.iopump.qa.allure.helper.Util.url;
+
 import io.swagger.v3.oas.annotations.Operation;
 import java.io.IOException;
 import java.util.Collection;
@@ -22,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
 import ru.iopump.qa.allure.model.ReportResponse;
@@ -40,9 +42,10 @@ public class AllureReportController {
     final static String CACHE = "reports";
     private final JpaReportService reportService;
     private final ResultService resultService;
+    private final AppCfg appCfg;
 
     public String baseUrl() {
-        return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
+        return url(appCfg);
     }
 
     @Operation(summary = "Get generated allure reports")

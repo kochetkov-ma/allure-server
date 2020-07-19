@@ -29,4 +29,6 @@ public class AppCfg {
     boolean supportOldFormat;
     @Value("${allure.date.format}")
     String dateFormat;
+    @Value("${allure.report.url.base:}")
+    String reportHost;
 }
