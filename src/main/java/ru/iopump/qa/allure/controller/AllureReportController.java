@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.controller;
+package ru.iopump.qa.allure.controller; //NOPMD
 
 import static ru.iopump.qa.allure.helper.Util.url;
 
