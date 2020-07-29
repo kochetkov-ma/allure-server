@@ -80,6 +80,8 @@ Response:
 ```
 Memorize `url`
 
+> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
+
 ### Access to generated reports
 After generating you can access the report by`http://localhost:8080/allure/reports/master/666/index.html`
 
@@ -133,6 +135,8 @@ Example: `http://localhost:8080/ui`
 WEB UI provides the same functions as a REST API  
 WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)  
 
-*Main Page*
+> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
+
+>*Main Page*
 ![alt text](ui-example.png)  
 
