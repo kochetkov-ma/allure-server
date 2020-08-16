@@ -6,6 +6,7 @@ import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Paragraph;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -37,7 +38,18 @@ public class AboutView extends VerticalLayout {
             new Paragraph("Allure Reports are very popular QA Reporting tool in Russia. " +
                 "But it hasn't any free EE servers, just plugins like Jenkins Plugin. " +
                 "This solution can be the only place to save, generate and provide Allure Reports in an organization. " +
-                "Run your tests, make zip archive with the allure results and upload to the Allure Server by API or Web-UI")
+                "Run your tests, make zip archive with the allure results and upload to the Allure Server by API or Web-UI"),
+            new Paragraph(
+                new Span("Gradle Plugin: "),
+                new Anchor("https://github.com/kochetkov-ma/allure-server-gradle", " allure-server-gradle "),
+                new Span(
+                    " - There is a Gradle plugin for integration you Test Framework - your CI - your Allure Server. Provide additional functions for GitLab CI")
+            ),
+            new Paragraph(
+                new Span("Kotest Listener: "),
+                new Anchor("https://github.com/kochetkov-ma/kotest-allure", "kotest-allure"),
+                new Span(" - If you using Kotest (Kotlin) for auto-testing try this extended Kotest Allure listener")
+            )
         );
 
         var author = new Paragraph("Author: Maxim Kochetkov, Russia, Moscow");

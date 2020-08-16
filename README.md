@@ -122,6 +122,9 @@ Spring Configutaion:
 | JAVA_OPTS    	                | string 	| -Xms256m -Xmx2048m     	| Java memory options for container                                              	|
 | allure.date.format            | string    | yy/MM/dd HH:mm:ss         | Date Time format in grid                                                          |
 | allure.report.url.base        | string    |                           | Define custom base url for results. If your server behind the proxy or other troubles to get server external hostname. Don't forget about '/' at the end |
+| basic.auth.enable             | boolean   | false                     | Enable Basic Authentication |
+| basic.auth.username           | string    | admin                     | Username for basic auth |
+| basic.auth.password           | string    | admin                     | Password for basic auth |
 
 Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
 For example: `allure.report.host` transform to `ALLURE_REPORT_HOST`  

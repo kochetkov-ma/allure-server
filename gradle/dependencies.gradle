@@ -14,8 +14,8 @@ ext {
     guavaVersion = '29.0-jre'
     logbackVersion = '1.2.3'
     apacheIoVersion = '2.7'
-    openApiVersion = '1.4.0'
-    allureVersion = '2.13.3'
+    openApiVersion = '1.4.4'
+    allureVersion = '2.13.5'
     h2Version = '1.4.200'
     joorVersion = '0.9.13'
     jsr303 = '6.1.5.Final'
@@ -46,6 +46,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation "org.hibernate:hibernate-validator:$jsr303"
+    implementation "org.springframework.boot:spring-boot-starter-security"
 
     implementation "org.jooq:joor:$joorVersion"
 

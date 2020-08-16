@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConstructorBinding;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+@SuppressWarnings("ConfigurationProperties")
 @Primary
 @Configuration
 @ConfigurationProperties
@@ -31,4 +32,11 @@ public class AppCfg {
     String dateFormat;
     @Value("${allure.report.url.base:}")
     String reportHost;
+
+    @Value("${basic.auth.username:admin}")
+    String basicAuthUsername;
+    @Value("${basic.auth.password:admin}")
+    String basicAuthPassword;
+    @Value("${basic.auth.enable:false}")
+    boolean basicAuthEnable;
 }
