@@ -30,7 +30,10 @@ public class BasicConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        var spec = http.csrf().disable()
+        var spec = http
+            .headers().frameOptions().sameOrigin()
+            .and()
+            .csrf().disable()
             .requestCache().requestCache(new CustomRequestCache());
         if (cfg.basicAuthEnable()) {
             spec.and().authorizeRequests()
