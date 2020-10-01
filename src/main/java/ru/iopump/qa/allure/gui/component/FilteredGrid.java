@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.gui.component;
 
+import static ru.iopump.qa.allure.helper.Util.lastSegment;
+
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.grid.Grid;
@@ -145,7 +147,7 @@ public class FilteredGrid<T> {
     private Renderer<T> link(Col<T> columnSpec) {
         return new ComponentRenderer<>(row -> {
             var link = Str.toStr(columnSpec.getValue().apply(row));
-            var res = new Anchor(link, link);
+            var res = new Anchor(link, lastSegment(link));
             res.setTarget("_blank");
             res.getStyle().set(FONT_FAMILY, GERMANIA_ONE);
             return res;
