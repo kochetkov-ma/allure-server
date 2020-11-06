@@ -97,10 +97,14 @@ You may get all uploaded results:
 ```shell
 curl --location --request GET 'http://localhost:8080/api/result'
 ```
-Clear results or reports:
+You can clear all results or reports:
 ```shell
 curl --location --request DELETE 'http://localhost:8080/api/result'
 curl --location --request DELETE 'http://localhost:8080/api/report'
+```
+Or clear reports older than date (in epoch seconds):
+```shell
+curl --location --request DELETE 'http://localhost:8080/api/report?seconds=1604693740'
 ```
 ### Special options
 From version `1.2.0` all reports manage with Database and have unic uuids.

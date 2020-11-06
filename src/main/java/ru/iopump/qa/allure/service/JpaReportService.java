@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -103,6 +104,20 @@ public class JpaReportService {
         repository.deleteAll();
         FileUtils.deleteDirectory(reportsDir.toFile());
         return res;
+    }
+
+    public Collection<ReportEntity> deleteAllOlderThanDate(LocalDateTime date) throws IOException {
+        return getAll()
+            .stream()
+            .filter(entity -> entity.getCreatedDateTime().isBefore(date))
+            .peek(entity -> {
+                try {
+                    this.internalDeleteByUUID(entity.getUuid());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .collect(Collectors.toList());
     }
 
     public Collection<ReportEntity> getAll() {
