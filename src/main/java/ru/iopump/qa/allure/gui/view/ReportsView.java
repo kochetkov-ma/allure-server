@@ -88,7 +88,7 @@ public class ReportsView extends VerticalLayout {
                     .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
                     .build()
             )
-            .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(url(appCfg))).type(LINK).build())
+            .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(url(appCfg), appCfg.reportsDir())).type(LINK).build())
             .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
             .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
             .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())

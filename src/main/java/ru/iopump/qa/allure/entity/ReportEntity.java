@@ -1,5 +1,8 @@
 package ru.iopump.qa.allure.entity;
 
+
+import static ru.iopump.qa.allure.helper.Util.join;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -79,8 +82,8 @@ public class ReportEntity {
         this.size = ObjectUtils.defaultIfNull(size, 0L);
     }
 
-    public String generateUrl(String baseUrl) {
-        return isFullUrl() ? url : baseUrl + url;
+    public String generateUrl(String serverBaseUrl, String reportPath) {
+        return isFullUrl() ? url : join(serverBaseUrl, reportPath, uuid) + "/";
     }
 
     public boolean isFullUrl() {

@@ -62,7 +62,7 @@ public class AllureReportController {
     @Cacheable(CACHE) // caching results
     public Collection<ReportResponse> getAllCached() {
         return StreamUtil.stream(reportService.getAll())
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl())))
+            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -80,7 +80,7 @@ public class AllureReportController {
             baseUrl()
         );
 
-        return new ReportResponse(reportEntity.getUuid(), reportEntity.getPath(), reportEntity.generateUrl(baseUrl()));
+        return new ReportResponse(reportEntity.getUuid(), reportEntity.getPath(), reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()));
     }
 
     @Operation(summary = "Clear all history reports")
@@ -88,7 +88,7 @@ public class AllureReportController {
     @CacheEvict(value = CACHE, allEntries = true)
     public Collection<ReportResponse> deleteAllHistory() {
         return reportService.clearAllHistory().stream()
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl())))
+            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -104,7 +104,7 @@ public class AllureReportController {
             deleted = reportService.deleteAllOlderThanDate(boundaryDate);
         }
         return deleted.stream()
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl())))
+            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
             .collect(Collectors.toUnmodifiableList());
     }
 
