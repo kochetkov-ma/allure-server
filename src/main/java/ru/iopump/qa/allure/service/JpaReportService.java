@@ -110,7 +110,7 @@ public class JpaReportService {
     public Collection<ReportEntity> deleteAllOlderThanDate(LocalDateTime date) {
         final Collection<ReportEntity> res = repository.findAllByCreatedDateTimeIsBefore(date);
         res.forEach(e -> {
-            repository.deleteById(e.getUuid().toString());
+            repository.deleteById(e.getUuid());
             deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile());
         });
         return res;
