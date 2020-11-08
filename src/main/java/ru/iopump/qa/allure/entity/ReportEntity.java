@@ -87,10 +87,6 @@ public class ReportEntity {
         return checkUrl(url);
     }
 
-    public UUID getUuid() {
-        return uuid;
-    }
-
     public LocalDateTime getCreatedDateTime() {
         // The newest version save data in zero UTC time zone
         if (version <= 0) {

@@ -106,18 +106,13 @@ public class JpaReportService {
         return res;
     }
 
-    public Collection<ReportEntity> deleteAllOlderThanDate(LocalDateTime date) throws IOException {
-        return getAll()
-            .stream()
-            .filter(entity -> entity.getCreatedDateTime().isBefore(date))
-            .peek(entity -> {
-                try {
-                    this.internalDeleteByUUID(entity.getUuid());
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            })
-            .collect(Collectors.toList());
+    public Collection<ReportEntity> deleteAllOlderThanDate(LocalDateTime date) {
+        final Collection<ReportEntity> res = repository.findAllByCreatedDateTimeIsBefore(date);
+        res.forEach(e -> {
+            repository.deleteById(e.getUuid().toString());
+            deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile());
+        });
+        return res;
     }
 
     public Collection<ReportEntity> getAll() {
