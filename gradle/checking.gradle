@@ -4,6 +4,7 @@ checkstyle {
 }
 ////// pmd //////
 pmd {
+    toolVersion = "6.21.0"
     rulePriority = 4 // 5 is default
     ruleSetFiles "$rootDir/config/pmd/pmd-rules.xml"
     ruleSets = []
