@@ -1,5 +1,6 @@
 package ru.iopump.qa.allure.repo;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
@@ -30,4 +31,7 @@ public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {
 
     @NonNull
     Collection<ReportEntity> findByActiveTrue();
+
+    @NonNull
+    Collection<ReportEntity> findAllByCreatedDateTimeIsBefore(@NonNull final LocalDateTime date);
 }

@@ -4,6 +4,9 @@ import static ru.iopump.qa.allure.helper.Util.url;
 
 import io.swagger.v3.oas.annotations.Operation;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Collection;
 import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletResponse;
@@ -89,11 +92,18 @@ public class AllureReportController {
             .collect(Collectors.toUnmodifiableList());
     }
 
-    @Operation(summary = "Delete all reports")
+    @Operation(summary = "Delete all reports or older than date in epoch seconds")
     @DeleteMapping
     @CacheEvict(value = CACHE, allEntries = true)
-    public Collection<ReportResponse> deleteAll() throws IOException {
-        return reportService.deleteAll().stream()
+    public Collection<ReportResponse> deleteAll(@RequestParam(required = false) Long seconds) throws IOException {
+        Collection<ReportEntity> deleted;
+        if (seconds == null) {
+            deleted = reportService.deleteAll();
+        } else {
+            LocalDateTime boundaryDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(seconds), ZoneId.of("UTC"));
+            deleted = reportService.deleteAllOlderThanDate(boundaryDate);
+        }
+        return deleted.stream()
             .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
             .collect(Collectors.toUnmodifiableList());
     }
