@@ -17,9 +17,9 @@ There is simple API with Swagger(OpenAPI) Description.
 
 Just use Spring Boot Jar from Release Page.
    
-Web GUI has been available from Release v2.0.0 
+Web GUI has been available from Release v2.0.0
 
-Example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/) _(unstable)_
+Example on [allure.iopump.ru](http://allure.iopump.ru/)
 
 ## Get Started
 ### Docker
@@ -72,10 +72,13 @@ curl --location --request POST 'http://localhost:8080/api/report' \
 }'
 ```
 Response:
+
 ```
 {
+    "uuid": "c994654d-6d6a-433c-b8e3-90c77d0e8163"
     "path": "master/666",
-    "url": "http://localhost:8080/allure/reports/master/666/index.html"
+    "url": "http://localhost:8080/allure/reports/c994654d-6d6a-433c-b8e3-90c77d0e8163/",
+    "latest": "http://localhost:8080/reports/master/666",
 }
 ```
 Memorize `url`
@@ -83,7 +86,8 @@ Memorize `url`
 > :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
 
 ### Access to generated reports
-After generating you can access the report by`http://localhost:8080/allure/reports/master/666/index.html`
+
+After generating you can access the latest report by `http://localhost:8080/allure/reports/master/666/index.html`
 
 You may get all reports
 ```shell
@@ -116,31 +120,42 @@ Spring Configutaion:
 
 | ENV                          	| TYPE    	| DEFAULT                  	| DESCRIPTION                                                                   	|
 |------------------------------	|---------	|--------------------------	|-------------------------------------------------------------------------------	|
-| spring.datasource.url        	| string  	| jdbc:h2:file:./allure/db 	| H2 jdbc connection string. By default DB file will be created/read on startup 	|
-| PORT                         	| int     	| 8080                     	| Tomcat http port                                                              	|
+| spring.datasource.url            | string    | jdbc:h2:file:./allure/db    | H2 jdbc connection string. By default DB file will be created/read on startup. Postgres driver supported!    |
+| PORT                            | int        | 8080                        | Tomcat http port                                                                |
 | allure.results.dir           	| string  	| allure/results/          	| Unzipped results store                                                        	|
 | allure.reports.dir           	| string  	| allure/reports/          	| Generated results store                                                       	|
 | allure.reports.path          	| string  	| reports/                 	| Url path (after base url) to acccess to reports                               	|
 | allure.reports.history.level 	| int     	| 20                       	| Number of reports in history                                                  	|
 | allure.support.old.format    	| boolean 	| false                    	| Auto-convert old format reports to new and add to db                          	|
-| JAVA_OPTS    	                | string 	| -Xms256m -Xmx2048m     	| Java memory options for container                                              	|
+| JAVA_OPTS                        | string    | -Xms256m -Xmx2048m        | Java memory options for container                                                |
 | allure.date.format            | string    | yy/MM/dd HH:mm:ss         | Date Time format in grid                                                          |
 | allure.report.url.base        | string    |                           | Define custom base url for results. If your server behind the proxy or other troubles to get server external hostname. Don't forget about '/' at the end |
 | basic.auth.enable             | boolean   | false                     | Enable Basic Authentication |
 | basic.auth.username           | string    | admin                     | Username for basic auth |
 | basic.auth.password           | string    | admin                     | Password for basic auth |
 
-Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
-For example: `allure.report.host` transform to `ALLURE_REPORT_HOST`  
+> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
+> For example: `allure.report.host` transform to `ALLURE_REPORT_HOST`
+
+> Postgres database supported!
+
+> You can mount external jars to `/ext` folder in the container, and they will be available in app classpath.  
+> For example you may add new jdbc drivers
+
+```shell
+    volumes:
+      - ./ext:/ext:rw
+```
 
 ### GUI
-##### See example on [allure.iopump.ru](http://allure.iopump.ru/) or [allure-server.herokuapp.com](https://allure-server.herokuapp.com/)
+
+##### See example on [allure.iopump.ru](http://allure.iopump.ru/)
 
 Allure Server provide WEB UI to access to reports and results.  
 By default WEB UI is available on path `/ui` and there is redirection from `/` to `/ui`   
 Example: `http://localhost:8080/ui`  
 WEB UI provides the same functions as a REST API  
-WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)  
+WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)
 
 > :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
 

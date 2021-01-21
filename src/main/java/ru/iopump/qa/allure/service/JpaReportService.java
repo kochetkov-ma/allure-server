@@ -1,30 +1,11 @@
 package ru.iopump.qa.allure.service; //NOPMD
 
-import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
-import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
-import static ru.iopump.qa.allure.helper.Util.join;
-import static ru.iopump.qa.allure.service.PathUtil.str;
-
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import io.qameta.allure.entity.ExecutorInfo;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -40,6 +21,26 @@ import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.OldReportsFormatConverterHelper;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
 import ru.iopump.qa.allure.repo.JpaReportRepository;
+
+import javax.annotation.Nullable;
+import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.apache.commons.io.FileUtils.deleteQuietly;
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
+import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
+import static ru.iopump.qa.allure.helper.Util.join;
+import static ru.iopump.qa.allure.service.PathUtil.str;
 
 @Component
 @Slf4j
@@ -75,7 +76,7 @@ public class JpaReportService {
     @PostConstruct
     protected void initRedirection() {
         repository.findByActiveTrue().forEach(
-            e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString())
+                e -> redirection.mapRequestTo(join(cfg.reportsPath(), e.getPath()), reportsDir.resolve(e.getUuid().toString()).toString())
         );
     }
 

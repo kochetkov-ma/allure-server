@@ -1,9 +1,10 @@
 package ru.iopump.qa.allure.model;
 
-import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -12,4 +13,5 @@ public class ReportResponse {
     UUID uuid;
     String path;
     String url;
+    String latest;
 }

@@ -1,8 +1,18 @@
 package ru.iopump.qa.allure.entity;
 
 
-import static ru.iopump.qa.allure.helper.Util.join;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ObjectUtils;
 
+import javax.annotation.Nullable;
+import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
@@ -10,22 +20,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
-import javax.annotation.Nullable;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.PositiveOrZero;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.ObjectUtils;
+
+import static ru.iopump.qa.allure.helper.Util.join;
 
 @Entity
 @Data
@@ -65,7 +61,7 @@ public class ReportEntity {
         return FileUtils.sizeOfDirectory(path.toFile()) / 1024;
     }
 
-    public static boolean checkUrl(@Nullable String url) {
+    public static boolean isFullUrl(@Nullable String url) {
         if (url == null) {
             return false;
         }
@@ -82,12 +78,12 @@ public class ReportEntity {
         this.size = ObjectUtils.defaultIfNull(size, 0L);
     }
 
-    public String generateUrl(String serverBaseUrl, String reportPath) {
-        return isFullUrl() ? url : join(serverBaseUrl, reportPath, uuid) + "/";
+    public String generateLatestUrl(String serverBaseUrl, String reportPath) {
+        return join(serverBaseUrl, reportPath, path);
     }
 
-    public boolean isFullUrl() {
-        return checkUrl(url);
+    public String generateUrl(String serverBaseUrl, String reportPath) {
+        return isFullUrl(url) ? url : join(serverBaseUrl, reportPath, uuid) + "/";
     }
 
     public LocalDateTime getCreatedDateTime() {

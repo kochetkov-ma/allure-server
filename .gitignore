@@ -49,3 +49,4 @@ id_rsa
 !**/resources/**/*.json
 !**/resources/**/*.zip
 !**/resources/**/*.jar
+allure-server-store/

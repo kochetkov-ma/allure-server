@@ -1,32 +1,13 @@
 package ru.iopump.qa.allure.controller; //NOPMD
 
-import static ru.iopump.qa.allure.helper.Util.url;
-
 import io.swagger.v3.oas.annotations.Operation;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Collection;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
@@ -34,6 +15,18 @@ import ru.iopump.qa.allure.model.ReportResponse;
 import ru.iopump.qa.allure.service.JpaReportService;
 import ru.iopump.qa.allure.service.ResultService;
 import ru.iopump.qa.util.StreamUtil;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+import static ru.iopump.qa.allure.helper.Util.url;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 @RequiredArgsConstructor
@@ -62,7 +55,12 @@ public class AllureReportController {
     @Cacheable(CACHE) // caching results
     public Collection<ReportResponse> getAllCached() {
         return StreamUtil.stream(reportService.getAll())
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
+                .map(entity -> new ReportResponse(
+                        entity.getUuid(),
+                        entity.getPath(),
+                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
+                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                ))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -73,14 +71,19 @@ public class AllureReportController {
     public ReportResponse generateReport(@RequestBody @Valid ReportGenerateRequest reportGenerateRequest) throws IOException {
 
         final ReportEntity reportEntity = reportService.generate(
-            reportGenerateRequest.getReportSpec().getPathsAsPath(),
-            reportGenerateRequest.getResultsAsPath(resultService.getStoragePath()),
-            reportGenerateRequest.isDeleteResults(),
-            reportGenerateRequest.getReportSpec().getExecutorInfo(),
-            baseUrl()
+                reportGenerateRequest.getReportSpec().getPathsAsPath(),
+                reportGenerateRequest.getResultsAsPath(resultService.getStoragePath()),
+                reportGenerateRequest.isDeleteResults(),
+                reportGenerateRequest.getReportSpec().getExecutorInfo(),
+                baseUrl()
         );
 
-        return new ReportResponse(reportEntity.getUuid(), reportEntity.getPath(), reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()));
+        return new ReportResponse(
+                reportEntity.getUuid(),
+                reportEntity.getPath(),
+                reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()),
+                reportEntity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+        );
     }
 
     @Operation(summary = "Clear all history reports")
@@ -88,7 +91,12 @@ public class AllureReportController {
     @CacheEvict(value = CACHE, allEntries = true)
     public Collection<ReportResponse> deleteAllHistory() {
         return reportService.clearAllHistory().stream()
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
+                .map(entity -> new ReportResponse(
+                        entity.getUuid(),
+                        entity.getPath(),
+                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
+                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                ))
             .collect(Collectors.toUnmodifiableList());
     }
 
@@ -104,7 +112,12 @@ public class AllureReportController {
             deleted = reportService.deleteAllOlderThanDate(boundaryDate);
         }
         return deleted.stream()
-            .map(entity -> new ReportResponse(entity.getUuid(), entity.getPath(), entity.generateUrl(baseUrl(), appCfg.reportsDir())))
+                .map(entity -> new ReportResponse(
+                        entity.getUuid(),
+                        entity.getPath(),
+                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
+                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                ))
             .collect(Collectors.toUnmodifiableList());
     }
 

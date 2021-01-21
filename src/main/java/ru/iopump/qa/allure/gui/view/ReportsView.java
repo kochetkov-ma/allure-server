@@ -1,11 +1,5 @@
 package ru.iopump.qa.allure.gui.view;
 
-import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
-import static ru.iopump.qa.allure.gui.component.Col.Type.LINK;
-import static ru.iopump.qa.allure.gui.component.Col.Type.NUMBER;
-import static ru.iopump.qa.allure.gui.component.Col.prop;
-import static ru.iopump.qa.allure.helper.Util.url;
-
 import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
@@ -17,11 +11,6 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
@@ -30,6 +19,18 @@ import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
 import ru.iopump.qa.allure.service.JpaReportService;
+
+import javax.annotation.PostConstruct;
+import java.lang.reflect.Proxy;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+
+import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
+import static ru.iopump.qa.allure.gui.component.Col.Type.LINK;
+import static ru.iopump.qa.allure.gui.component.Col.Type.NUMBER;
+import static ru.iopump.qa.allure.gui.component.Col.prop;
+import static ru.iopump.qa.allure.helper.Util.url;
 
 @Tag("reports-view")
 @PageTitle("Reports | " + ALLURE_SERVER)
@@ -81,26 +82,34 @@ public class ReportsView extends VerticalLayout {
     //// PRIVATE ////
     private List<Col<ReportEntity>> cols() {
         return ImmutableList.<Col<ReportEntity>>builder()
-            .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
-            .add(
-                Col.<ReportEntity>with()
-                    .name("Created")
-                    .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
-                    .build()
-            )
-            .add(Col.<ReportEntity>with().name("Url").value(e -> e.generateUrl(url(appCfg), appCfg.reportsDir())).type(LINK).build())
-            .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
-            .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
-            .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
-            .build();
+                .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
+                .add(
+                        Col.<ReportEntity>with()
+                                .name("Created")
+                                .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
+                                .build()
+                )
+                .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
+                .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
+                .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
+                .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
+                .build();
+    }
+
+    private String displayUrl(ReportEntity e) {
+        if (e.isActive()) {
+            return e.generateLatestUrl(url(appCfg), appCfg.reportsPath());
+        } else {
+            return e.generateUrl(url(appCfg), appCfg.reportsDir());
+        }
     }
 
     private static ListDataProvider<ReportEntity> asProvider(final JpaReportService jpaReportService) {
         //noinspection unchecked
         final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy
-            .newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[] {Collection.class},
-                (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
+                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                        new Class[]{Collection.class},
+                        (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
 
         return new ListDataProvider<>(collection);
     }

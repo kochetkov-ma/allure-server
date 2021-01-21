@@ -1,12 +1,28 @@
 version: '3.7'
 services:
   allure-server:
-    container_name: allure-server
-    #    build: . # Local debug
-    image: kochetkovma/allure-server:latest
-    #    environment: # Local debug
-    #      ALLURE_REPORT_URL_BASE: http://test.ru/ # Local debug
+    build: . # Local debug
+    # image: kochetkovma/allure-server:latest
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/allure
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_DATABASE: postgresql
+      SPRING_JPA_HIBERNATE_DDL-AUTO: update # Careful! 'create' destroy data! https://stackoverflow.com/questions/21113154/spring-boot-ddl-auto-generator
     ports:
       - 8080:8080
     volumes:
-      - /allure-server-store:/allure
+      #- ./ext:/ext:rw
+      - ./allure-server-store:/allure:rw
+    restart: unless-stopped
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: allure
+    ports:
+      - 5432:5432

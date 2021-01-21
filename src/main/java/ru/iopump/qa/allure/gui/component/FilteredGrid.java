@@ -1,7 +1,5 @@
 package ru.iopump.qa.allure.gui.component;
 
-import static ru.iopump.qa.allure.helper.Util.lastSegment;
-
 import com.google.common.collect.Maps;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.grid.Grid;
@@ -16,15 +14,18 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
 import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.function.ValueProvider;
+import lombok.Getter;
+import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
+import ru.iopump.qa.util.Str;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.Getter;
-import lombok.NonNull;
-import org.apache.commons.lang3.StringUtils;
-import ru.iopump.qa.util.Str;
+
+import static ru.iopump.qa.allure.helper.Util.shortUrl;
 
 public class FilteredGrid<T> {
     public static final String FONT_FAMILY = "font-family";
@@ -147,7 +148,7 @@ public class FilteredGrid<T> {
     private Renderer<T> link(Col<T> columnSpec) {
         return new ComponentRenderer<>(row -> {
             var link = Str.toStr(columnSpec.getValue().apply(row));
-            var res = new Anchor(link, lastSegment(link));
+            var res = new Anchor(link, shortUrl(link));
             res.setTarget("_blank");
             res.getStyle().set(FONT_FAMILY, GERMANIA_ONE);
             return res;
