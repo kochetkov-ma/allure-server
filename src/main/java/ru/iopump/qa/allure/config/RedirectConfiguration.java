@@ -1,13 +1,5 @@
 package ru.iopump.qa.allure.config;
 
-import static ru.iopump.qa.allure.service.JpaReportService.REPORT_PATH_DEFAULT;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +13,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
 import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.helper.Util;
+
+import javax.annotation.Nonnull;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -44,7 +44,7 @@ public class RedirectConfiguration implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-            .addResourceHandler("/" + REPORT_PATH_DEFAULT + "**")
+                .addResourceHandler(Util.join("/", cfg.reportsDir(), "**"))
             .addResourceLocations("file:" + cfg.reportsDir())
             .resourceChain(true)
             .addResolver(new PathResourceResolver() {
