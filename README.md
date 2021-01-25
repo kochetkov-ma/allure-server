@@ -37,8 +37,10 @@ Got to `http://localhost:8080` - will redirect to OpenAPI (Swagger UI)
 Only allure2 supported  
 Make some allure results and create `zip` archive with these results, for example `allure-results.zip` in your root dir
 ```shell
-curl --location --request POST 'http://localhost:8080/api/result' \
---form 'allureResults=@/allure-results.zip;type=application/zip'
+curl -X POST 'http://localhost:8080/api/result' \
+-H  "accept: */*" \
+-H  "Content-Type: multipart/form-data" \
+-F "allureResults=@allure-results.zip;type=application/x-zip-compressed"
 ```
 Response:
 ```
@@ -146,6 +148,14 @@ Spring Configutaion:
     volumes:
       - ./ext:/ext:rw
 ```
+
+### Docker compose
+
+See docker compose:
+
+[docker-compose with Postgres integration](./docker-compose.yml)
+
+[docker-compose with default H2 database](./docker-compose-h2.yml)
 
 ### GUI
 

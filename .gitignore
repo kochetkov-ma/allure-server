@@ -50,3 +50,4 @@ id_rsa
 !**/resources/**/*.zip
 !**/resources/**/*.jar
 allure-server-store/
+tmp/

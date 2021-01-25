@@ -1,8 +1,9 @@
 version: '3.7'
 services:
   allure-server:
-    build: . # Local debug
-    # image: kochetkovma/allure-server:latest
+    # For local debug #
+    # build: .
+    image: kochetkovma/allure-server:latest
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/allure
       SPRING_DATASOURCE_USERNAME: postgres
@@ -12,7 +13,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      #- ./ext:/ext:rw
+      - ./ext:/ext:rw
       - ./allure-server-store:/allure:rw
     restart: unless-stopped
     depends_on:
