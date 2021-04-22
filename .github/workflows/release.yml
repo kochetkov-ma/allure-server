@@ -31,7 +31,7 @@ jobs:
       - name: Build with Gradle
         uses: eskatos/gradle-command-action@v1
         with:
-          gradle-version: current
+          gradle-version: 6.8.3
           arguments: ' -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar'
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
