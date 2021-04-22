@@ -33,7 +33,7 @@ Execute command `java -jar allure-server.jar`
 
 Got to `http://localhost:8080` - will redirect to OpenAPI (Swagger UI)
 
-### Upload results
+### Upload results or use [GitHub Actions](#github-actions)
 Only allure2 supported  
 Make some allure results and create `zip` archive with these results, for example `allure-results.zip` in your root dir
 ```shell
@@ -120,16 +120,16 @@ Spring Configutaion:
 - environment vars `export allure.support.old.format=true` 
 - in docker environment vars `-e allure.support.old.format=true`
 
-| ENV                          	| TYPE    	| DEFAULT                  	| DESCRIPTION                                                                   	|
+| ENV                            | TYPE        | DEFAULT                    | DESCRIPTION                                                                    |
 |------------------------------	|---------	|--------------------------	|-------------------------------------------------------------------------------	|
-| spring.datasource.url            | string    | jdbc:h2:file:./allure/db    | H2 jdbc connection string. By default DB file will be created/read on startup. Postgres driver supported!    |
-| PORT                            | int        | 8080                        | Tomcat http port                                                                |
-| allure.results.dir           	| string  	| allure/results/          	| Unzipped results store                                                        	|
-| allure.reports.dir           	| string  	| allure/reports/          	| Generated results store                                                       	|
-| allure.reports.path          	| string  	| reports/                 	| Url path (after base url) to acccess to reports                               	|
-| allure.reports.history.level 	| int     	| 20                       	| Number of reports in history                                                  	|
-| allure.support.old.format    	| boolean 	| false                    	| Auto-convert old format reports to new and add to db                          	|
-| JAVA_OPTS                        | string    | -Xms256m -Xmx2048m        | Java memory options for container                                                |
+| spring.datasource.url         | string    | jdbc:h2:file:./allure/db  | H2 jdbc connection string. By default DB file will be created/read on startup. Postgres driver supported!    |
+| PORT                          | int       | 8080                      | Tomcat http port                                                                |
+| allure.results.dir            | string    | allure/results/            | Unzipped results store                                                            |
+| allure.reports.dir            | string    | allure/reports/            | Generated results store                                                        |
+| allure.reports.path            | string    | reports/                    | Url path (after base url) to acccess to reports                                |
+| allure.reports.history.level    | int        | 20                        | Number of reports in history                                                    |
+| allure.support.old.format        | boolean    | false                        | Auto-convert old format reports to new and add to db                            |
+| JAVA_OPTS                     | string    | -Xms256m -Xmx2048m        | Java memory options for container                                                 |
 | allure.date.format            | string    | yy/MM/dd HH:mm:ss         | Date Time format in grid                                                          |
 | allure.report.url.base        | string    |                           | Define custom base url for results. If your server behind the proxy or other troubles to get server external hostname. Don't forget about '/' at the end |
 | basic.auth.enable             | boolean   | false                     | Enable Basic Authentication |
@@ -156,6 +156,32 @@ See docker compose:
 [docker-compose with Postgres integration](./docker-compose.yml)
 
 [docker-compose with default H2 database](./docker-compose-h2.yml)
+
+### GitHub Actions
+
+Thx [Xotabu4](https://github.com/Xotabu4)
+
+There is external GitHub Action to sent and generate Allure
+Reports: [send-to-allure-server-action](https://github.com/Xotabu4/send-to-allure-server-action)
+
+```
+Compresses allure-results, sends to kochetkov-ma/allure-server , and triggers allure report generation on it. Result of this action - is URL to generated report.
+
+Works for any test project languages (java, .net, js/ts, python, etc), for any testing frameworks (junit, pytest, cucumber, mocha, jest ...) that has allure reporter configured.
+```
+
+Example:
+
+```
+    - name: Send Results and Generate Allure Report
+      uses: Xotabu4/send-to-allure-server-action@1
+      # always() needed because we want report for failed tests as well
+      if: ${{ always() }}
+      with:
+        allure-server-url: 'http://my-allure-server.com:5001/'
+```
+
+![alt text](github-action.png)
 
 ### GUI
 
