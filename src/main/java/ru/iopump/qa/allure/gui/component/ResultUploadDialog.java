@@ -39,7 +39,7 @@ public class ResultUploadDialog extends Dialog { //NOPMD
         upload.setMaxFiles(1);
         upload.setDropLabel(new Label("Upload allure results as Zip archive (.zip)"));
         upload.setAcceptedFileTypes(".zip");
-        upload.setMaxFileSize(5 * 1024 * 1024);
+        upload.setMaxFileSize(500 * 1024 * 1024);
 
         upload.addSucceededListener(event -> {
             try {
