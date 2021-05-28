@@ -1,8 +1,5 @@
 package ru.iopump.qa.allure.gui.view; //NOPMD
 
-import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
-import static ru.iopump.qa.allure.gui.component.Col.prop;
-
 import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
@@ -15,11 +12,8 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.List;
-import javax.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import ru.iopump.qa.allure.controller.AllureReportController;
 import ru.iopump.qa.allure.controller.AllureResultController;
 import ru.iopump.qa.allure.gui.DateTimeResolver;
@@ -31,6 +25,14 @@ import ru.iopump.qa.allure.gui.component.ResultUploadDialog;
 import ru.iopump.qa.allure.gui.dto.GenerateDto;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.util.StreamUtil;
+
+import javax.annotation.PostConstruct;
+import java.lang.reflect.Proxy;
+import java.util.Collection;
+import java.util.List;
+
+import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
+import static ru.iopump.qa.allure.gui.component.Col.prop;
 
 @Tag("results-view")
 @PageTitle("Results | " + ALLURE_SERVER)
@@ -52,39 +54,41 @@ public class ResultsView extends VerticalLayout {
 
     public ResultsView(final AllureResultController allureResultController,
                        final AllureReportController allureReportController,
-                       final DateTimeResolver dateTimeResolver) {
+                       final DateTimeResolver dateTimeResolver,
+                       final MultipartProperties multipartProperties) {
         this.dateTimeResolver = dateTimeResolver;
         this.dateTimeResolver.retrieve();
 
         this.results = new FilteredGrid<>(
-            asProvider(allureResultController),
-            cols()
+                asProvider(allureResultController),
+                cols()
         );
         this.generateButton = new Button("Generate report");
         this.uploadButton = new Button("Upload result");
 
         this.generateDialog = new ReportGenerateDialog(allureReportController);
-        this.uploadDialog = new ResultUploadDialog(allureResultController);
+        this.uploadDialog = new ResultUploadDialog(allureResultController,
+                (int) multipartProperties.getMaxFileSize().toBytes());
 
         uploadDialog.onClose(event -> results.getGrid().getDataProvider().refreshAll());
 
         this.deleteSelection = new Button("Delete selection",
-            new Icon(VaadinIcon.CLOSE_CIRCLE),
-            event -> {
-                for (ResultResponse resultResponse : results.getGrid().getSelectedItems()) {
-                    String uuid = resultResponse.getUuid();
-                    try {
-                        allureResultController.deleteResult(uuid);
-                        Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                    } catch (Exception e) { //NOPMD
-                        Notification.show("Deleting error: " + e.getLocalizedMessage(),
-                            5000,
-                            Notification.Position.TOP_START);
-                        log.error("Deleting error", e);
+                new Icon(VaadinIcon.CLOSE_CIRCLE),
+                event -> {
+                    for (ResultResponse resultResponse : results.getGrid().getSelectedItems()) {
+                        String uuid = resultResponse.getUuid();
+                        try {
+                            allureResultController.deleteResult(uuid);
+                            Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
+                        } catch (Exception e) { //NOPMD
+                            Notification.show("Deleting error: " + e.getLocalizedMessage(),
+                                    5000,
+                                    Notification.Position.TOP_START);
+                            log.error("Deleting error", e);
+                        }
                     }
-                }
-                results.getGrid().deselectAll();
-                results.getGrid().getDataProvider().refreshAll();
+                    results.getGrid().deselectAll();
+                    results.getGrid().getDataProvider().refreshAll();
             });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
 

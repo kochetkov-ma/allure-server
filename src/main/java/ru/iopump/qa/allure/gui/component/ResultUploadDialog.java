@@ -1,7 +1,5 @@
 package ru.iopump.qa.allure.gui.component;
 
-import static ru.iopump.qa.util.Str.format;
-
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.button.Button;
@@ -13,14 +11,17 @@ import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.multipart.MultipartFile;
 import ru.iopump.qa.allure.controller.AllureResultController;
+
+import javax.annotation.Nonnull;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
+import static ru.iopump.qa.util.Str.format;
 
 @Slf4j
 public class ResultUploadDialog extends Dialog { //NOPMD
@@ -31,7 +32,7 @@ public class ResultUploadDialog extends Dialog { //NOPMD
     private final Div infoContainer;
     private final Button close = new Button("Ok", e -> onClickCloseAndDiscard());
 
-    public ResultUploadDialog(AllureResultController allureResultController) {
+    public ResultUploadDialog(AllureResultController allureResultController, int maxFileSizeBytes) {
         this.buffer = new MemoryBuffer();
         this.infoContainer = new Div();
 
@@ -39,7 +40,7 @@ public class ResultUploadDialog extends Dialog { //NOPMD
         upload.setMaxFiles(1);
         upload.setDropLabel(new Label("Upload allure results as Zip archive (.zip)"));
         upload.setAcceptedFileTypes(".zip");
-        upload.setMaxFileSize(5 * 1024 * 1024);
+        upload.setMaxFileSize(maxFileSizeBytes);
 
         upload.addSucceededListener(event -> {
             try {
