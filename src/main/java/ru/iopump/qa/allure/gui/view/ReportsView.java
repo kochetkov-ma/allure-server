@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.gui.view;
+package ru.iopump.qa.allure.gui.view; //NOPMD
 
 import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
