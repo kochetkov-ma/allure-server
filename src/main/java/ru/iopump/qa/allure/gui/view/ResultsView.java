@@ -33,6 +33,7 @@ import java.util.List;
 
 import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 import static ru.iopump.qa.allure.gui.component.Col.prop;
+import static ru.iopump.qa.allure.gui.component.ResultUploadDialog.toMultiPartFile;
 
 @Tag("results-view")
 @PageTitle("Results | " + ALLURE_SERVER)
@@ -67,8 +68,11 @@ public class ResultsView extends VerticalLayout {
         this.uploadButton = new Button("Upload result");
 
         this.generateDialog = new ReportGenerateDialog(allureReportController);
-        this.uploadDialog = new ResultUploadDialog(allureResultController,
-                (int) multipartProperties.getMaxFileSize().toBytes());
+        this.uploadDialog = new ResultUploadDialog(
+                (buffer) -> allureResultController.uploadResults(toMultiPartFile(buffer)),
+                (int) multipartProperties.getMaxFileSize().toBytes(),
+                "results"
+        );
 
         uploadDialog.onClose(event -> results.getGrid().getDataProvider().refreshAll());
 
@@ -89,41 +93,41 @@ public class ResultsView extends VerticalLayout {
                     }
                     results.getGrid().deselectAll();
                     results.getGrid().getDataProvider().refreshAll();
-            });
+                });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         // Add first selected item on open generation dialog or empty bind
         generateDialog.addOpenedChangeListener(event -> {
             StreamUtil.stream(results.getGrid().getSelectedItems()).findFirst()
-                .ifPresentOrElse(resultResponse -> generateDialog.getPayload().getBinder()
-                        .setBean(new GenerateDto(resultResponse.getUuid(), null, null, false)),
-                    () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
-                );
+                    .ifPresentOrElse(resultResponse -> generateDialog.getPayload().getBinder()
+                                    .setBean(new GenerateDto(resultResponse.getUuid(), null, null, false)),
+                            () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
+                    );
         });
 
         this.dateTimeResolver.onClientReady(() -> results.getGrid().getDataProvider().refreshAll());
     }
     //// PRIVATE ////
 
-    private List<Col<ResultResponse>> cols() {
-        return ImmutableList.<Col<ResultResponse>>builder()
-            .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
-            .add(Col.<ResultResponse>with()
-                .name("Created")
-                .value(e -> dateTimeResolver.printDate(e.getCreated()))
-                .build())
-            .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
-            .build();
-    }
-
     private static ListDataProvider<ResultResponse> asProvider(final AllureResultController allureResultController) {
         //noinspection unchecked
         final Collection<ResultResponse> collection = (Collection<ResultResponse>) Proxy
-            .newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                new Class[] {Collection.class},
-                (proxy, method, args) -> method.invoke(allureResultController.getAllResult(), args));
+                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                        new Class[]{Collection.class},
+                        (proxy, method, args) -> method.invoke(allureResultController.getAllResult(), args));
 
         return new ListDataProvider<>(collection);
+    }
+
+    private List<Col<ResultResponse>> cols() {
+        return ImmutableList.<Col<ResultResponse>>builder()
+                .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
+                .add(Col.<ResultResponse>with()
+                        .name("Created")
+                        .value(e -> dateTimeResolver.printDate(e.getCreated()))
+                        .build())
+                .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
+                .build();
     }
 
     @PostConstruct

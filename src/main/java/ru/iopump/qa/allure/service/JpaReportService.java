@@ -25,6 +25,7 @@ import ru.iopump.qa.allure.repo.JpaReportRepository;
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,6 +57,7 @@ public class JpaReportService {
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
     private final JpaReportRepository repository;
+    private final ResultService reportUnzipService;
 
     private final AtomicBoolean init = new AtomicBoolean();
 
@@ -71,6 +73,7 @@ public class JpaReportService {
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
+        this.reportUnzipService = new ResultService(reportsDir);
     }
 
     @PostConstruct
@@ -86,11 +89,11 @@ public class JpaReportService {
 
         // delete active history
         entitiesActive
-            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).resolve("history").toFile()));
+                .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).resolve("history").toFile()));
 
         // delete active history
         entitiesInactive
-            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()));
+                .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()));
 
         return entitiesInactive;
     }
@@ -120,6 +123,59 @@ public class JpaReportService {
         return repository.findAll(Sort.by("createdDateTime").descending());
     }
 
+    @SneakyThrows
+    public ReportEntity uploadReport(@NonNull String reportPath,
+                                     @NonNull InputStream archiveInputStream,
+                                     @Nullable ExecutorInfo executorInfo,
+                                     String baseUrl) {
+
+        // New report destination and entity
+        final Path destination = reportUnzipService.unzipAndStore(archiveInputStream);
+        final UUID uuid = UUID.fromString(destination.getFileName().toString());
+        Preconditions.checkArgument(
+                Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
+                "Uploaded archive is not an Allure Report"
+        );
+
+        // Find prev report if present
+        final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
+                .stream()
+                .findFirst();
+
+        // Add CI executor information
+        addExecutionInfo(
+                destination,
+                executorInfo,
+                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
+                uuid
+        );
+
+        log.info("Report '{}' loaded", destination);
+
+        // New report entity
+        final ReportEntity newEntity = ReportEntity.builder()
+                .uuid(uuid)
+                .path(reportPath)
+                .createdDateTime(LocalDateTime.now(zeroZone()))
+                .url(join(baseUrl, cfg.reportsDir(), uuid.toString()) + "/")
+                .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+                .active(true)
+                .size(ReportEntity.sizeKB(destination))
+                .build();
+
+        // Add request mapping
+        redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
+
+        // Persist
+        handleMaxHistory(newEntity);
+        repository.save(newEntity);
+
+        // Disable prev report
+        prevEntity.ifPresent(e -> e.setActive(false));
+
+        return newEntity;
+    }
+
     public ReportEntity generate(@NonNull String reportPath,
                                  @NonNull List<Path> resultDirs,
                                  boolean clearResults,
@@ -140,29 +196,29 @@ public class JpaReportService {
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
-            .stream()
-            .findFirst();
+                .stream()
+                .findFirst();
 
         // New uuid directory
         final Path destination = reportsDir.resolve(uuid.toString());
 
         // Copy history from prev report
         final Optional<Path> historyO = prevEntity
-            .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
-            .or(Optional::empty);
+                .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
+                .or(Optional::empty);
 
         try {
             // Add history to results if exists
             final List<Path> resultDirsToGenerate = historyO
-                .map(history -> (List<Path>) ImmutableList.<Path>builder().addAll(resultDirs).add(history).build())
-                .orElse(resultDirs);
+                    .map(history -> (List<Path>) ImmutableList.<Path>builder().addAll(resultDirs).add(history).build())
+                    .orElse(resultDirs);
 
             // Add CI executor information
             addExecutionInfo(
-                resultDirs.get(0),
-                executorInfo,
-                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
-                uuid
+                    resultDirs.get(0),
+                    executorInfo,
+                    baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
+                    uuid
             );
 
             // Generate new report with history
@@ -180,14 +236,14 @@ public class JpaReportService {
 
         // New report entity
         final ReportEntity newEntity = ReportEntity.builder()
-            .uuid(uuid)
-            .path(reportPath)
-            .createdDateTime(LocalDateTime.now(zeroZone()))
-            .url(join(baseUrl, cfg.reportsDir(), uuid.toString()) + "/")
-            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
-            .active(true)
-            .size(ReportEntity.sizeKB(destination))
-            .build();
+                .uuid(uuid)
+                .path(reportPath)
+                .createdDateTime(LocalDateTime.now(zeroZone()))
+                .url(join(baseUrl, cfg.reportsDir(), uuid.toString()) + "/")
+                .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+                .active(true)
+                .size(ReportEntity.sizeKB(destination))
+                .build();
 
         // Add request mapping
         redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
@@ -215,17 +271,17 @@ public class JpaReportService {
             // If size more than max history
             if (allReports.size() >= max) {
                 log.info("Current report count '{}' exceed max history report count '{}'",
-                    allReports.size(),
-                    max
+                        allReports.size(),
+                        max
                 );
 
                 // Delete last after max history
                 long deleted = allReports.stream()
-                    .skip(max)
-                    .peek(e -> log.info("Report '{}' will be deleted", e))
-                    .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
-                    .peek(repository::delete)
-                    .count();
+                        .skip(max)
+                        .peek(e -> log.info("Report '{}' will be deleted", e))
+                        .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
+                        .peek(repository::delete)
+                        .count();
 
                 // Update level (safety)
                 created.setLevel(Math.max(created.getLevel() - deleted, 0));

@@ -1,0 +1,8 @@
+{{- if .Values.pvc.enabled -}}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: allure-server-storagepvc
+spec:
+  {{- toYaml .Values.pvc.spec | nindent 2 }}
+  {{ end }}

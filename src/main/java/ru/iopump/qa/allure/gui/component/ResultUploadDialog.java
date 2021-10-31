@@ -14,12 +14,12 @@ import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.multipart.MultipartFile;
-import ru.iopump.qa.allure.controller.AllureResultController;
 
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Function;
 
 import static ru.iopump.qa.util.Str.format;
 
@@ -32,23 +32,27 @@ public class ResultUploadDialog extends Dialog { //NOPMD
     private final Div infoContainer;
     private final Button close = new Button("Ok", e -> onClickCloseAndDiscard());
 
-    public ResultUploadDialog(AllureResultController allureResultController, int maxFileSizeBytes) {
+    public ResultUploadDialog(
+            Function<MemoryBuffer, Object> uploadConsumer,
+            int maxFileSizeBytes,
+            String type) {
+
         this.buffer = new MemoryBuffer();
         this.infoContainer = new Div();
 
         this.upload = new Upload(buffer);
         upload.setMaxFiles(1);
-        upload.setDropLabel(new Label("Upload allure results as Zip archive (.zip)"));
+        upload.setDropLabel(new Label(format("Upload allure {} as Zip archive (.zip)", type)));
         upload.setAcceptedFileTypes(".zip");
         upload.setMaxFileSize(maxFileSizeBytes);
 
         upload.addSucceededListener(event -> {
             try {
-                var uploadResponse = allureResultController.uploadResults(toMultiPartFile(buffer));
+                var uploadResponse = uploadConsumer.apply(buffer);
                 show(info(format(
-                    "File '{}- {} bytes' loaded: {}",
-                    event.getFileName(), event.getContentLength(), uploadResponse
-                    )), false
+                                "File '{}- {} bytes' loaded: {}",
+                                event.getFileName(), event.getContentLength(), uploadResponse
+                        )), false
                 );
             } catch (Exception ex) { //NOPMD
                 show(error("Internal error: " + ex.getLocalizedMessage()), true);
@@ -63,45 +67,10 @@ public class ResultUploadDialog extends Dialog { //NOPMD
                 log.warn("Uploading rejected: " + event.getErrorMessage());
             }
         });
-        configureDialog();
+        configureDialog(type);
     }
 
-    public void onClose(ComponentEventListener<DialogCloseActionEvent> listener) {
-        addDialogCloseActionListener(listener);
-    }
-
-    public void addControlButton(final Button externalButton) {
-        externalButton.addClickListener(event -> {
-            if (isOpened()) {
-                onClickCloseAndDiscard();
-            } else {
-                onClickOpenAndInit();
-            }
-        });
-    }
-
-    private void configureDialog() {
-        setCloseOnEsc(true);
-        setCloseOnOutsideClick(true);
-        addDialogCloseActionListener(event -> {
-            cleanInfo();
-            close();
-        });
-
-        var title = new H3("Upload result");
-        add(title, new VerticalLayout(upload, infoContainer, close));
-    }
-
-    private void onClickOpenAndInit() {
-        cleanInfo();
-        open();
-    }
-
-    private void onClickCloseAndDiscard() {
-        super.fireEvent(new Dialog.DialogCloseActionEvent(this, true));
-    }
-
-    private MultipartFile toMultiPartFile(MemoryBuffer memoryBuffer) {
+    public static MultipartFile toMultiPartFile(MemoryBuffer memoryBuffer) {
         return new MultipartFile() {
 
             @Override
@@ -153,6 +122,41 @@ public class ResultUploadDialog extends Dialog { //NOPMD
         };
     }
 
+    public void onClose(ComponentEventListener<DialogCloseActionEvent> listener) {
+        addDialogCloseActionListener(listener);
+    }
+
+    public void addControlButton(final Button externalButton) {
+        externalButton.addClickListener(event -> {
+            if (isOpened()) {
+                onClickCloseAndDiscard();
+            } else {
+                onClickOpenAndInit();
+            }
+        });
+    }
+
+    private void configureDialog(String type) {
+        setCloseOnEsc(true);
+        setCloseOnOutsideClick(true);
+        addDialogCloseActionListener(event -> {
+            cleanInfo();
+            close();
+        });
+
+        var title = new H3("Upload " + type);
+        add(title, new VerticalLayout(upload, infoContainer, close));
+    }
+
+    private void onClickOpenAndInit() {
+        cleanInfo();
+        open();
+    }
+
+    private void onClickCloseAndDiscard() {
+        super.fireEvent(new Dialog.DialogCloseActionEvent(this, true));
+    }
+
     private Component info(String text) {
         var p = new Paragraph();
         p.getElement().setText(text);
@@ -178,7 +182,6 @@ public class ResultUploadDialog extends Dialog { //NOPMD
             upload.getElement().getStyle().set("background", "pink");
         }
         infoContainer.add(component);
-
     }
 }
 

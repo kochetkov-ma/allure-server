@@ -1,0 +1,6 @@
+apiVersion: v2
+name: allure-server
+description: Allure Server application helm chart for Kubernetes
+type: application
+version: 1.0.0
+appVersion: 2.9.0

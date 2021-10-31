@@ -14,8 +14,6 @@ import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.PropertyId;
 import io.qameta.allure.entity.ExecutorInfo;
-import java.io.Closeable;
-import java.util.Collections;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +21,9 @@ import ru.iopump.qa.allure.controller.AllureReportController;
 import ru.iopump.qa.allure.gui.dto.GenerateDto;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
 import ru.iopump.qa.allure.model.ReportSpec;
+
+import java.io.Closeable;
+import java.util.Collections;
 
 @Slf4j
 public class ReportGenerateDialog extends Dialog {
@@ -145,7 +146,7 @@ public class ReportGenerateDialog extends Dialog {
             request.setResults(Collections.singletonList(generateDto.getResultUuid()));
             request.setDeleteResults(generateDto.isDeleteResults());
 
-            spec.setPath(new String[] {generateDto.getPath()});
+            spec.setPath(new String[]{generateDto.getPath()});
             spec.setExecutorInfo(info.setBuildName(generateDto.getBuild()));
 
             request.setReportSpec(spec);

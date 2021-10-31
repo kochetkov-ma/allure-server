@@ -1,23 +1,11 @@
 package ru.iopump.qa.allure.controller; //NOPMD
 
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
-
 import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletResponse;
-import javax.validation.ConstraintViolationException;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,21 +13,27 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.model.UploadResponse;
 import ru.iopump.qa.allure.service.PathUtil;
 import ru.iopump.qa.allure.service.ResultService;
 import ru.iopump.qa.util.StreamUtil;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.ConstraintViolationException;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 
 @RequiredArgsConstructor
 @RestController
@@ -63,7 +57,7 @@ public class AllureResultController {
     @DeleteMapping(path = "/{uuid}")
     @CacheEvict(value = CACHE, allEntries = true)
     public ResultResponse deleteResult(
-        @PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid
+            @PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid
     ) throws IOException {
         return resultService.internalDeleteByUUID(uuid);
     }
@@ -72,9 +66,9 @@ public class AllureResultController {
     @GetMapping(path = "/{uuid}")
     public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid) throws IOException {
         return StreamUtil.stream(getAllResult())
-            .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
-            .findFirst()
-            .orElse(ResultResponse.builder().build());
+                .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
+                .findFirst()
+                .orElse(ResultResponse.builder().build());
     }
 
     @Operation(summary = "Get all uploaded allure results archives")
@@ -98,34 +92,35 @@ public class AllureResultController {
         }).collect(Collectors.toUnmodifiableSet());
     }
 
+    @SneakyThrows
     @Operation(summary = "Upload allure-results.zip with allure results files before generating report. " +
-        "Don't forgot memorize uuid from response for further report generation"
+            "Don't forgot memorize uuid from response for further report generation"
     )
     @PostMapping(consumes = {"multipart/form-data"})
     @ResponseStatus(HttpStatus.CREATED)
     @CacheEvict(value = CACHE, allEntries = true) // update results cache
     public UploadResponse uploadResults(
-        @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
-            name = "allureResults",
-            example = "allure-result.zip",
-            required = true,
-            content = @Content(mediaType = "application/zip")
-        )
-        @RequestParam MultipartFile allureResults
-    ) throws IOException {
+            @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
+                    name = "allureResults",
+                    example = "allure-result.zip",
+                    required = true,
+                    content = @Content(mediaType = "application/zip")
+            )
+            @RequestParam MultipartFile allureResults
+    ) {
 
         final String contentType = allureResults.getContentType();
 
         // Check Content-Type
         if (StringUtils.isNotBlank(contentType)) {
             Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
-                "Content-Type must be '%s' but '%s'", "application/zip", contentType);
+                    "Content-Type must be '%s' but '%s'", "application/zip", contentType);
         }
 
         // Check Extension
         if (allureResults.getOriginalFilename() != null) {
             Preconditions.checkArgument(allureResults.getOriginalFilename().endsWith(".zip"),
-                "File must have '.zip' extension but '%s'", allureResults.getOriginalFilename());
+                    "File must have '.zip' extension but '%s'", allureResults.getOriginalFilename());
         }
 
         // Unzip and save

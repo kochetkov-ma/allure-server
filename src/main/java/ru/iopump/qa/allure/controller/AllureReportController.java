@@ -1,13 +1,21 @@
 package ru.iopump.qa.allure.controller; //NOPMD
 
+import com.google.common.base.Preconditions;
+import io.qameta.allure.entity.ExecutorInfo;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
@@ -77,6 +85,49 @@ public class AllureReportController {
                 reportGenerateRequest.getReportSpec().getExecutorInfo(),
                 baseUrl()
         );
+
+        return new ReportResponse(
+                reportEntity.getUuid(),
+                reportEntity.getPath(),
+                reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()),
+                reportEntity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+        );
+    }
+
+
+    @SneakyThrows
+    @Operation(summary = "Upload allure-report.zip with generated allure report files")
+    @PostMapping(value = "{reportPath}", consumes = {"multipart/form-data"})
+    @ResponseStatus(HttpStatus.CREATED)
+    @CacheEvict(value = CACHE, allEntries = true) // update results cache
+    public ReportResponse uploadReport(
+            @PathVariable("reportPath") @NonNull String reportPath,
+            @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
+                    name = "allureResults",
+                    example = "allure-result.zip",
+                    required = true,
+                    content = @Content(mediaType = "application/zip")
+            )
+            @RequestParam MultipartFile allureReportArchive) {
+
+        final String contentType = allureReportArchive.getContentType();
+
+        // Check Content-Type
+        if (StringUtils.isNotBlank(contentType)) {
+            Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
+                    "Content-Type must be '%s' but '%s'", "application/zip", contentType);
+        }
+
+        // Check Extension
+        if (allureReportArchive.getOriginalFilename() != null) {
+            Preconditions.checkArgument(allureReportArchive.getOriginalFilename().endsWith(".zip"),
+                    "File must have '.zip' extension but '%s'", allureReportArchive.getOriginalFilename());
+        }
+
+        // Unzip and save
+        ReportEntity reportEntity = reportService
+                .uploadReport(reportPath, allureReportArchive.getInputStream(), new ExecutorInfo(), baseUrl());
+        log.info("File saved to file system '{}'", allureReportArchive);
 
         return new ReportResponse(
                 reportEntity.getUuid(),

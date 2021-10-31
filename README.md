@@ -16,16 +16,24 @@ Allure server for store / aggregate / manage Allure results and generate / manag
 There is simple API with Swagger(OpenAPI) Description.
 
 Just use Spring Boot Jar from Release Page.
-   
+
 Web GUI has been available from Release v2.0.0
 
 Example on [allure.iopump.ru](http://allure.iopump.ru/)
 
 ## Get Started
+
 ### Docker
+
 There is a docker image on Docker Hub: [allure-server](https://hub.docker.com/r/kochetkovma/allure-server)
 Running as Docker container look at: [readme](https://hub.docker.com/r/kochetkovma/allure-server)
-### Jar 
+
+### Kubernetes
+
+Use Helm Chart for Kubernetes from **[.helm/allure-server/README.md](.helm/allure-server/README.md)**
+
+### Jar
+
 Get the latest release [Releases](https://github.com/kochetkov-ma/allure-server/releases)   
 Download `allure-server.jar`  
 Update your jre(jdk) up to [Java 11](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)  
@@ -156,6 +164,8 @@ See docker compose:
 [docker-compose with Postgres integration](./docker-compose.yml)
 
 [docker-compose with default H2 database](./docker-compose-h2.yml)
+
+Use Helm Chart for Kubernetes from **[.helm/allure-server/README.md](.helm/allure-server/README.md)**
 
 ### GitHub Actions
 

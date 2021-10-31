@@ -1,8 +1,17 @@
 package ru.iopump.qa.allure.service;
 
-import static java.nio.file.Files.isDirectory;
-
 import com.google.common.base.Preconditions;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.helper.MoveFileVisitor;
+import ru.iopump.qa.allure.model.ResultResponse;
+import ru.iopump.qa.util.FileUtil;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -18,16 +27,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import ru.iopump.qa.allure.AppCfg;
-import ru.iopump.qa.allure.helper.MoveFileVisitor;
-import ru.iopump.qa.allure.model.ResultResponse;
-import ru.iopump.qa.util.FileUtil;
+
+import static java.nio.file.Files.isDirectory;
 
 @Getter
 @Component
@@ -137,9 +138,10 @@ public class ResultService {
 
     private void move(Path from, Path to) throws IOException {
         Files.find(from,
-            1,
-            (path, basicFileAttributes)
-                -> basicFileAttributes.isDirectory() && path.getFileName().toString().matches("allure-results?"))
+                        1,
+                        (path, basicFileAttributes)
+                                -> basicFileAttributes.isDirectory() && (path.getFileName().toString()
+                                .matches("allure-.+|report.*")))
             .forEach(
                 nestedResultDir -> {
                     try {

@@ -51,3 +51,6 @@ id_rsa
 !**/resources/**/*.jar
 allure-server-store/
 tmp/
+
+pg-secret.yaml
+CA.pem

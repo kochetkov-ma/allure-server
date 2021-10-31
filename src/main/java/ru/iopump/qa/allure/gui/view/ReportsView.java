@@ -12,12 +12,15 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.controller.AllureReportController;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.gui.DateTimeResolver;
 import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
+import ru.iopump.qa.allure.gui.component.ResultUploadDialog;
 import ru.iopump.qa.allure.service.JpaReportService;
 
 import javax.annotation.PostConstruct;
@@ -30,6 +33,7 @@ import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 import static ru.iopump.qa.allure.gui.component.Col.Type.LINK;
 import static ru.iopump.qa.allure.gui.component.Col.Type.NUMBER;
 import static ru.iopump.qa.allure.gui.component.Col.prop;
+import static ru.iopump.qa.allure.gui.component.ResultUploadDialog.toMultiPartFile;
 import static ru.iopump.qa.allure.helper.Util.url;
 
 @Tag("reports-view")
@@ -44,39 +48,62 @@ public class ReportsView extends VerticalLayout {
     /* COMPONENTS */
     private final FilteredGrid<ReportEntity> reports;
     private final Button deleteSelection;
+    private final ResultUploadDialog uploadDialog;
+    private final Button uploadButton;
 
     public ReportsView(final JpaReportService jpaReportService,
+                       final AllureReportController allureReportController,
                        final DateTimeResolver dateTimeResolver,
-                       final AppCfg appCfg) {
+                       final AppCfg appCfg,
+                       final MultipartProperties multipartProperties) {
         this.dateTimeResolver = dateTimeResolver;
         this.appCfg = appCfg;
         this.dateTimeResolver.retrieve();
 
-        this.reports = new FilteredGrid<>(
-            asProvider(jpaReportService),
-            cols()
+        this.uploadDialog = new ResultUploadDialog(
+                (buffer) -> allureReportController.uploadReport("manual_uploaded", toMultiPartFile(buffer)),
+                (int) multipartProperties.getMaxFileSize().toBytes(),
+                "report"
         );
+
+        this.reports = new FilteredGrid<>(
+                asProvider(jpaReportService),
+                cols()
+        );
+        this.uploadButton = new Button("Upload report");
         this.deleteSelection = new Button("Delete selection",
-            new Icon(VaadinIcon.CLOSE_CIRCLE),
-            event -> {
-                for (ReportEntity reportEntity : reports.getGrid().getSelectedItems()) {
-                    UUID uuid = reportEntity.getUuid();
-                    try {
-                        jpaReportService.internalDeleteByUUID(uuid);
-                        Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                    } catch (Exception e) { //NOPMD
-                        Notification.show("Deleting error: " + e.getLocalizedMessage(),
-                            5000,
-                            Notification.Position.TOP_START);
-                        log.error("Deleting error", e);
+                new Icon(VaadinIcon.CLOSE_CIRCLE),
+                event -> {
+                    for (ReportEntity reportEntity : reports.getGrid().getSelectedItems()) {
+                        UUID uuid = reportEntity.getUuid();
+                        try {
+                            jpaReportService.internalDeleteByUUID(uuid);
+                            Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
+                        } catch (Exception e) { //NOPMD
+                            Notification.show("Deleting error: " + e.getLocalizedMessage(),
+                                    5000,
+                                    Notification.Position.TOP_START);
+                            log.error("Deleting error", e);
+                        }
                     }
-                }
-                reports.getGrid().deselectAll();
-                reports.getGrid().getDataProvider().refreshAll();
-            });
+                    reports.getGrid().deselectAll();
+                    reports.getGrid().getDataProvider().refreshAll();
+                });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         this.dateTimeResolver.onClientReady(() -> reports.getGrid().getDataProvider().refreshAll());
+
+        uploadDialog.onClose(event -> reports.getGrid().getDataProvider().refreshAll());
+    }
+
+    private static ListDataProvider<ReportEntity> asProvider(final JpaReportService jpaReportService) {
+        //noinspection unchecked
+        final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy
+                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                        new Class[]{Collection.class},
+                        (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
+
+        return new ListDataProvider<>(collection);
     }
 
     //// PRIVATE ////
@@ -104,19 +131,10 @@ public class ReportsView extends VerticalLayout {
         }
     }
 
-    private static ListDataProvider<ReportEntity> asProvider(final JpaReportService jpaReportService) {
-        //noinspection unchecked
-        final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy
-                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class[]{Collection.class},
-                        (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
-
-        return new ListDataProvider<>(collection);
-    }
-
     @PostConstruct
     public void postConstruct() {
-        add(deleteSelection);
+        add(deleteSelection, uploadButton);
+        uploadDialog.addControlButton(uploadButton);
         reports.addTo(this);
     }
 }

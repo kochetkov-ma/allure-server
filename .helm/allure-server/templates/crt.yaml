@@ -1,0 +1,15 @@
+{{- if .Values.databaseCrt.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: allure-server-crt
+  labels:
+  {{- include "allure-server.labels" . | nindent 4 }}
+data:
+  root.crt: |
+    {{- if .Values.databaseCrt.crt.sourceText }}
+    {{ .Values.databaseCrt.crt.sourceText | indent 4 }}
+    {{- else }}
+    {{ .Files.Get .Values.databaseCrt.crt.sourcePath | nindent 4 }}
+    {{- end }}
+  {{- end }}

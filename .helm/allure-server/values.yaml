@@ -1,0 +1,153 @@
+replicaCount: 1
+
+image:
+  repository: kochetkovma/allure-server
+  pullPolicy: IfNotPresent
+  ## Don't use 'latest' ;)
+  tag: 2.9.0
+
+## Add 'key: value collection' and delete '{ }' if need
+## Uncomment and remove '{ }' if need
+imagePullSecrets: { }
+#- secretName: your-registry-secret
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  ## Specifies whether a service account should be created
+  create: false
+  ## Annotations to add to the service account
+  annotations: { }
+  ## The name of the service account to use.
+  ## If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: { }
+
+podSecurityContext: { }
+#fsGroup: 2000
+
+securityContext: { }
+#capabilities:
+#  drop:
+#  - ALL
+#readOnlyRootFilesystem: true
+#runAsNonRoot: true
+#runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+  name: http
+
+## Ingress for load balancer
+ingress:
+  enabled: true
+  ## Labels -> key: value
+  labels: { }
+  ## Ingress annotations
+  annotations:
+    acme.cert-manager.io/http01-edit-in-place: "true"
+    kubernetes.io/ingress.class: nginx
+    ## deprecated
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    ## deprecated
+    nginx.ingress.kubernetes.io/client-max-body-size: "100m"
+    ## new https://docs.nginx.com/nginx-ingress-controller/configuration/ingress-resources/advanced-configuration-with-annotations/
+    nginx.org/client-max-body-size: "100m"
+    ## LetsEncrypt Issuer by CertManager annotation. USE YOUR OWN or disable TLS (https)
+    ## MY issuer
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  ## If TLS is set to true, you must declare what secret will store the key/certificate for TLS
+  tls:
+    - hosts:
+        - "allure.iopump.ru"
+        - "iopump.ru"
+      ## Must be provided if Ingress is enabled
+      ## Secrets must be added manually to the namespace
+      ## MY secret
+      secretName: letsencrypt-prod
+  ## Ingress hostnames and service paths
+  hosts:
+    - name: allure.iopump.ru
+      path: /
+    - name: iopump.ru
+      path: /
+  extraPaths: { }
+
+resources:
+  limits:
+    cpu: 800m
+    memory: 800Mi
+  requests:
+    cpu: 400m
+    memory: 400Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  #targetMemoryUtilizationPercentage: 80
+
+nodeSelector: { }
+
+tolerations: [ ]
+
+affinity: { }
+
+## Secret object name to use 'env.secret' map
+## Secrets must be added manually to the namespace
+## Uncomment and remove '{ }' if need
+## OPTIONAL
+secret: { }
+  ## name: allure-server-env-var-secret
+  ## Env variables from secret with name from 'secret.name'
+  ## OPTIONAL
+  #keys:
+  #- SPRING_DATASOURCE_USERNAME
+#- SPRING_DATASOURCE_PASSWORD
+
+## Allure filesystem storage in PVC
+## enable/disable by 'pvc.enabled'
+pvc:
+  enabled: true
+  spec:
+    ## My storage Class Name
+    storageClassName: yc-network-hdd
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 1Gi
+    ## Static PV
+    #volumeName: allure-storage-pv
+
+## Add cert for connection to database
+## enable/disable by 'databaseCrt.enabled'
+databaseCrt:
+  enabled: false
+  crt:
+    ## Use crt as text (first priority)
+    sourceText: ""
+    ## Read crt from local file in helm chart (second priority)
+    sourcePath: "crt/CA.pem"
+    ## Mount crt to this dir in container
+    targetDir: "~/.postgresql/"
+
+env:
+  ## Add custom env variables
+  ## OPTIONAL
+  SPRING_PROFILES_ACTIVE: default
+
+  ##################
+  ## FOR Postgres ##
+  ##################
+  #SPRING_DATASOURCE_URL: jdbc:postgresql://rc1b-olr3c3p38mxdsm0f.mdb.yandexcloud.net:6432/allure?&targetServerType=master&useSSL=false
+  #SPRING_JPA_DATABASE: postgresql
+  #SPRING_JPA_HIBERNATE_DDL-AUTO: update
+
+  ## Use 'secret.keys' instead this
+  #SPRING_DATASOURCE_USERNAME: <your_username>
+  #SPRING_DATASOURCE_PASSWORD: <your_password>
