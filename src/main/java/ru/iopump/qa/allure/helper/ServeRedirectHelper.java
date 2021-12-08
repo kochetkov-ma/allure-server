@@ -1,8 +1,6 @@
 package ru.iopump.qa.allure.helper;
 
 import com.google.common.collect.Maps;
-import java.util.Map;
-import javax.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +9,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
-import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.properties.AllureProperties;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 @RequiredArgsConstructor
 @Controller
@@ -19,7 +20,7 @@ import ru.iopump.qa.allure.AppCfg;
 public class ServeRedirectHelper {
     public static final String INDEX_HTML = "/index.html";
     public static final char CHAR = '/';
-    private final AppCfg cfg;
+    private final AllureProperties cfg;
     private final Map<String, String> redirectReportPaths = Maps.newConcurrentMap();
 
     @GetMapping("${allure.reports.path}**")
@@ -57,8 +58,8 @@ public class ServeRedirectHelper {
         result = StringUtils.strip(result, "/");
 
         // Add base url if not
-        if (!result.startsWith(cfg.reportsPath())) {
-            result = cfg.reportsPath() + result; //NOPMD
+        if (!result.startsWith(cfg.reports().path())) {
+            result = cfg.reports().path() + result; //NOPMD
         }
 
         // Remove '/index.html' if exists

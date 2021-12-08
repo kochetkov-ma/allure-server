@@ -16,10 +16,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
 import ru.iopump.qa.allure.model.ReportResponse;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.service.JpaReportService;
 import ru.iopump.qa.allure.service.ResultService;
 import ru.iopump.qa.util.StreamUtil;
@@ -46,18 +46,18 @@ public class AllureReportController {
     final static String CACHE = "reports";
     private final JpaReportService reportService;
     private final ResultService resultService;
-    private final AppCfg appCfg;
+    private final AllureProperties allureProperties;
 
     public String baseUrl() {
-        return url(appCfg);
+        return url(allureProperties);
     }
 
     @Operation(summary = "Get generated allure reports")
     @GetMapping
     public Collection<ReportResponse> getAllReports(@RequestParam(required = false) String path) {
         return StreamUtil.stream(getAllCached())
-            .filter(i -> path == null || i.getPath().startsWith(path))
-            .collect(Collectors.toUnmodifiableSet());
+                .filter(i -> path == null || i.getPath().startsWith(path))
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     @Cacheable(CACHE) // caching results
@@ -66,10 +66,10 @@ public class AllureReportController {
                 .map(entity -> new ReportResponse(
                         entity.getUuid(),
                         entity.getPath(),
-                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
-                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
                 ))
-            .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Operation(summary = "Generate report")
@@ -89,8 +89,8 @@ public class AllureReportController {
         return new ReportResponse(
                 reportEntity.getUuid(),
                 reportEntity.getPath(),
-                reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()),
-                reportEntity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
         );
     }
 
@@ -132,8 +132,8 @@ public class AllureReportController {
         return new ReportResponse(
                 reportEntity.getUuid(),
                 reportEntity.getPath(),
-                reportEntity.generateUrl(baseUrl(), appCfg.reportsDir()),
-                reportEntity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
         );
     }
 
@@ -145,10 +145,10 @@ public class AllureReportController {
                 .map(entity -> new ReportResponse(
                         entity.getUuid(),
                         entity.getPath(),
-                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
-                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
                 ))
-            .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @Operation(summary = "Delete all reports or older than date in epoch seconds")
@@ -166,10 +166,10 @@ public class AllureReportController {
                 .map(entity -> new ReportResponse(
                         entity.getUuid(),
                         entity.getPath(),
-                        entity.generateUrl(baseUrl(), appCfg.reportsDir()),
-                        entity.generateLatestUrl(baseUrl(), appCfg.reportsPath())
+                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
                 ))
-            .collect(Collectors.toUnmodifiableList());
+                .collect(Collectors.toUnmodifiableList());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

@@ -1,14 +1,15 @@
 package ru.iopump.qa.allure.gui;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.TimeZone;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.properties.AllureProperties;
+
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.TimeZone;
 
 @Slf4j
 public class DateTimeResolverTest {
@@ -18,7 +19,9 @@ public class DateTimeResolverTest {
     @Before
     public void setUp() throws Exception {
 
-        var resolver = new DateTimeResolver(new AppCfg().dateFormat("yy/MM/dd HH:mm:ss"));
+        var resolver = new DateTimeResolver(
+                new AllureProperties(null, null, false, "yy/MM/dd HH:mm:ss", null)
+        );
         var formatterInCurrentTimeZone = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(TimeZone.getDefault().toZoneId());
 
         resolverSpy = Mockito.spy(resolver);

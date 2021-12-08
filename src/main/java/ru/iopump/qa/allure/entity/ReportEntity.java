@@ -53,6 +53,10 @@ public class ReportEntity {
     @PositiveOrZero
     @Column(columnDefinition = "int not null default '0'")
     private int version = 1; //NOPMD
+    @Builder.Default
+    @NotNull
+    @Column(nullable = false, columnDefinition = "varchar(255) not null default ''")
+    private String buildUrl = ""; //NOPMD
 
     public static long sizeKB(@Nullable Path path) {
         if (path == null || Files.notExists(path)) {

@@ -1,6 +1,11 @@
 package ru.iopump.qa.allure.helper;
 
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import ru.iopump.qa.allure.entity.ReportEntity;
+import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.service.PathUtil;
+import ru.iopump.qa.util.Str;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,12 +18,8 @@ import java.util.Collections;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import ru.iopump.qa.allure.AppCfg;
-import ru.iopump.qa.allure.entity.ReportEntity;
-import ru.iopump.qa.allure.service.PathUtil;
-import ru.iopump.qa.util.Str;
+
+import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 
 @Slf4j
 public class OldReportsFormatConverterHelper {
@@ -26,8 +27,8 @@ public class OldReportsFormatConverterHelper {
     private final Path reportsDir;
     private final String reportsPath;
 
-    public OldReportsFormatConverterHelper(AppCfg cfg) {
-        this(Paths.get(cfg.reportsDir()), cfg.reportsPath());
+    public OldReportsFormatConverterHelper(AllureProperties cfg) {
+        this(Paths.get(cfg.reports().dir()), cfg.reports().path());
     }
 
     OldReportsFormatConverterHelper(Path reportsDir, String reportsPath) {

@@ -1,9 +1,11 @@
 package ru.iopump.qa.allure.gui;
 
-import static java.lang.String.format;
-
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.spring.annotation.VaadinSessionScope;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import ru.iopump.qa.allure.properties.AllureProperties;
+
 import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -13,9 +15,8 @@ import java.util.Calendar;
 import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import ru.iopump.qa.allure.AppCfg;
+
+import static java.lang.String.format;
 
 @Slf4j
 @Component
@@ -29,9 +30,9 @@ public class DateTimeResolver {
     private DateTimeFormatter clientFormatter;
     private Runnable clientReady;
 
-    public DateTimeResolver(AppCfg appCfg) {
-        this.pattern = appCfg.dateFormat();
-        this.serverFormatter = DateTimeFormatter.ofPattern(appCfg.dateFormat()).withZone(serverZone());
+    public DateTimeResolver(AllureProperties allureProperties) {
+        this.pattern = allureProperties.dateFormat();
+        this.serverFormatter = DateTimeFormatter.ofPattern(allureProperties.dateFormat()).withZone(serverZone());
     }
 
     public static ZoneId serverZone() {

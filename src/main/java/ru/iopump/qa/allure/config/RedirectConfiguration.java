@@ -1,8 +1,8 @@
 package ru.iopump.qa.allure.config;
 
-import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -12,8 +12,8 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
-import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.helper.Util;
+import ru.iopump.qa.allure.properties.AllureProperties;
 
 import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletRequest;
@@ -22,17 +22,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-@RequiredArgsConstructor
 @Configuration
 @Slf4j
 public class RedirectConfiguration implements WebMvcConfigurer {
 
-    private final AppCfg cfg;
+    private final String swaggerPath;
+    private final AllureProperties cfg;
+
+    public RedirectConfiguration(@Value("${springdoc.swagger-ui.path}") String swaggerPath, AllureProperties cfg) {
+        this.swaggerPath = swaggerPath;
+        this.cfg = cfg;
+    }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/swagger", cfg.swaggerPath()); // Will redirect to UI
-        registry.addRedirectViewController("/api", cfg.swaggerPath());
+        registry.addRedirectViewController("/swagger", swaggerPath); // Will redirect to UI
+        registry.addRedirectViewController("/api", swaggerPath);
         registry.addRedirectViewController("/", "/ui"); // To Vaadin UI
     }
 
@@ -44,30 +49,30 @@ public class RedirectConfiguration implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-                .addResourceHandler(Util.join("/", cfg.reportsDir(), "**"))
-            .addResourceLocations("file:" + cfg.reportsDir())
-            .resourceChain(true)
-            .addResolver(new PathResourceResolver() {
+                .addResourceHandler(Util.join("/", cfg.reports().dir(), "**"))
+                .addResourceLocations("file:" + cfg.reports().dir())
+                .resourceChain(true)
+                .addResolver(new PathResourceResolver() {
 
-                @Override
-                public Resource resolveResource(HttpServletRequest request,
-                                                @Nonnull String requestPath,
-                                                @Nonnull List<? extends Resource> locations,
-                                                @Nonnull ResourceResolverChain chain) {
-                    return super.resolveResource(request, requestPath, locations, chain);
-                }
-
-                @Override
-                protected Resource getResource(@Nonnull String resourcePath,
-                                               @Nonnull Resource location) throws IOException {
-                    var res = super.getResource(resourcePath, location);
-                    if (res == null) {
-                        return getIndexHtml(resourcePath, location);
+                    @Override
+                    public Resource resolveResource(HttpServletRequest request,
+                                                    @Nonnull String requestPath,
+                                                    @Nonnull List<? extends Resource> locations,
+                                                    @Nonnull ResourceResolverChain chain) {
+                        return super.resolveResource(request, requestPath, locations, chain);
                     }
-                    return res;
 
-                }
-            });
+                    @Override
+                    protected Resource getResource(@Nonnull String resourcePath,
+                                                   @Nonnull Resource location) throws IOException {
+                        var res = super.getResource(resourcePath, location);
+                        if (res == null) {
+                            return getIndexHtml(resourcePath, location);
+                        }
+                        return res;
+
+                    }
+                });
     }
 
     @SneakyThrows
@@ -76,11 +81,11 @@ public class RedirectConfiguration implements WebMvcConfigurer {
         final Path thisResource = location.getFile().toPath().resolve(resourcePath);
         if (Files.exists(thisResource) && Files.isDirectory(thisResource)) {
             return Files.walk(thisResource, 1)
-                .skip(1)
-                .filter(i -> "index.html".equals(i.getFileName().toString()))
-                .map(i -> new FileSystemResource(i.toFile()))
-                .findFirst()
-                .orElse(null);
+                    .skip(1)
+                    .filter(i -> "index.html".equals(i.getFileName().toString()))
+                    .map(i -> new FileSystemResource(i.toFile()))
+                    .findFirst()
+                    .orElse(null);
         }
         return null;
     }

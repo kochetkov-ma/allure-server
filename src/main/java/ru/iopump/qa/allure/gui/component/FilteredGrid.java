@@ -148,7 +148,7 @@ public class FilteredGrid<T> {
     private Renderer<T> link(Col<T> columnSpec) {
         return new ComponentRenderer<>(row -> {
             var link = Str.toStr(columnSpec.getValue().apply(row));
-            var res = new Anchor(link, shortUrl(link));
+            var res = new Anchor(link, StringUtils.defaultIfBlank(shortUrl(link), link));
             res.setTarget("_blank");
             res.getStyle().set(FONT_FAMILY, GERMANIA_ONE);
             return res;

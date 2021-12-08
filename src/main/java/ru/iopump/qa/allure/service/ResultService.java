@@ -7,9 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.helper.MoveFileVisitor;
 import ru.iopump.qa.allure.model.ResultResponse;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.util.FileUtil;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ public class ResultService {
     private final Path storagePath;
 
     @Autowired
-    public ResultService(AppCfg cfg) {
+    public ResultService(AllureProperties cfg) {
         this(Paths.get(cfg.resultsDir()));
     }
 

@@ -8,11 +8,14 @@ import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConf
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.properties.BasicProperties;
+import ru.iopump.qa.allure.properties.CleanUpProperties;
 
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class, ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableTransactionManagement
-@EnableConfigurationProperties(AppCfg.class)
+@EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class})
 @EnableVaadin
 public class Application { //NOPMD
 

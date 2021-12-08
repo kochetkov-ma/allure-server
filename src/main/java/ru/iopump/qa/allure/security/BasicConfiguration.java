@@ -8,23 +8,23 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.properties.BasicProperties;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class BasicConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final AppCfg cfg;
+    private final BasicProperties basicProperties;
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         PasswordEncoder encoder =
             PasswordEncoderFactories.createDelegatingPasswordEncoder();
         auth
-            .inMemoryAuthentication()
-            .withUser(cfg.basicAuthUsername())
-            .password(encoder.encode(cfg.basicAuthPassword()))
+                .inMemoryAuthentication()
+                .withUser(basicProperties.username())
+                .password(encoder.encode(basicProperties.password()))
             .roles("USER", "ADMIN");
     }
 
@@ -35,11 +35,11 @@ public class BasicConfiguration extends WebSecurityConfigurerAdapter {
             .and()
             .csrf().disable()
             .requestCache().requestCache(new CustomRequestCache());
-        if (cfg.basicAuthEnable()) {
+        if (basicProperties.enable()) {
             spec.and().authorizeRequests()
-                .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
-                .anyRequest().authenticated()
-                .and().httpBasic();
+                    .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+                    .anyRequest().authenticated()
+                    .and().httpBasic();
         }
     }
 }

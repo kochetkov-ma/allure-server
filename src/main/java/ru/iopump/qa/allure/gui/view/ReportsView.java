@@ -13,7 +13,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
-import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.controller.AllureReportController;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.gui.DateTimeResolver;
@@ -21,6 +20,7 @@ import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.allure.gui.component.Col;
 import ru.iopump.qa.allure.gui.component.FilteredGrid;
 import ru.iopump.qa.allure.gui.component.ResultUploadDialog;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.service.JpaReportService;
 
 import javax.annotation.PostConstruct;
@@ -43,7 +43,7 @@ import static ru.iopump.qa.allure.helper.Util.url;
 public class ReportsView extends VerticalLayout {
     private static final long serialVersionUID = 5822017036734476962L;
     private final DateTimeResolver dateTimeResolver;
-    private final AppCfg appCfg;
+    private final AllureProperties allureProperties;
 
     /* COMPONENTS */
     private final FilteredGrid<ReportEntity> reports;
@@ -54,10 +54,10 @@ public class ReportsView extends VerticalLayout {
     public ReportsView(final JpaReportService jpaReportService,
                        final AllureReportController allureReportController,
                        final DateTimeResolver dateTimeResolver,
-                       final AppCfg appCfg,
+                       final AllureProperties allureProperties,
                        final MultipartProperties multipartProperties) {
         this.dateTimeResolver = dateTimeResolver;
-        this.appCfg = appCfg;
+        this.allureProperties = allureProperties;
         this.dateTimeResolver.retrieve();
 
         this.uploadDialog = new ResultUploadDialog(
@@ -120,14 +120,19 @@ public class ReportsView extends VerticalLayout {
                 .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
                 .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
                 .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
+                .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
                 .build();
+    }
+
+    private String buildUrl(ReportEntity e) {
+        return e.getBuildUrl();
     }
 
     private String displayUrl(ReportEntity e) {
         if (e.isActive()) {
-            return e.generateLatestUrl(url(appCfg), appCfg.reportsPath());
+            return e.generateLatestUrl(url(allureProperties), allureProperties.reports().path());
         } else {
-            return e.generateUrl(url(appCfg), appCfg.reportsDir());
+            return e.generateUrl(url(allureProperties), allureProperties.reports().dir());
         }
     }
 

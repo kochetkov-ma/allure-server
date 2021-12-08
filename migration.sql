@@ -1,0 +1,4 @@
+-- version 2.10.0
+-- New column
+ALTER TABLE REPORT_ENTITY
+    ADD COLUMN BUILD_URL varchar(255) NOT NULL DEFAULT ''

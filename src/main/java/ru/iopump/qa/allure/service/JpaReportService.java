@@ -15,20 +15,20 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import ru.iopump.qa.allure.AppCfg;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.OldReportsFormatConverterHelper;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.repo.JpaReportRepository;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
 import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
@@ -48,11 +49,9 @@ import static ru.iopump.qa.allure.service.PathUtil.str;
 @Transactional
 public class JpaReportService {
 
-    public static final String REPORT_PATH_DEFAULT = "allure/reports/";
-
     @Getter
     private final Path reportsDir;
-    private final AppCfg cfg;
+    private final AllureProperties cfg;
     private final ObjectMapper objectMapper;
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
@@ -61,13 +60,13 @@ public class JpaReportService {
 
     private final AtomicBoolean init = new AtomicBoolean();
 
-    public JpaReportService(AppCfg cfg,
+    public JpaReportService(AllureProperties cfg,
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
                             ServeRedirectHelper redirection
     ) {
-        this.reportsDir = Paths.get(cfg.reportsDir());
+        this.reportsDir = cfg.reports().dirPath();
         this.cfg = cfg;
         this.objectMapper = objectMapper;
         this.repository = repository;
@@ -79,7 +78,7 @@ public class JpaReportService {
     @PostConstruct
     protected void initRedirection() {
         repository.findByActiveTrue().forEach(
-                e -> redirection.mapRequestTo(join(cfg.reportsPath(), e.getPath()), reportsDir.resolve(e.getUuid().toString()).toString())
+                e -> redirection.mapRequestTo(join(cfg.reports().path(), e.getPath()), reportsDir.resolve(e.getUuid().toString()).toString())
         );
     }
 
@@ -143,7 +142,7 @@ public class JpaReportService {
                 .findFirst();
 
         // Add CI executor information
-        addExecutionInfo(
+        var safeExecutorInfo = addExecutionInfo(
                 destination,
                 executorInfo,
                 baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
@@ -157,10 +156,20 @@ public class JpaReportService {
                 .uuid(uuid)
                 .path(reportPath)
                 .createdDateTime(LocalDateTime.now(zeroZone()))
-                .url(join(baseUrl, cfg.reportsDir(), uuid.toString()) + "/")
+                .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
                 .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
                 .active(true)
                 .size(ReportEntity.sizeKB(destination))
+                .buildUrl(
+                        // Взять Build Url
+                        ofNullable(safeExecutorInfo.getBuildUrl())
+                                // Or Build Name
+                                .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
+                                // Or Executor Name
+                                .or(() -> ofNullable(safeExecutorInfo.getName()))
+                                // Or Executor Type
+                                .orElse(safeExecutorInfo.getType())
+                )
                 .build();
 
         // Add request mapping
@@ -207,19 +216,19 @@ public class JpaReportService {
                 .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
                 .or(Optional::empty);
 
+        // Add CI executor information
+        var safeExecutorInfo = addExecutionInfo(
+                resultDirs.get(0),
+                executorInfo,
+                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
+                uuid
+        );
+
         try {
             // Add history to results if exists
             final List<Path> resultDirsToGenerate = historyO
                     .map(history -> (List<Path>) ImmutableList.<Path>builder().addAll(resultDirs).add(history).build())
                     .orElse(resultDirs);
-
-            // Add CI executor information
-            addExecutionInfo(
-                    resultDirs.get(0),
-                    executorInfo,
-                    baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
-                    uuid
-            );
 
             // Generate new report with history
             reportGenerator.generate(destination, resultDirsToGenerate);
@@ -239,10 +248,20 @@ public class JpaReportService {
                 .uuid(uuid)
                 .path(reportPath)
                 .createdDateTime(LocalDateTime.now(zeroZone()))
-                .url(join(baseUrl, cfg.reportsDir(), uuid.toString()) + "/")
+                .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
                 .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
                 .active(true)
                 .size(ReportEntity.sizeKB(destination))
+                .buildUrl(
+                        // Взять Build Url
+                        ofNullable(safeExecutorInfo.getBuildUrl())
+                                // Or Build Name
+                                .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
+                                // Or Executor Name
+                                .or(() -> ofNullable(safeExecutorInfo.getName()))
+                                // Or Executor Type
+                                .orElse(safeExecutorInfo.getType())
+                )
                 .build();
 
         // Add request mapping
@@ -262,7 +281,7 @@ public class JpaReportService {
 
     //region Private
     private void handleMaxHistory(ReportEntity created) {
-        var max = cfg.maxReportHistoryLevel();
+        var max = cfg.reports().historyLevel();
 
         if (created.getLevel() >= max) { // Check reports count in history
             // Get all sorted reports
@@ -307,12 +326,13 @@ public class JpaReportService {
         }
     }
 
-    private void addExecutionInfo(Path resultPathWithInfo,
-                                  ExecutorInfo executor,
-                                  String reportUrl,
-                                  UUID uuid) throws IOException {
+    @NotNull
+    private ExecutorInfo addExecutionInfo(Path resultPathWithInfo,
+                                          ExecutorInfo executor,
+                                          String reportUrl,
+                                          UUID uuid) throws IOException {
 
-        var executorInfo = Optional.ofNullable(executor).orElse(new ExecutorInfo());
+        var executorInfo = ofNullable(executor).orElse(new ExecutorInfo());
         executorInfo.setReportUrl(reportUrl);
 
         if (StringUtils.isBlank(executorInfo.getName())) {
@@ -331,6 +351,7 @@ public class JpaReportService {
         final Path executorPath = resultPathWithInfo.resolve(JSON_FILE_NAME);
         writer.writeValue(executorPath.toFile(), executorInfo);
         log.info("Executor information added to '{}' : {}", executorPath, executorInfo);
+        return executorInfo;
     }
     //endregion
 }

@@ -3,7 +3,7 @@ package ru.iopump.qa.allure.helper;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-import ru.iopump.qa.allure.AppCfg;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.util.Str;
 import ru.iopump.qa.util.StreamUtil;
 
@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 @SuppressWarnings("RedundantModifiersUtilityClassLombok")
 @UtilityClass
 public class Util {
-    public static String url(AppCfg appCfg) {
-        if (StringUtils.isBlank(appCfg.reportHost())) {
+    public static String url(AllureProperties allureProperties) {
+        if (StringUtils.isBlank(allureProperties.serverBaseUrl())) {
             return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
         } else {
-            return appCfg.reportHost();
+            return allureProperties.serverBaseUrl();
         }
     }
 
