@@ -101,13 +101,13 @@ affinity: { }
 ## Secrets must be added manually to the namespace
 ## Uncomment and remove '{ }' if need
 ## OPTIONAL
-secret: { }
+secret:
   ## name: allure-server-env-var-secret
   ## Env variables from secret with name from 'secret.name'
   ## OPTIONAL
-  #keys:
-  #- SPRING_DATASOURCE_USERNAME
-#- SPRING_DATASOURCE_PASSWORD
+  keys:
+    - SPRING_DATASOURCE_USERNAME
+    - SPRING_DATASOURCE_PASSWORD
 
 ## Allure filesystem storage in PVC
 ## enable/disable by 'pvc.enabled'
@@ -127,7 +127,7 @@ pvc:
 ## Add cert for connection to database
 ## enable/disable by 'databaseCrt.enabled'
 databaseCrt:
-  enabled: false
+  enabled: true
   crt:
     ## Use crt as text (first priority)
     sourceText: ""
@@ -144,9 +144,9 @@ env:
   ##################
   ## FOR Postgres ##
   ##################
-  #SPRING_DATASOURCE_URL: jdbc:postgresql://rc1b-olr3c3p38mxdsm0f.mdb.yandexcloud.net:6432/allure?&targetServerType=master&useSSL=false
-  #SPRING_JPA_DATABASE: postgresql
-  #SPRING_JPA_HIBERNATE_DDL-AUTO: update
+  SPRING_DATASOURCE_URL: jdbc:postgresql://rc1b-olr3c3p38mxdsm0f.mdb.yandexcloud.net:6432/allure?&targetServerType=master&useSSL=false
+  SPRING_JPA_DATABASE: postgresql
+  SPRING_JPA_HIBERNATE_DDL-AUTO: update
 
   ## Use 'secret.keys' instead this
   #SPRING_DATASOURCE_USERNAME: <your_username>

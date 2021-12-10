@@ -65,8 +65,10 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
     @Override
     public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
         taskRegistrar.addTriggerTask(() -> {
-            log.info("CleanUp started ...");
-            log.info("CleanUp parameters: " + cleanUpProperties);
+            if (log.isInfoEnabled()) {
+                log.info("CleanUp started ...");
+                log.info("CleanUp parameters: " + cleanUpProperties);
+            }
 
             final Collection<ReportEntity> candidatesCleanUp = repository
                     .findAllByCreatedDateTimeIsBefore(cleanUpProperties.getClosestEdgeDate());
@@ -96,7 +98,7 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
                                     })
                     ).collect(Collectors.toUnmodifiableList());
 
-            log.info("CleanUp finished with results: " + print(processedReports));
+            if (log.isInfoEnabled()) log.info("CleanUp finished with results: " + print(processedReports));
 
         }, triggerContext -> {
 
@@ -111,7 +113,7 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
             // Следующее срабатывание из даты и времени из настроек
             final LocalDateTime nextDateTime = LocalDateTime.of(nextDate, nextTime);
 
-            log.info("Next CleanUp scheduled at " + nextDateTime);
+            if (log.isInfoEnabled()) log.info("Next CleanUp scheduled at " + nextDateTime);
 
             return Date.from(nextDateTime.atZone(ZoneId.systemDefault()).toInstant());
         });

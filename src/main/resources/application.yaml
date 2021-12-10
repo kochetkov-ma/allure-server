@@ -41,13 +41,13 @@ allure:
   reports:
     dir: allure/reports/
     path: reports/
-    historyLevel: 20
+    history-level: 20
   support-old-format: false
   date-format: "yy/MM/dd HH:mm:ss"
   clean:
     dryRun: false
     time: "00:00"
-    ageDays: 30
+    ageDays: 90
     paths:
       - path: "manual_uploaded"
-        ageDays: 40
+        ageDays: 30
