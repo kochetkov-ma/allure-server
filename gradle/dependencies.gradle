@@ -41,12 +41,33 @@ dependencies {
     implementation 'org.jooq:joor:0.9.14'
 
     implementation('com.vaadin:vaadin-spring-boot-starter') {
+
         ["com.vaadin.webjar",
          "org.webjars.bowergithub.insites",
          "org.webjars.bowergithub.polymer",
          "org.webjars.bowergithub.polymerelements",
          "org.webjars.bowergithub.vaadin",
          "org.webjars.bowergithub.webcomponents"].forEach { group -> exclude(group: group) }
+
+        ['vaadin-dev-server',
+         'vaadin-accordion-flow',
+         'vaadin-avatar-flow',
+         'vaadin-date-picker-flow',
+         'vaadin-date-time-picker-flow',
+         'vaadin-details-flow',
+         'vaadin-login-flow',
+         'vaadin-material-theme',
+         'vaadin-virtual-list-flow',
+         'vaadin-time-picker-flow',
+         'vaadin-split-layout-flow',
+         'vaadin-radio-button-flow',
+         'vaadin-list-box-flow',
+         'vaadin-iron-list-flow',
+         'vaadin-combo-box-flow',
+         'flow-polymer-template',
+         'flow-lit-template',
+         'flow-dnd',
+         'android-json'].forEach { module -> exclude(module: module) }
     }
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
