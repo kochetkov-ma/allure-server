@@ -45,7 +45,7 @@ wrapper {
 }
 vaadin {
     nodeVersion = 'v16.15.0'
-    pnpmEnable = true
+    pnpmEnable = false
     productionMode = true
 }
 classes {

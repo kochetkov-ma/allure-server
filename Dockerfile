@@ -1,10 +1,9 @@
-FROM gradle:6.9.2-jdk11-alpine as build
+FROM gradle:6.9.2-jdk11 as build
 COPY . .
 ARG RELEASE_VERSION=${RELEASE_VERSION:-0.0.0}
-ARG NODE_VERSION=${NODE_VERSION:-16.15.0}
-RUN gradle -Pversion=docker --no-daemon -PnodeVersion=v$NODE_VERSION vaadinBuildFrontend bootJar
+RUN gradle -Pversion=docker -i -s --no-daemon bootJar
 
-FROM openjdk:11.0.15-jre11.0.15-jre-slim-bullseye as production
+FROM openjdk:11.0.15-jre-slim-bullseye as production
 COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-server-docker.jar
 # Set port
 EXPOSE ${PORT:-8080}
