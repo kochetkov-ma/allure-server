@@ -1,7 +1,8 @@
 FROM gradle:6.9.2-jdk11-alpine as build
 COPY . .
 ARG RELEASE_VERSION=${RELEASE_VERSION:-0.0.0}
-RUN gradle -Pversion=docker --no-daemon -PnodeVersion=12.16.3 vaadinPrepareFrontend vaadinBuildFrontend bootJar
+ARG NODE_VERSION=${NODE_VERSION:16.15.0}
+RUN gradle -Pversion=docker --no-daemon -PnodeVersion=$NODE_VERSION vaadinPrepareFrontend vaadinBuildFrontend bootJar
 
 FROM openjdk:11.0.15-jre11.0.15-jre-slim-bullseye as production
 COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-server-docker.jar

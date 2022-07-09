@@ -1443,6 +1443,13 @@ packages:
     engines: { node: '>=6.0.0' }
     dev: true
 
+  /@jridgewell/source-map/0.3.2:
+    resolution: { integrity: sha512-m7O9o2uR8k2ObDysZYzdfhb08VuEml5oWGiosa1VdaPZ/A6QyPkAJuwN0Q1lhULOf6B7MtQmHENS743hWtCrgw== }
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.2
+      '@jridgewell/trace-mapping': 0.3.14
+    dev: true
+
   /@jridgewell/sourcemap-codec/1.4.14:
     resolution: { integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw== }
     dev: true
@@ -7478,7 +7485,7 @@ packages:
       jest-worker: 26.6.2
       rollup: 2.76.0
       serialize-javascript: 4.0.0
-      terser: 4.6.7
+      terser: 5.14.1
     dev: true
 
   /rollup/2.76.0:
@@ -8064,6 +8071,17 @@ packages:
       acorn: 8.7.1
       commander: 2.20.3
       source-map: 0.6.1
+      source-map-support: 0.5.21
+    dev: true
+
+  /terser/5.14.1:
+    resolution: { integrity: sha512-+ahUAE+iheqBTDxXhTisdA8hgvbEG1hHOQ9xmNjeUJSoi6DU/gMrKNcfZjHkyY6Alnuyc+ikYJaxxfHkT3+WuQ== }
+    engines: { node: '>=10' }
+    hasBin: true
+    dependencies:
+      '@jridgewell/source-map': 0.3.2
+      acorn: 8.7.1
+      commander: 2.20.3
       source-map-support: 0.5.21
     dev: true
 
