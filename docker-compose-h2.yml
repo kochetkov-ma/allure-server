@@ -3,7 +3,7 @@ services:
   allure-server:
     # For local debug #
     # build: .
-    image: kochetkovma/allure-server:latest
+    image: kochetkovma/allure-server:2.11.1
     ports:
       - 8080:8080
     volumes:
