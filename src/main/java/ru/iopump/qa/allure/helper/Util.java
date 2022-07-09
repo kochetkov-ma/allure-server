@@ -22,6 +22,12 @@ public class Util {
         }
     }
 
+    public static String concatParts(@Nullable String... part) {
+        return StreamUtil.stream(part)
+                .collect(Collectors.joining("/"))
+                .replaceAll("/{2,}", "/");
+    }
+
     public static String join(@Nullable Object... part) {
         return StreamUtil.stream(part)
                 .map(Str::toStr)

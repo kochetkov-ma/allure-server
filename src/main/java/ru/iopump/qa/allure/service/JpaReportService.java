@@ -14,7 +14,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.OldReportsFormatConverterHelper;
@@ -24,6 +23,7 @@ import ru.iopump.qa.allure.repo.JpaReportRepository;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import javax.transaction.Transactional;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
@@ -177,7 +177,7 @@ public class JpaReportService {
 
         // Persist
         handleMaxHistory(newEntity);
-        repository.save(newEntity);
+        repository.saveAndFlush(newEntity);
 
         // Disable prev report
         prevEntity.ifPresent(e -> e.setActive(false));
@@ -269,7 +269,7 @@ public class JpaReportService {
 
         // Persist
         handleMaxHistory(newEntity);
-        repository.save(newEntity);
+        repository.saveAndFlush(newEntity);
 
         // Disable prev report
         prevEntity.ifPresent(e -> e.setActive(false));

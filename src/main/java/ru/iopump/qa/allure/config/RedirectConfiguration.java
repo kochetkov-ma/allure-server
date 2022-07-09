@@ -12,15 +12,17 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
-import ru.iopump.qa.allure.helper.Util;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
 import javax.annotation.Nonnull;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+
+import static ru.iopump.qa.allure.helper.Util.join;
 
 @Configuration
 @Slf4j
@@ -28,17 +30,22 @@ public class RedirectConfiguration implements WebMvcConfigurer {
 
     private final String swaggerPath;
     private final AllureProperties cfg;
+    private final ServletContext servletContext;
 
-    public RedirectConfiguration(@Value("${springdoc.swagger-ui.path}") String swaggerPath, AllureProperties cfg) {
+    public RedirectConfiguration(@Value("${springdoc.swagger-ui.path}") String swaggerPath,
+                                 ServletContext servletContext,
+                                 AllureProperties cfg) {
         this.swaggerPath = swaggerPath;
+        this.servletContext = servletContext;
         this.cfg = cfg;
     }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/swagger", swaggerPath); // Will redirect to UI
-        registry.addRedirectViewController("/api", swaggerPath);
-        registry.addRedirectViewController("/", "/ui"); // To Vaadin UI
+        String ctxPath = servletContext.getContextPath();
+        registry.addRedirectViewController("swagger", swaggerPath); // Will redirect to UI
+        registry.addRedirectViewController("api", swaggerPath);
+        registry.addRedirectViewController("/", "ui"); // To Vaadin UI
     }
 
     @Override
@@ -49,7 +56,7 @@ public class RedirectConfiguration implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-                .addResourceHandler(Util.join("/", cfg.reports().dir(), "**"))
+                .addResourceHandler(join("/", cfg.reports().dir(), "**"))
                 .addResourceLocations("file:" + cfg.reports().dir())
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver() {

@@ -1,4 +1,7 @@
 ### Internal Spring Configuration
+#server:
+#  servlet:
+#    context-path: "/server"
 spring:
   servlet:
     multipart.max-file-size: 100MB
@@ -51,3 +54,4 @@ allure:
     paths:
       - path: "manual_uploaded"
         ageDays: 30
+  server-base-url:

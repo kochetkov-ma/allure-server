@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
-import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.properties.CleanUpProperties;
@@ -31,7 +30,6 @@ import static org.apache.commons.io.FileUtils.deleteQuietly;
 @Configuration
 @Lazy(false)
 @Slf4j
-@Transactional
 @RequiredArgsConstructor
 @EnableScheduling
 public class CleanUpServiceConfiguration implements SchedulingConfigurer {
@@ -72,6 +70,18 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
 
             final Collection<ReportEntity> candidatesCleanUp = repository
                     .findAllByCreatedDateTimeIsBefore(cleanUpProperties.getClosestEdgeDate());
+
+            if (log.isDebugEnabled()) {
+                log.debug("CleanUp. All reports: " + repository.findAll().stream()
+                        .map(e -> e.getUuid() + " " + e.getPath() + " " + e.getCreatedDateTime())
+                        .collect(Collectors.joining(", ", "[", "]"))
+                );
+
+                log.debug("CleanUp. Candidates to clean up: " + candidatesCleanUp.stream()
+                        .map(e -> e.getUuid() + " " + e.getPath() + " " + e.getCreatedDateTime())
+                        .collect(Collectors.joining(", ", "[", "]"))
+                );
+            }
 
             final Collection<Pair<ReportEntity, Boolean>> processedReports = candidatesCleanUp.stream()
                     .map(report ->

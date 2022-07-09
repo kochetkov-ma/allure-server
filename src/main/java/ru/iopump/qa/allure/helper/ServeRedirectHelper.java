@@ -14,6 +14,8 @@ import ru.iopump.qa.allure.properties.AllureProperties;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
+import static ru.iopump.qa.allure.helper.Util.concatParts;
+
 @RequiredArgsConstructor
 @Controller
 @Slf4j
@@ -29,8 +31,9 @@ public class ServeRedirectHelper {
         final String to = redirectReportPaths.get(from);
 
         if (to != null) {
-            log.info("Redirect evaluated: '{}' -> '{}'", from, to);
-            return new RedirectView(to, false);
+            String redirectTo = concatParts(request.getServletContext().getContextPath(), to);
+            log.info("Redirect evaluated: '{}' -> '{}'", from, redirectTo);
+            return new RedirectView(redirectTo, false);
         }
 
         log.info("Redirect NOT evaluated: '{}'", from);

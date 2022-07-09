@@ -17,6 +17,8 @@
         <appender-ref ref="STDOUT"/>
     </logger>
 
+    <logger name="ru.iopump.qa.allure.service" level="DEBUG"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
