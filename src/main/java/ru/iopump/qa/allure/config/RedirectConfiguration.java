@@ -15,7 +15,6 @@ import org.springframework.web.servlet.resource.ResourceResolverChain;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
 import javax.annotation.Nonnull;
-import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -30,19 +29,15 @@ public class RedirectConfiguration implements WebMvcConfigurer {
 
     private final String swaggerPath;
     private final AllureProperties cfg;
-    private final ServletContext servletContext;
 
     public RedirectConfiguration(@Value("${springdoc.swagger-ui.path}") String swaggerPath,
-                                 ServletContext servletContext,
                                  AllureProperties cfg) {
         this.swaggerPath = swaggerPath;
-        this.servletContext = servletContext;
         this.cfg = cfg;
     }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        String ctxPath = servletContext.getContextPath();
         registry.addRedirectViewController("swagger", swaggerPath); // Will redirect to UI
         registry.addRedirectViewController("api", swaggerPath);
         registry.addRedirectViewController("/", "ui"); // To Vaadin UI
