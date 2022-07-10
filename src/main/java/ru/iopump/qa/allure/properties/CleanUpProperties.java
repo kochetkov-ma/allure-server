@@ -27,9 +27,6 @@ public class CleanUpProperties {
     private final Collection<PathCleanUpItem> paths;
     private final int minAge;
 
-    private final transient LocalDateTime closestEdgeDate;
-    private final transient LocalDateTime edgeDate;
-
     public CleanUpProperties() {
         this(false, MIDNIGHT, 0, Collections.emptyList());
     }
@@ -42,8 +39,14 @@ public class CleanUpProperties {
         this.paths = defaultIfNull(paths, Collections.emptyList());
 
         this.minAge = concat(Stream.of(ageDays), this.paths.stream().map(PathCleanUpItem::getAgeDays)).min(naturalOrder()).orElse(0);
-        this.closestEdgeDate = LocalDateTime.now().minusDays(this.minAge);
-        this.edgeDate = LocalDateTime.now().minusDays(this.ageDays);
+    }
+
+    public LocalDateTime getClosestEdgeDate() {
+        return LocalDateTime.now().minusDays(this.minAge);
+    }
+
+    public LocalDateTime getEdgeDate() {
+        return LocalDateTime.now().minusDays(this.ageDays);
     }
 
     public boolean isNotDryRun() {
@@ -56,12 +59,13 @@ public class CleanUpProperties {
         private final String path;
         private final int ageDays;
 
-        private final transient LocalDateTime edgeDate;
-
         public PathCleanUpItem(String path, int ageDays) {
             this.path = path;
             this.ageDays = ageDays;
-            this.edgeDate = LocalDateTime.now().minusDays(this.ageDays);
+        }
+
+        public LocalDateTime getEdgeDate() {
+            return LocalDateTime.now().minusDays(this.ageDays);
         }
     }
 }
