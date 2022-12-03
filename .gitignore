@@ -1,6 +1,6 @@
 /.gradle
 /.idea
-**/wrapper
+**/wrapper/gradle-wrapper.jar
 /build
 /keys
 /allure
