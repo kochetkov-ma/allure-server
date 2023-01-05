@@ -42,6 +42,7 @@ public class AllureProperties {
             this("allure/reports/", "reports/", 20);
         }
 
+        @ConstructorBinding
         public Reports(String dir,
                        String path,
                        long historyLevel) {
