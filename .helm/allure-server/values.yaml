@@ -4,7 +4,7 @@ image:
   repository: kochetkovma/allure-server
   pullPolicy: IfNotPresent
   ## Don't use 'latest' ;)
-  tag: 2.9.1
+  tag: 2.11.2
 
 ## Add 'key: value collection' and delete '{ }' if need
 ## Uncomment and remove '{ }' if need
@@ -140,6 +140,11 @@ env:
   ## Add custom env variables
   ## OPTIONAL
   SPRING_PROFILES_ACTIVE: default
+
+  #ALLURE_CLEAN_DRYRUN: true
+  #ALLURE_CLEAN_AGEDAYS: 60
+  #ALLURE_CLEAN_PATHS_0_PATH: customPath
+  #ALLURE_CLEAN_PATHS_0_AGEDAYS: 15
 
   ##################
   ## FOR Postgres ##
