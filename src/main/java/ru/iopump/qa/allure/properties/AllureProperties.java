@@ -1,10 +1,13 @@
 package ru.iopump.qa.allure.properties;
 
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
 
+import javax.annotation.PostConstruct;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -14,6 +17,8 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 @Getter
 @Accessors(fluent = true)
 @ConstructorBinding
+@Slf4j
+@ToString
 public class AllureProperties {
 
     private final Reports reports;
@@ -30,7 +35,13 @@ public class AllureProperties {
         this.serverBaseUrl = defaultIfNull(serverBaseUrl, null);
     }
 
+    @PostConstruct
+    void init() {
+        log.info("[ALLURE SERVER CONFIGURATION] Main AllureProperties parameters: " + this);
+    }
+
     @Getter
+    @ToString
     public static class Reports {
 
         private final transient Path dirPath;

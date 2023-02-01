@@ -1,9 +1,13 @@
 package ru.iopump.qa.allure.properties;
 
 import lombok.Getter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConstructorBinding;
+
+import javax.annotation.PostConstruct;
 
 import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 
@@ -11,6 +15,8 @@ import static org.apache.commons.lang3.ObjectUtils.defaultIfNull;
 @Getter
 @Accessors(fluent = true)
 @ConstructorBinding
+@Slf4j
+@ToString(exclude = "password")
 public class BasicProperties {
 
     private final String username;
@@ -21,5 +27,10 @@ public class BasicProperties {
         this.username = defaultIfNull(username, "admin");
         this.password = defaultIfNull(password, "admin");
         this.enable = defaultIfNull(enable, false);
+    }
+
+    @PostConstruct
+    void init() {
+        log.info("[ALLURE SERVER CONFIGURATION] Authorization parameters: " + this);
     }
 }
