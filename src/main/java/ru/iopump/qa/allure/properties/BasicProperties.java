@@ -31,6 +31,7 @@ public class BasicProperties {
 
     @PostConstruct
     void init() {
-        log.info("[ALLURE SERVER CONFIGURATION] Authorization parameters: " + this);
+        if (log.isInfoEnabled())
+            log.info("[ALLURE SERVER CONFIGURATION] Authorization parameters: " + this);
     }
 }

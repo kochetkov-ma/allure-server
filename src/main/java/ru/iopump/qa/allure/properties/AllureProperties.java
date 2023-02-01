@@ -37,7 +37,8 @@ public class AllureProperties {
 
     @PostConstruct
     void init() {
-        log.info("[ALLURE SERVER CONFIGURATION] Main AllureProperties parameters: " + this);
+        if (log.isInfoEnabled())
+            log.info("[ALLURE SERVER CONFIGURATION] Main AllureProperties parameters: " + this);
     }
 
     @Getter
