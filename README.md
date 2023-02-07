@@ -269,3 +269,27 @@ WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)
 > *Main Page*
 ![alt text](ui-example.png)  
 
+### Logging
+
+Logging properties are located in `[application.yaml](src%2Fmain%2Fresources%2Fapplication.yaml)`
+
+```
+logging:
+  level:
+    root: INFO
+    org.atmosphere: WARN # Vaadin (GUI) Server
+    org.springframework: INFO
+    org.springframework.core: WARN
+    org.springframework.beans.factory.support: WARN
+    ru.iopump.qa:allure: INFO # Allure Server Logs
+```
+
+You may override it by Environment Variables, for example enable `DEBUG` for allure server:
+```
+    export LOGGING_LEVEL_RU_IOPUMP_QA_ALLURE=DEBUG
+```
+
+Or switch all logs to `DEBUG`:
+```
+    export LOGGING_LEVEL_ROOT=DEBUG
+```

@@ -55,3 +55,11 @@ allure:
       - path: "manual_uploaded"
         ageDays: 30
   server-base-url:
+logging:
+  level:
+    root: INFO
+    org.atmosphere: WARN # Vaadin (GUI) Server
+    org.springframework: INFO
+    org.springframework.core: WARN
+    org.springframework.beans.factory.support: WARN
+    ru.iopump.qa:allure: INFO # Allure Server Logs

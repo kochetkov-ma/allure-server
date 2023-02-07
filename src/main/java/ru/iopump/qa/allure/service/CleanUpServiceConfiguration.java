@@ -57,7 +57,7 @@ public class CleanUpServiceConfiguration implements SchedulingConfigurer {
     void init() throws JsonProcessingException {
         final ObjectWriter prettyWriter = objectMapper.writerWithDefaultPrettyPrinter();
 
-        log.info("CleanUp policy settings:\n{}", prettyWriter.writeValueAsString(cleanUpProperties));
+        log.info("[ALLURE SERVER CONFIGURATION] CleanUp policy settings:\n{}", prettyWriter.writeValueAsString(cleanUpProperties));
     }
 
     @Override
