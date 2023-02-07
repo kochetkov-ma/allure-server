@@ -97,6 +97,10 @@ tolerations: [ ]
 
 affinity: { }
 
+startupInitialDelay: 30
+livenessInitialDelay: 30
+readinessInitialDelay: 30
+
 ## Secret object name to use 'env.secret' map
 ## Secrets must be added manually to the namespace
 ## Uncomment and remove '{ }' if need
