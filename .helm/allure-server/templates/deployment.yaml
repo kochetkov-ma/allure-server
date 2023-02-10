@@ -44,19 +44,19 @@ spec:
             httpGet:
               path: /api/result
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: {{ .Values.startupInitialDelay }}
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /api/result
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: {{ .Values.livenessInitialDelay }}
             periodSeconds: 30
           readinessProbe:
             httpGet:
               path: /api/result
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: {{ .Values.readinessInitialDelay }}
             periodSeconds: 30
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
