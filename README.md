@@ -293,3 +293,6 @@ Or switch all logs to `DEBUG`:
 ```
     export LOGGING_LEVEL_ROOT=DEBUG
 ```
+
+## Goals
+See [milestones](https://github.com/kochetkov-ma/allure-server/milestones)
