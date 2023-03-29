@@ -65,7 +65,7 @@ jobs:
           asset_name: allure-server.jar
           asset_content_type: application/jar
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v5
         env:
           RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
