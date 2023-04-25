@@ -16,9 +16,9 @@ public class GenerateDto {
     @NotEmpty
     @Pattern(regexp = PathUtil.UUID_PATTERN)
     String resultUuid;
-    @Size(min = 2, max = 20)
+    @Size(min = 2, max = 120)
     String path;
-    @Size(min = 2, max = 20)
+    @Size(min = 2, max = 120)
     String build;
     boolean deleteResults;
 }
