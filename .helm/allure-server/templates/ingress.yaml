@@ -29,14 +29,20 @@ spec:
         paths:
           {{- range $ingressExtraPaths }}
           - path: {{ default "/" .path | quote }}
+            pathType: Prefix
             backend:
-              serviceName: {{ default $serviceName .service }}
-              servicePort: {{ default $servicePort .port }}
+              service:
+                name: {{ default $serviceName .service }}
+                port:
+                  number: {{ default $servicePort .port }}
           {{- end }}
           - path: {{ default "/" .path | quote }}
+            pathType: Prefix
             backend:
-              serviceName: {{ default $serviceName .service }}
-              servicePort: {{ default $servicePort .servicePort }}
+              service:
+                name: {{ default $serviceName .service }}
+                port:
+                  number: {{ default $servicePort .servicePort }}
   {{- end }}
   {{- if .Values.ingress.tls }}
   tls:
