@@ -1,6 +1,7 @@
 package ru.iopump.qa.allure.security;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,29 +18,41 @@ public class BasicConfiguration extends WebSecurityConfigurerAdapter {
 
     private final BasicProperties basicProperties;
 
+    @Value("${app.security.enable-oauth2:false}")
+    private boolean enableOAuth2;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        PasswordEncoder encoder =
-            PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        auth
-                .inMemoryAuthentication()
+        if (!enableOAuth2 && basicProperties.enable()) {
+            PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+            auth.inMemoryAuthentication()
                 .withUser(basicProperties.username())
                 .password(encoder.encode(basicProperties.password()))
-            .roles("USER", "ADMIN");
+                .roles("USER", "ADMIN");
+        }
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        var spec = http
-            .headers().frameOptions().sameOrigin()
+        http.headers().frameOptions().sameOrigin()
             .and()
             .csrf().disable()
             .requestCache().requestCache(new CustomRequestCache());
-        if (basicProperties.enable()) {
-            spec.and().authorizeRequests()
+
+        if (enableOAuth2) {
+            http
+                .oauth2Login()
+                .and()
+                .authorizeRequests()
+                .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+                .anyRequest().authenticated();
+        } else {
+            http
+                .authorizeRequests(configurer -> configurer
                     .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
                     .anyRequest().authenticated()
-                    .and().httpBasic();
+                )
+                .httpBasic();
         }
     }
 }
