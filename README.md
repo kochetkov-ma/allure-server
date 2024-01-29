@@ -170,6 +170,53 @@ allure:
 - Report with path=`service/production-job` and age=`10d` will be removed at today MIDNIGHT
 - Report with path=`service/production-job` and age=`9d` will **NOT** be removed at today MIDNIGHT
 
+### OAuth2 feature (since 2.12.0)
+Separate Spring profile has been added `oauth`
+
+To enable `Oauth` add this profile to `SPRING_PROFILES_ACTIVE` . For example:
+- in `values.yaml` (Helm): 
+```yaml
+env:
+    SPRING_PROFILES_ACTIVE: oauth
+``` 
+- shell command `export SPRING_PROFILES_ACTIVE=oauth`
+- docker compose
+```yaml
+    environment:
+      SPRING_PROFILES_ACTIVE: oauth
+```
+
+Now [application-oauth.yaml](src/main/resources/application-oauth.yaml) is adjusted to use Google Auth Server:
+```yaml
+### Internal Spring Configuration
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH2_GOOGLE_ALLURE_CLIENT_ID}
+            client-secret: ${OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: Google
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+### App OAuth2 Security Configuration Toggle
+app:
+  security:
+    enable-oauth2: true
+```
+Pass your `OAUTH2_GOOGLE_ALLURE_CLIENT_ID` and `OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET` or override configuration options to use other provider.
+
+There is Oauth feature-toggle `app.security.enable-oauth2`
+
+> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
+
+**By default `oauth` profile is not used and disabled**
+
 ### Special options
 
 > Since version `1.2.0` all reports manage with Database and have unic uuids.

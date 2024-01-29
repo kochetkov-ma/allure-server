@@ -3,8 +3,11 @@ services:
   allure-server:
     # For local debug #
     # build: .
-    image: kochetkovma/allure-server:2.11.1
+    image: kochetkovma/allure-server:2.12.0
     ports:
       - 8080:8080
     volumes:
       - ./tmp/allure:/allure/:rw
+    environment:
+      SPRING_PROFILES_ACTIVE: oauth
+      # BASIC_AUTH_ENABLE: true
