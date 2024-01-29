@@ -9,4 +9,4 @@ COPY --from=build /home/gradle/build/libs/allure-server-docker.jar /allure-serve
 EXPOSE ${PORT:-8080}
 # Run application
 ENV JAVA_OPTS="-Xms256m -Xmx2048m"
-ENTRYPOINT ["java", "-Dloader.path=/ext", "-cp", "allure-server-docker.jar", "-Dspring.profiles.active=${PROFILE:default}", "org.springframework.boot.loader.PropertiesLauncher"]
+ENTRYPOINT ["java", "-Dloader.path=/ext", "-cp", "allure-server-docker.jar", "-Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:default}", "org.springframework.boot.loader.PropertiesLauncher"]

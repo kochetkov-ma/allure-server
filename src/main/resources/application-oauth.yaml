@@ -1,0 +1,20 @@
+### Internal Spring Configuration
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${OAUTH2_GOOGLE_ALLURE_CLIENT_ID}
+            client-secret: ${OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            client-name: Google
+        provider:
+          google:
+            issuer-uri: https://accounts.google.com
+
+### App OAuth2 Security Configuration Toggle
+app:
+  security:
+    enable-oauth2: true

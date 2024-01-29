@@ -19,11 +19,13 @@ spring:
 
 vaadin.urlMapping: "/ui/*"
 server.port: ${PORT:8080}
+
 ### Security
 basic.auth:
   username: admin
   password: admin
   enable: false
+
 ### App Configuration
 springdoc.swagger-ui.path: /swagger-ui.html
 

@@ -31,6 +31,12 @@ dependencies {
     implementation "com.google.guava:guava:$guavaVersion"
     /* Open API */
     implementation "org.springdoc:springdoc-openapi-ui:$openApiVersion"
+
+    /* OAuth2 */
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-oauth2-client'
+    implementation 'org.springframework.security:spring-security-oauth2-jose'
+
     /* Spring Boot */
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

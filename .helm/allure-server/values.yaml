@@ -4,7 +4,7 @@ image:
   repository: kochetkovma/allure-server
   pullPolicy: IfNotPresent
   ## Don't use 'latest' ;)
-  tag: 2.11.2
+  tag: 2.12.0
 
 ## Add 'key: value collection' and delete '{ }' if need
 ## Uncomment and remove '{ }' if need
