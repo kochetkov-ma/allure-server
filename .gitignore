@@ -1,6 +1,5 @@
 /.gradle
 /.idea
-**/wrapper/gradle-wrapper.jar
 /build
 /keys
 /allure
@@ -12,10 +11,6 @@
 package.json
 webpack.config.js
 webpack.generated.js
-
-# Gradle
-gradlew
-gradlew.bat
 
 # Compiled class file
 *.class

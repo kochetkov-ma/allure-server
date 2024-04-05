@@ -22,8 +22,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
       - name: Build with Gradle
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 6.9.2
-          arguments: '--stacktrace --info build'
+        run: ./gradlew --stacktrace --info build

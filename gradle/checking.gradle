@@ -5,12 +5,12 @@ checkstyle {
 ////// pmd //////
 pmd {
     toolVersion = "6.21.0"
-    rulePriority = 4 // 5 is default
+    rulesMinimumPriority = 4 // 5 is default
     ruleSetFiles "$rootDir/config/pmd/pmd-rules.xml"
     ruleSets = []
 }
 pmdTest {
-    rulePriority = 1
+    rulesMinimumPriority = 1
 }
 ////// spotbugs //////
 spotbugs {

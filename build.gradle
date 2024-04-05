@@ -38,10 +38,7 @@ java {
 }
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = '6.9.2'
-    doLast {
-        delete "$projectDir/gradlew.bat", "$projectDir/gradlew"
-    }
+    gradleVersion = '8.7'
 }
 vaadin {
     nodeVersion = 'v16.15.0'

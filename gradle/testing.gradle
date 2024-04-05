@@ -3,8 +3,8 @@ test {
     minHeapSize = "256m"
     maxHeapSize = "2G"
     reports {
-        junitXml.enabled = true
-        html.enabled = true
+        junitXml.required = true
+        html.required = true
     }
     testLogging {
         showCauses true
@@ -21,9 +21,9 @@ test {
 ////// jacoco //////
 jacocoTestReport {
     reports {
-        xml.enabled true
-        csv.enabled false
-        html.enabled true
+        xml.required = true
+        csv.required = false
+        html.required = true
     }
 }
 jacocoTestCoverageVerification {
