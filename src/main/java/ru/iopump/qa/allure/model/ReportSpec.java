@@ -3,7 +3,7 @@ package ru.iopump.qa.allure.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Joiner;
 import io.qameta.allure.entity.ExecutorInfo;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

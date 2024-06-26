@@ -9,36 +9,47 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+
+      ## Build prepare ##
       - name: Fast checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Set RELEASE_VERSION
         run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
       - name: Set up JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
-          java-version: '11'
-          java-package: jdk
-          architecture: x64
+          java-version: '21'
+          distribution: 'temurin'
       - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+
+      ## Build Image ##
       - name: Build with Gradle
-        uses: eskatos/gradle-command-action@v1
+        uses: eskatos/gradle-command-action@v3
         with:
-          gradle-version: 6.9.2
+          gradle-version: ${{ env.GRADLE_VERSION }}
           arguments: ' -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar'
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
-        with:
-          name: allure-server-${{ env.RELEASE_VERSION }}.jar
-          path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
+
+      ## Release in DockerHub ##
+      - name: Publish to Registry
+        uses: elgohr/Publish-Docker-Github-Action@v5
         env:
+          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        with:
+          name: kochetkovma/allure-server
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          tags: "latest,${{ env.RELEASE_VERSION }}"
+          buildargs: RELEASE_VERSION
+
+      ## Release in GitHub ##
       - name: Create Release
         id: create_release
         uses: actions/create-release@latest
@@ -64,14 +75,3 @@ jobs:
           asset_path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
           asset_name: allure-server.jar
           asset_content_type: application/jar
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        env:
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-        with:
-          name: kochetkovma/allure-server
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-          tags: "latest,${{ env.RELEASE_VERSION }}"
-          buildargs: RELEASE_VERSION

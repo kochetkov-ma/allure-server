@@ -1,100 +1,62 @@
 package ru.iopump.qa.allure.helper; //NOPMD
 
+import io.qameta.allure.Aggregator2;
 import io.qameta.allure.ConfigurationBuilder;
 import io.qameta.allure.ReportGenerator;
-import io.qameta.allure.allure1.Allure1Plugin;
-import io.qameta.allure.allure2.Allure2Plugin;
-import io.qameta.allure.category.CategoriesPlugin;
-import io.qameta.allure.category.CategoriesTrendPlugin;
-import io.qameta.allure.context.FreemarkerContext;
-import io.qameta.allure.context.JacksonContext;
-import io.qameta.allure.context.MarkdownContext;
-import io.qameta.allure.context.RandomUidContext;
-import io.qameta.allure.core.AttachmentsPlugin;
+import io.qameta.allure.ReportStorage;
 import io.qameta.allure.core.Configuration;
-import io.qameta.allure.core.MarkdownDescriptionsPlugin;
+import io.qameta.allure.core.LaunchResults;
 import io.qameta.allure.core.Plugin;
-import io.qameta.allure.core.ReportWebPlugin;
-import io.qameta.allure.core.TestsResultsPlugin;
-import io.qameta.allure.duration.DurationPlugin;
-import io.qameta.allure.duration.DurationTrendPlugin;
-import io.qameta.allure.environment.Allure1EnvironmentPlugin;
-import io.qameta.allure.history.HistoryPlugin;
-import io.qameta.allure.history.HistoryTrendPlugin;
-import io.qameta.allure.launch.LaunchPlugin;
-import io.qameta.allure.mail.MailPlugin;
-import io.qameta.allure.owner.OwnerPlugin;
 import io.qameta.allure.plugin.DefaultPluginLoader;
-import io.qameta.allure.retry.RetryPlugin;
-import io.qameta.allure.retry.RetryTrendPlugin;
-import io.qameta.allure.severity.SeverityPlugin;
-import io.qameta.allure.status.StatusChartPlugin;
-import io.qameta.allure.suites.SuitesPlugin;
-import io.qameta.allure.summary.SummaryPlugin;
-import io.qameta.allure.tags.TagsPlugin;
-import io.qameta.allure.timeline.TimelinePlugin;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
+import ru.iopump.qa.allure.helper.plugin.AllureServerPlugin;
+import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.properties.TmsProperties;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
 public final class AllureReportGenerator {
 
+    private final Collection<AllureServerPlugin> listeners;
+    private final AllureProperties allureProperties;
+    private final TmsProperties tmsProperties;
     private final ReportGenerator delegate;
+    private final BeanFactory beanFactory;
+    private final AggregatorGrabber aggregatorGrabber = new AggregatorGrabber();
 
-    public AllureReportGenerator() {
+    public AllureReportGenerator(@NonNull Collection<AllureServerPlugin> listeners, AllureProperties allureProperties, TmsProperties tmsProperties, BeanFactory beanFactory) {
+        this.listeners = listeners;
+        this.allureProperties = allureProperties;
+        this.tmsProperties = tmsProperties;
+        this.beanFactory = beanFactory;
         this.delegate = new ReportGenerator(configuration());
     }
 
-    private static Configuration configuration() {
-        return new ConfigurationBuilder()
-            .fromPlugins(loadPlugins())
-            .fromExtensions(
-                Arrays.asList(
-                    new JacksonContext(),
-                    new MarkdownContext(),
-                    new FreemarkerContext(),
-                    new RandomUidContext(),
-                    new MarkdownDescriptionsPlugin(),
-                    new RetryPlugin(),
-                    new RetryTrendPlugin(),
-                    new TagsPlugin(),
-                    new SeverityPlugin(),
-                    new OwnerPlugin(),
-                    new HistoryPlugin(),
-                    new HistoryTrendPlugin(),
-                    new CategoriesPlugin(),
-                    new CategoriesTrendPlugin(),
-                    new DurationPlugin(),
-                    new DurationTrendPlugin(),
-                    new StatusChartPlugin(),
-                    new TimelinePlugin(),
-                    new SuitesPlugin(),
-                    new ReportWebPlugin(),
-                    new TestsResultsPlugin(),
-                    new AttachmentsPlugin(),
-                    new MailPlugin(),
-                    new SummaryPlugin(),
-                    new ExecutorCiPlugin(),
-                    new LaunchPlugin(),
-                    new Allure2Plugin(),
-                    new Allure1EnvironmentPlugin(),
-                    new Allure1Plugin()
-                )
-            ).build();
+    private Configuration configuration() {
+        return ConfigurationBuilder
+            .bundled()
+            .withPlugins(loadPlugins())
+            .withExtensions(List.of(aggregatorGrabber))
+            .build();
     }
 
     ///// PRIVATE /////
@@ -138,8 +100,61 @@ public final class AllureReportGenerator {
         }
     }
 
-    public Path generate(Path outputDirectory, List<Path> resultsDirectories) throws IOException {
-        delegate.generate(outputDirectory, resultsDirectories);
+    public Path generate(Path outputDirectory, List<Path> resultsDirectories, String reportUrl) {
+        listeners.parallelStream().forEach(listener -> evaluateListener(() -> listener.onGenerationStart(resultsDirectories, new PluginContext(reportUrl)), listener.getName(), "before generation"));
+
+        final Collection<LaunchResults> launchesResults;
+        synchronized (aggregatorGrabber) {
+            delegate.generate(outputDirectory, resultsDirectories);
+            launchesResults = aggregatorGrabber.launchesResults();
+        }
+
+        listeners.parallelStream().forEach(listener -> evaluateListener(() -> listener.onGenerationFinish(outputDirectory, launchesResults, new PluginContext(reportUrl)), listener.getName(), "after generation"));
         return outputDirectory;
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    private class PluginContext implements AllureServerPlugin.Context {
+
+        private final String reportUrl;
+
+        @Override
+        public AllureProperties getAllureProperties() {
+            return allureProperties;
+        }
+
+        @Override
+        public TmsProperties tmsProperties() {
+            return tmsProperties;
+        }
+
+        @Override
+        public BeanFactory beanFactory() {
+            return beanFactory;
+        }
+    }
+
+    private static void evaluateListener(Runnable runnable, String name, String stage) {
+        try {
+            runnable.run();
+            log.info("Listener '{}' {} executed successfully", name, stage);
+        } catch (Exception ex) {
+            log.error("Error in listener '{}'", name, ex);
+        }
+    }
+
+    private static class AggregatorGrabber implements Aggregator2 {
+
+        private Collection<LaunchResults> launchesResults = Collections.emptyList();
+
+        private Collection<LaunchResults> launchesResults() {
+            return launchesResults.stream().toList();
+        }
+
+        @Override
+        public void aggregate(Configuration configuration, List<LaunchResults> launchesResults, ReportStorage storage) {
+            this.launchesResults = launchesResults;
+        }
     }
 }

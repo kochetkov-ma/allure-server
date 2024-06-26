@@ -1,8 +1,8 @@
 package ru.iopump.qa.allure.gui;
 
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
@@ -16,11 +16,11 @@ public class DateTimeResolverTest {
 
     private DateTimeResolver resolverSpy;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    public void setUp() {
 
         var resolver = new DateTimeResolver(
-                new AllureProperties(null, null, false, "yy/MM/dd HH:mm:ss", null)
+            new AllureProperties(null, null, "yy/MM/dd HH:mm:ss", null, null, null)
         );
         var formatterInCurrentTimeZone = DateTimeFormatter.ofPattern("yy/MM/dd HH:mm:ss").withZone(TimeZone.getDefault().toZoneId());
 

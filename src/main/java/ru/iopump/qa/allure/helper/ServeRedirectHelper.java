@@ -1,6 +1,7 @@
 package ru.iopump.qa.allure.helper;
 
 import com.google.common.collect.Maps;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +12,6 @@ import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.RedirectView;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 import static ru.iopump.qa.allure.helper.Util.concatParts;

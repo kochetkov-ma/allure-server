@@ -1,7 +1,8 @@
 package ru.iopump.qa.allure.service;
 
 import java.nio.file.Path;
-import javax.annotation.Nullable;
+
+import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @SuppressWarnings("RedundantModifiersUtilityClassLombok")

@@ -53,3 +53,7 @@ tmp/
 
 pg-secret.yaml
 CA.pem
+
+**/generated/**
+*generated*
+*-private*

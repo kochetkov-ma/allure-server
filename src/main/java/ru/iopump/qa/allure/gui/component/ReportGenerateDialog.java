@@ -7,7 +7,7 @@ import com.vaadin.flow.component.checkbox.Checkbox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
@@ -32,8 +32,8 @@ public class ReportGenerateDialog extends Dialog {
 
     private final AllureReportController allureReportController;
 
-    private final Label info = new Label();
-    private final Label error = new Label();
+    private final NativeLabel info = new NativeLabel();
+    private final NativeLabel error = new NativeLabel();
     @Getter
     private final FormPayload payload;
     private final Button generate = new Button("Generate", e -> onClickGenerate());

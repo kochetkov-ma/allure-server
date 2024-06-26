@@ -11,6 +11,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import ru.iopump.qa.allure.controller.AllureReportController;
@@ -23,7 +24,6 @@ import ru.iopump.qa.allure.gui.component.ResultUploadDialog;
 import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.service.JpaReportService;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;
@@ -61,34 +61,34 @@ public class ReportsView extends VerticalLayout {
         this.dateTimeResolver.retrieve();
 
         this.uploadDialog = new ResultUploadDialog(
-                (buffer) -> allureReportController.uploadReport("manual_uploaded", toMultiPartFile(buffer)),
-                (int) multipartProperties.getMaxFileSize().toBytes(),
-                "report"
+            (buffer) -> allureReportController.uploadReport("manual_uploaded", toMultiPartFile(buffer)),
+            (int) multipartProperties.getMaxFileSize().toBytes(),
+            "report"
         );
 
         this.reports = new FilteredGrid<>(
-                asProvider(jpaReportService),
-                cols()
+            asProvider(jpaReportService),
+            cols()
         );
         this.uploadButton = new Button("Upload report");
         this.deleteSelection = new Button("Delete selection",
-                new Icon(VaadinIcon.CLOSE_CIRCLE),
-                event -> {
-                    for (ReportEntity reportEntity : reports.getGrid().getSelectedItems()) {
-                        UUID uuid = reportEntity.getUuid();
-                        try {
-                            jpaReportService.internalDeleteByUUID(uuid);
-                            Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                        } catch (Exception e) { //NOPMD
-                            Notification.show("Deleting error: " + e.getLocalizedMessage(),
-                                    5000,
-                                    Notification.Position.TOP_START);
-                            log.error("Deleting error", e);
-                        }
+            new Icon(VaadinIcon.CLOSE_CIRCLE),
+            event -> {
+                for (ReportEntity reportEntity : reports.getGrid().getSelectedItems()) {
+                    UUID uuid = reportEntity.getUuid();
+                    try {
+                        jpaReportService.internalDeleteByUUID(uuid);
+                        Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
+                    } catch (Exception e) { //NOPMD
+                        Notification.show("Deleting error: " + e.getLocalizedMessage(),
+                            5000,
+                            Notification.Position.TOP_START);
+                        log.error("Deleting error", e);
                     }
-                    reports.getGrid().deselectAll();
-                    reports.getGrid().getDataProvider().refreshAll();
-                });
+                }
+                reports.getGrid().deselectAll();
+                reports.getGrid().getDataProvider().refreshAll();
+            });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         this.dateTimeResolver.onClientReady(() -> reports.getGrid().getDataProvider().refreshAll());
@@ -99,9 +99,9 @@ public class ReportsView extends VerticalLayout {
     private static ListDataProvider<ReportEntity> asProvider(final JpaReportService jpaReportService) {
         //noinspection unchecked
         final Collection<ReportEntity> collection = (Collection<ReportEntity>) Proxy
-                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class[]{Collection.class},
-                        (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
+            .newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                new Class[]{Collection.class},
+                (proxy, method, args) -> method.invoke(jpaReportService.getAll(), args));
 
         return new ListDataProvider<>(collection);
     }
@@ -109,19 +109,19 @@ public class ReportsView extends VerticalLayout {
     //// PRIVATE ////
     private List<Col<ReportEntity>> cols() {
         return ImmutableList.<Col<ReportEntity>>builder()
-                .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
-                .add(
-                        Col.<ReportEntity>with()
-                                .name("Created")
-                                .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
-                                .build()
-                )
-                .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
-                .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
-                .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
-                .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
-                .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
-                .build();
+            .add(Col.<ReportEntity>with().name("Uuid").value(prop("uuid")).build())
+            .add(
+                Col.<ReportEntity>with()
+                    .name("Created")
+                    .value(e -> dateTimeResolver.printDate(e.getCreatedDateTime()))
+                    .build()
+            )
+            .add(Col.<ReportEntity>with().name("Url").value(this::displayUrl).type(LINK).build())
+            .add(Col.<ReportEntity>with().name("Path").value(prop("path")).build())
+            .add(Col.<ReportEntity>with().name("Active").value(prop("active")).build())
+            .add(Col.<ReportEntity>with().name("Size KB").value(prop("size")).type(NUMBER).build())
+            .add(Col.<ReportEntity>with().name("Build").value(this::buildUrl).type(LINK).build())
+            .build();
     }
 
     private String buildUrl(ReportEntity e) {

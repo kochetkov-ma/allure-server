@@ -16,18 +16,27 @@ spring:
     database: H2
     show-sql: false
     hibernate.ddl-auto: update
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            loggerLevel: basic
 
 vaadin.urlMapping: "/ui/*"
 server.port: ${PORT:8080}
 
 ### Security
-basic.auth:
-  username: admin
-  password: admin
-  enable: false
+basic:
+  auth:
+    username: admin
+    password: admin
+    enable: false
 
 ### App Configuration
-springdoc.swagger-ui.path: /swagger-ui.html
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
 
 # #################
 # Deprecated format. Not supported!
@@ -40,8 +49,11 @@ springdoc.swagger-ui.path: /swagger-ui.html
 #     history.level: 20
 #   support.old.format: false
 #   date.format: "yy/MM/dd HH:mm:ss"
-
 allure:
+  title: "BrewCode | Allure Report"
+  # FROM URL: https://avatars.githubusercontent.com/u/16944358?v=4
+  # FROM FILE: file:/images/logo.png
+  logo: ""
   resultsDir: allure/results/
   reports:
     dir: allure/reports/
@@ -64,4 +76,12 @@ logging:
     org.springframework: INFO
     org.springframework.core: WARN
     org.springframework.beans.factory.support: WARN
-    ru.iopump.qa:allure: INFO # Allure Server Logs
+    ru.iopump.qa.allure: INFO # Allure Server Logs
+    ru.iopump.qa.allure.api: DEBUG
+
+tms:
+  host: tms.localhost
+  api-base-url: https://${tms.host}/api
+  token: "my-token"
+  issue-key-pattern: "[A-Za-z]+-\\d+"
+  dry-run: false
