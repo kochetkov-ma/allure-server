@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.helper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -7,13 +9,14 @@ import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.util.Str;
 import ru.iopump.qa.util.StreamUtil;
 
-import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("RedundantModifiersUtilityClassLombok")
 @UtilityClass
 public class Util {
+    public static final ObjectMapper MAPPER = new ObjectMapper();
+
     public static String url(AllureProperties allureProperties) {
         if (StringUtils.isBlank(allureProperties.serverBaseUrl())) {
             return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString() + "/";
@@ -24,15 +27,15 @@ public class Util {
 
     public static String concatParts(@Nullable String... part) {
         return StreamUtil.stream(part)
-                .collect(Collectors.joining("/"))
-                .replaceAll("/{2,}", "/");
+            .collect(Collectors.joining("/"))
+            .replaceAll("/{2,}", "/");
     }
 
     public static String join(@Nullable Object... part) {
         return StreamUtil.stream(part)
-                .map(Str::toStr)
-                .map(s -> StringUtils.strip(s, "/"))
-                .collect(Collectors.joining("/"));
+            .map(Str::toStr)
+            .map(s -> StringUtils.strip(s, "/"))
+            .collect(Collectors.joining("/"));
     }
 
     public static String shortUrl(@Nullable String str) {

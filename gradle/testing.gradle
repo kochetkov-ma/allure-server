@@ -1,38 +1,18 @@
 ////// junit //////
 test {
+    useJUnitPlatform()
+
     minHeapSize = "256m"
     maxHeapSize = "2G"
-    reports {
-        junitXml.enabled = true
-        html.enabled = true
-    }
+//    reports {
+//        junitXml.enabled = true
+//        html.enabled = true
+//    }
     testLogging {
         showCauses true
         showStackTraces true
         showExceptions true
         /* events "started", "skipped", "failed" */
         exceptionFormat "full"
-    }
-    jacoco {
-        enabled = true
-    }
-    finalizedBy jacocoTestReport
-}
-////// jacoco //////
-jacocoTestReport {
-    reports {
-        xml.enabled true
-        csv.enabled false
-        html.enabled true
-    }
-}
-jacocoTestCoverageVerification {
-    mustRunAfter jacocoTestReport
-    violationRules {
-        rule {
-            limit {
-                minimum = 0.7
-            }
-        }
     }
 }

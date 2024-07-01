@@ -1,6 +1,5 @@
 /.gradle
 /.idea
-**/wrapper/gradle-wrapper.jar
 /build
 /keys
 /allure
@@ -14,7 +13,6 @@ webpack.config.js
 webpack.generated.js
 
 # Gradle
-gradlew
 gradlew.bat
 
 # Compiled class file
@@ -30,7 +28,6 @@ gradlew.bat
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
@@ -53,3 +50,7 @@ tmp/
 
 pg-secret.yaml
 CA.pem
+
+**/generated/**
+*generated*
+*-private*

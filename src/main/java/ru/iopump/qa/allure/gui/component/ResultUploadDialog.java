@@ -6,16 +6,16 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.html.NativeLabel;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.upload.Upload;
 import com.vaadin.flow.component.upload.receivers.MemoryBuffer;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,16 +33,16 @@ public class ResultUploadDialog extends Dialog { //NOPMD
     private final Button close = new Button("Ok", e -> onClickCloseAndDiscard());
 
     public ResultUploadDialog(
-            Function<MemoryBuffer, Object> uploadConsumer,
-            int maxFileSizeBytes,
-            String type) {
+        Function<MemoryBuffer, Object> uploadConsumer,
+        int maxFileSizeBytes,
+        String type) {
 
         this.buffer = new MemoryBuffer();
         this.infoContainer = new Div();
 
         this.upload = new Upload(buffer);
         upload.setMaxFiles(1);
-        upload.setDropLabel(new Label(format("Upload allure {} as Zip archive (.zip)", type)));
+        upload.setDropLabel(new NativeLabel(format("Upload allure {} as Zip archive (.zip)", type)));
         upload.setAcceptedFileTypes(".zip");
         upload.setMaxFileSize(maxFileSizeBytes);
 
@@ -50,9 +50,9 @@ public class ResultUploadDialog extends Dialog { //NOPMD
             try {
                 var uploadResponse = uploadConsumer.apply(buffer);
                 show(info(format(
-                                "File '{}- {} bytes' loaded: {}",
-                                event.getFileName(), event.getContentLength(), uploadResponse
-                        )), false
+                        "File '{}- {} bytes' loaded: {}",
+                        event.getFileName(), event.getContentLength(), uploadResponse
+                    )), false
                 );
             } catch (Exception ex) { //NOPMD
                 show(error("Internal error: " + ex.getLocalizedMessage()), true);

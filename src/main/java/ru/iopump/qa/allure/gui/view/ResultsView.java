@@ -12,6 +12,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import ru.iopump.qa.allure.controller.AllureReportController;
@@ -26,7 +27,6 @@ import ru.iopump.qa.allure.gui.dto.GenerateDto;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.util.StreamUtil;
 
-import javax.annotation.PostConstruct;
 import java.lang.reflect.Proxy;
 import java.util.Collection;
 import java.util.List;

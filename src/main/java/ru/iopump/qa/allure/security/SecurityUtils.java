@@ -2,9 +2,9 @@ package ru.iopump.qa.allure.security;
 
 import com.vaadin.flow.server.HandlerHelper;
 import com.vaadin.flow.shared.ApplicationConstants;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.experimental.UtilityClass;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.stream.Stream;
 
 @UtilityClass

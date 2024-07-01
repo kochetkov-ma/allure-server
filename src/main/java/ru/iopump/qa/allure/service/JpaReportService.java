@@ -6,6 +6,10 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import io.qameta.allure.entity.ExecutorInfo;
+import jakarta.annotation.Nullable;
+import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
@@ -16,15 +20,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
-import ru.iopump.qa.allure.helper.OldReportsFormatConverterHelper;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
 import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.repo.JpaReportRepository;
 
-import javax.annotation.Nullable;
-import javax.annotation.PostConstruct;
-import javax.transaction.Transactional;
-import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -78,7 +77,7 @@ public class JpaReportService {
     @PostConstruct
     protected void initRedirection() {
         repository.findByActiveTrue().forEach(
-                e -> redirection.mapRequestTo(join(cfg.reports().path(), e.getPath()), reportsDir.resolve(e.getUuid().toString()).toString())
+            e -> redirection.mapRequestTo(join(cfg.reports().path(), e.getPath()), reportsDir.resolve(e.getUuid().toString()).toString())
         );
     }
 
@@ -88,11 +87,11 @@ public class JpaReportService {
 
         // delete active history
         entitiesActive
-                .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).resolve("history").toFile()));
+            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).resolve("history").toFile()));
 
         // delete active history
         entitiesInactive
-                .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()));
+            .forEach(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()));
 
         return entitiesInactive;
     }
@@ -132,45 +131,45 @@ public class JpaReportService {
         final Path destination = reportUnzipService.unzipAndStore(archiveInputStream);
         final UUID uuid = UUID.fromString(destination.getFileName().toString());
         Preconditions.checkArgument(
-                Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
-                "Uploaded archive is not an Allure Report"
+            Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
+            "Uploaded archive is not an Allure Report"
         );
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
-                .stream()
-                .findFirst();
+            .stream()
+            .findFirst();
 
         // Add CI executor information
         var safeExecutorInfo = addExecutionInfo(
-                destination,
-                executorInfo,
-                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
-                uuid
+            destination,
+            executorInfo,
+            baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
+            uuid
         );
 
         log.info("Report '{}' loaded", destination);
 
         // New report entity
         final ReportEntity newEntity = ReportEntity.builder()
-                .uuid(uuid)
-                .path(reportPath)
-                .createdDateTime(LocalDateTime.now(zeroZone()))
-                .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
-                .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
-                .active(true)
-                .size(ReportEntity.sizeKB(destination))
-                .buildUrl(
-                        // Взять Build Url
-                        ofNullable(safeExecutorInfo.getBuildUrl())
-                                // Or Build Name
-                                .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
-                                // Or Executor Name
-                                .or(() -> ofNullable(safeExecutorInfo.getName()))
-                                // Or Executor Type
-                                .orElse(safeExecutorInfo.getType())
-                )
-                .build();
+            .uuid(uuid)
+            .path(reportPath)
+            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
+            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+            .active(true)
+            .size(ReportEntity.sizeKB(destination))
+            .buildUrl(
+                // Взять Build Url
+                ofNullable(safeExecutorInfo.getBuildUrl())
+                    // Or Build Name
+                    .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
+                    // Or Executor Name
+                    .or(() -> ofNullable(safeExecutorInfo.getName()))
+                    // Or Executor Type
+                    .orElse(safeExecutorInfo.getType())
+            )
+            .build();
 
         // Add request mapping
         redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
@@ -191,11 +190,6 @@ public class JpaReportService {
                                  @Nullable ExecutorInfo executorInfo,
                                  String baseUrl
     ) throws IOException {
-        if (cfg.supportOldFormat() && init.compareAndSet(false, true)) {
-            var old = new OldReportsFormatConverterHelper(cfg).convertOldFormat();
-            repository.saveAll(old);
-            old.forEach(e -> redirection.mapRequestTo(e.getPath(), reportsDir.resolve(e.getUuid().toString()).toString()));
-        }
         // Preconditions
         Preconditions.checkArgument(!resultDirs.isEmpty());
         resultDirs.forEach(i -> Preconditions.checkArgument(Files.exists(i), "Result '%s' doesn't exist", i));
@@ -205,33 +199,34 @@ public class JpaReportService {
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
-                .stream()
-                .findFirst();
+            .stream()
+            .findFirst();
 
         // New uuid directory
         final Path destination = reportsDir.resolve(uuid.toString());
 
         // Copy history from prev report
         final Optional<Path> historyO = prevEntity
-                .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
-                .or(Optional::empty);
+            .flatMap(e -> copyHistory(reportsDir.resolve(e.getUuid().toString()), uuid.toString()))
+            .or(Optional::empty);
 
         // Add CI executor information
         var safeExecutorInfo = addExecutionInfo(
-                resultDirs.get(0),
-                executorInfo,
-                baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
-                uuid
+            resultDirs.get(0),
+            executorInfo,
+            baseUrl + str(reportsDir.resolve(uuid.toString())) + "/index.html",
+            uuid
         );
 
+        var reportUrl = join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/";
         try {
             // Add history to results if exists
             final List<Path> resultDirsToGenerate = historyO
-                    .map(history -> (List<Path>) ImmutableList.<Path>builder().addAll(resultDirs).add(history).build())
-                    .orElse(resultDirs);
+                .map(history -> (List<Path>) ImmutableList.<Path>builder().addAll(resultDirs).add(history).build())
+                .orElse(resultDirs);
 
             // Generate new report with history
-            reportGenerator.generate(destination, resultDirsToGenerate);
+            reportGenerator.generate(destination, resultDirsToGenerate, reportUrl);
 
             log.info("Report '{}' generated according to results '{}'", destination, resultDirsToGenerate);
         } finally {
@@ -245,24 +240,24 @@ public class JpaReportService {
 
         // New report entity
         final ReportEntity newEntity = ReportEntity.builder()
-                .uuid(uuid)
-                .path(reportPath)
-                .createdDateTime(LocalDateTime.now(zeroZone()))
-                .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
-                .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
-                .active(true)
-                .size(ReportEntity.sizeKB(destination))
-                .buildUrl(
-                        // Взять Build Url
-                        ofNullable(safeExecutorInfo.getBuildUrl())
-                                // Or Build Name
-                                .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
-                                // Or Executor Name
-                                .or(() -> ofNullable(safeExecutorInfo.getName()))
-                                // Or Executor Type
-                                .orElse(safeExecutorInfo.getType())
-                )
-                .build();
+            .uuid(uuid)
+            .path(reportPath)
+            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .url(reportUrl)
+            .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
+            .active(true)
+            .size(ReportEntity.sizeKB(destination))
+            .buildUrl(
+                // Взять Build Url
+                ofNullable(safeExecutorInfo.getBuildUrl())
+                    // Or Build Name
+                    .or(() -> ofNullable(safeExecutorInfo.getBuildName()))
+                    // Or Executor Name
+                    .or(() -> ofNullable(safeExecutorInfo.getName()))
+                    // Or Executor Type
+                    .orElse(safeExecutorInfo.getType())
+            )
+            .build();
 
         // Add request mapping
         redirection.mapRequestTo(newEntity.getPath(), reportsDir.resolve(uuid.toString()).toString());
@@ -290,17 +285,17 @@ public class JpaReportService {
             // If size more than max history
             if (allReports.size() >= max) {
                 log.info("Current report count '{}' exceed max history report count '{}'",
-                        allReports.size(),
-                        max
+                    allReports.size(),
+                    max
                 );
 
                 // Delete last after max history
                 long deleted = allReports.stream()
-                        .skip(max)
-                        .peek(e -> log.info("Report '{}' will be deleted", e))
-                        .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
-                        .peek(repository::delete)
-                        .count();
+                    .skip(max)
+                    .peek(e -> log.info("Report '{}' will be deleted", e))
+                    .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
+                    .peek(repository::delete)
+                    .count();
 
                 // Update level (safety)
                 created.setLevel(Math.max(created.getLevel() - deleted, 0));

@@ -2,10 +2,9 @@ package ru.iopump.qa.allure.gui;
 
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
-import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.H3;
-import com.vaadin.flow.component.icon.IronIcon;
+import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -13,16 +12,19 @@ import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.HighlightConditions;
 import com.vaadin.flow.router.RouterLink;
+import com.vaadin.flow.server.StreamResource;
 import ru.iopump.qa.allure.gui.view.AboutView;
 import ru.iopump.qa.allure.gui.view.ReportsView;
 import ru.iopump.qa.allure.gui.view.ResultsView;
 import ru.iopump.qa.allure.gui.view.SwaggerView;
 
-@JsModule("./brands.js")
+import java.io.Serial;
+
 public class MainLayout extends AppLayout {
 
     public static final String ALLURE_SERVER = "Allure Server";
 
+    @Serial
     private static final long serialVersionUID = 2881152775131362224L;
 
     public MainLayout() {
@@ -57,13 +59,13 @@ public class MainLayout extends AppLayout {
         tabs.setSizeFull();
 
         var github = new Anchor("https://github.com/kochetkov-ma/allure-server",
-            new IronIcon("icomoon", "github"));
+            new SvgIcon(new StreamResource("github.svg", () -> getClass().getResourceAsStream("/icons/github.svg"))));
         github.setTarget("_blank");
         var dockerHub = new Anchor("https://hub.docker.com/r/kochetkovma/allure-server",
-            new IronIcon("icomoon", "docker"));
+            new SvgIcon(new StreamResource("docker.svg", () -> getClass().getResourceAsStream("/icons/docker.svg"))));
         dockerHub.setTarget("_blank");
         var linkedIn = new Anchor("https://www.linkedin.com/in/maxim-kochetkov-75178215a/",
-            new IronIcon("icomoon", "linkedin"));
+            new SvgIcon(new StreamResource("linkedin.svg", () -> getClass().getResourceAsStream("/icons/linkedin.svg"))));
         linkedIn.setTarget("_blank");
 
         var footer = new HorizontalLayout(github, dockerHub, linkedIn);

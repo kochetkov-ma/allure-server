@@ -124,7 +124,7 @@ public class FilteredGrid<T> {
         grid.addClassName(GRID_CLASS);
         grid.setDataProvider(dataProvider);
         grid.removeAllColumns();
-        grid.setHeightByRows(true);
+        // grid.setHeightByRows(true); // deprecated
         grid.setSelectionMode(Grid.SelectionMode.MULTI);
 
         final List<Grid.Column<T>> cols = columnSpecList.stream()

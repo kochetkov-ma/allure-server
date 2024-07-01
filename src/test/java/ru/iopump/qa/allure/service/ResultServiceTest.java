@@ -1,22 +1,23 @@
 package ru.iopump.qa.allure.service;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import java.io.IOException;
-import java.nio.file.Path;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import ru.iopump.qa.util.FileUtil;
+
+import java.io.IOException;
+import java.nio.file.Path;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Slf4j
 public class ResultServiceTest {
 
     private ResultService resultService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         resultService = new ResultService(
             FileUtil.getClassPathMainDir().resolve("test")

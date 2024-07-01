@@ -1,7 +1,6 @@
 node_modules/
 .helm/
 .github/
-build/
 .idea/
 .gradle/
 tmp/

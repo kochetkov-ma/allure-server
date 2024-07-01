@@ -1,5 +1,7 @@
 package ru.iopump.qa.allure.config;
 
+import jakarta.annotation.Nonnull;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +16,6 @@ import org.springframework.web.servlet.resource.PathResourceResolver;
 import org.springframework.web.servlet.resource.ResourceResolverChain;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
-import javax.annotation.Nonnull;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,30 +51,30 @@ public class RedirectConfiguration implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry
-                .addResourceHandler(join("/", cfg.reports().dir(), "**"))
-                .addResourceLocations("file:" + cfg.reports().dir())
-                .resourceChain(true)
-                .addResolver(new PathResourceResolver() {
+            .addResourceHandler(join("/", cfg.reports().dir(), "**"))
+            .addResourceLocations("file:" + cfg.reports().dir())
+            .resourceChain(true)
+            .addResolver(new PathResourceResolver() {
 
-                    @Override
-                    public Resource resolveResource(HttpServletRequest request,
-                                                    @Nonnull String requestPath,
-                                                    @Nonnull List<? extends Resource> locations,
-                                                    @Nonnull ResourceResolverChain chain) {
-                        return super.resolveResource(request, requestPath, locations, chain);
+                @Override
+                public Resource resolveResource(HttpServletRequest request,
+                                                @Nonnull String requestPath,
+                                                @Nonnull List<? extends Resource> locations,
+                                                @Nonnull ResourceResolverChain chain) {
+                    return super.resolveResource(request, requestPath, locations, chain);
+                }
+
+                @Override
+                protected Resource getResource(@Nonnull String resourcePath,
+                                               @Nonnull Resource location) throws IOException {
+                    var res = super.getResource(resourcePath, location);
+                    if (res == null) {
+                        return getIndexHtml(resourcePath, location);
                     }
+                    return res;
 
-                    @Override
-                    protected Resource getResource(@Nonnull String resourcePath,
-                                                   @Nonnull Resource location) throws IOException {
-                        var res = super.getResource(resourcePath, location);
-                        if (res == null) {
-                            return getIndexHtml(resourcePath, location);
-                        }
-                        return res;
-
-                    }
-                });
+                }
+            });
     }
 
     @SneakyThrows
@@ -83,11 +83,11 @@ public class RedirectConfiguration implements WebMvcConfigurer {
         final Path thisResource = location.getFile().toPath().resolve(resourcePath);
         if (Files.exists(thisResource) && Files.isDirectory(thisResource)) {
             return Files.walk(thisResource, 1)
-                    .skip(1)
-                    .filter(i -> "index.html".equals(i.getFileName().toString()))
-                    .map(i -> new FileSystemResource(i.toFile()))
-                    .findFirst()
-                    .orElse(null);
+                .skip(1)
+                .filter(i -> "index.html".equals(i.getFileName().toString()))
+                .map(i -> new FileSystemResource(i.toFile()))
+                .findFirst()
+                .orElse(null);
         }
         return null;
     }

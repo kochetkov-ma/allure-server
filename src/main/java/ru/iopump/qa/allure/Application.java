@@ -11,11 +11,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.properties.BasicProperties;
 import ru.iopump.qa.allure.properties.CleanUpProperties;
+import ru.iopump.qa.allure.properties.TmsProperties;
 
+// @ImportAutoConfiguration({FeignAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class, JacksonAutoConfiguration.class})
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class, ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableTransactionManagement
-@EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class})
+@EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class, TmsProperties.class})
 @EnableVaadin
 public class Application { //NOPMD
 
