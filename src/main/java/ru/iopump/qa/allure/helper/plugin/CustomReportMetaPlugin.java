@@ -4,7 +4,6 @@ import io.qameta.allure.core.LaunchResults;
 import io.qameta.allure.summary.SummaryData;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,8 +49,14 @@ public class CustomReportMetaPlugin implements AllureServerPlugin {
 
                 Files.write(customLogoPath, bytes);
 
-                String cssForNewLogo = new String(new ClassPathResource("static/" + LOGO_STYLE_FILE).getContentAsByteArray(), UTF_8)
-                    .replace("img.png", logoName);
+                var cssForNewLogo = """
+                    .side-nav__brand {
+                          background: url('img.png') no-repeat left center !important;
+                          padding-left: 200px !important;
+                          margin-left: 10px;
+                    }
+                    """;
+                cssForNewLogo = cssForNewLogo.replace("img.png", logoName);
                 Files.writeString(customLogoCssPath, cssForNewLogo, UTF_8, Files.exists(customLogoCssPath) ? TRUNCATE_EXISTING : CREATE_NEW);
                 log.info("{}: {} copied to {}", getName(), logoName, customLogoPath);
             }

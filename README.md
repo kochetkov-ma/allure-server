@@ -9,7 +9,6 @@ Allure Portal (Allure Report Server)
 ![Docker Pulls](https://img.shields.io/docker/pulls/kochetkovma/allure-server?link=https)
 
 
-
 ## About
 
 https://allurereport.org/docs
