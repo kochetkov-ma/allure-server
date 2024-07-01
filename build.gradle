@@ -128,3 +128,8 @@ bootJar {
         attributes 'Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher'
     }
 }
+
+wrapper {
+    gradleVersion = '8.8'
+    distributionType = Wrapper.DistributionType.ALL
+}

@@ -14,7 +14,6 @@ webpack.config.js
 webpack.generated.js
 
 # Gradle
-gradlew
 gradlew.bat
 
 # Compiled class file
