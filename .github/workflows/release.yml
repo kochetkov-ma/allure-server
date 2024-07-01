@@ -37,6 +37,8 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
 
       ## Release in DockerHub ##
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Publish to Registry
         uses: elgohr/Publish-Docker-Github-Action@v5
         env:
