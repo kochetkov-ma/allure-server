@@ -1,6 +1,5 @@
 /.gradle
 /.idea
-**/wrapper/gradle-wrapper.jar
 /build
 /keys
 /allure
@@ -29,7 +28,6 @@ gradlew.bat
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.nar
 *.ear
