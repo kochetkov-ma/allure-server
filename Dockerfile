@@ -1,5 +1,5 @@
 FROM openjdk:21-slim
-COPY build/libs/allure-server.jar /allure-server-docker.jar
+COPY build/libs/*.jar /allure-server-docker.jar
 # Set port
 EXPOSE ${PORT:-8080}
 # Run application
