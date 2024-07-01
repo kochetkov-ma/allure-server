@@ -12,7 +12,7 @@ max_line_length = 200
 [*.java]
 max_line_length = 180
 
-[*.yml}]
+[*.yml]
 indent_size = 2
 
 [*.yaml]

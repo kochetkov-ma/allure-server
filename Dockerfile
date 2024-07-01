@@ -1,4 +1,4 @@
-FROM openjdk:21-slim
+FROM amazoncorretto:21-alpine
 COPY build/libs/*.jar /allure-server-docker.jar
 # Set port
 EXPOSE ${PORT:-8080}
