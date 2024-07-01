@@ -80,6 +80,7 @@ logging:
     ru.iopump.qa.allure.api: DEBUG
 
 tms:
+  enabled: false
   host: tms.localhost
   api-base-url: https://${tms.host}/api
   token: "my-token"

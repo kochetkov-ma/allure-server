@@ -49,6 +49,11 @@ public class YouTrackPlugin implements AllureServerPlugin {
     }
 
     @Override
+    public boolean isEnabled(Context context) {
+        return context.tmsProperties().isEnabled();
+    }
+
+    @Override
     public void onGenerationStart(Collection<Path> resultsDirectories, Context context) {
     }
 

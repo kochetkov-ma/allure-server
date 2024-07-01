@@ -16,6 +16,10 @@ public interface AllureServerPlugin {
 
     String getName();
 
+    default boolean isEnabled(Context context) {
+        return true;
+    }
+
     interface Context {
 
         AllureProperties getAllureProperties();

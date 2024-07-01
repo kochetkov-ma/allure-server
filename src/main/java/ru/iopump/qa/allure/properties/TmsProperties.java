@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 @ConfigurationProperties(prefix = "tms")
 public class TmsProperties {
 
+    private final boolean enabled;
     private final String host;
     private final String apiBaseUrl;
     private final String project;

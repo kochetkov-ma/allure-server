@@ -101,7 +101,19 @@ public final class AllureReportGenerator {
     }
 
     public Path generate(Path outputDirectory, List<Path> resultsDirectories, String reportUrl) {
-        listeners.parallelStream().forEach(listener -> evaluateListener(() -> listener.onGenerationStart(resultsDirectories, new PluginContext(reportUrl)), listener.getName(), "before generation"));
+        var ctx = new PluginContext(reportUrl);
+
+        var effectiveListeners = listeners.stream()
+            .filter(it -> {
+                if (it.isEnabled(ctx))
+                    return true;
+                log.info("[PLUGIN] Plugin '{} : {}' is disabled", it.getName(), it.getClass().getName());
+                return false;
+            })
+            .toList();
+
+        effectiveListeners.parallelStream()
+            .forEach(listener -> evaluateListener(() -> listener.onGenerationStart(resultsDirectories, ctx), listener.getName(), "before generation"));
 
         final Collection<LaunchResults> launchesResults;
         synchronized (aggregatorGrabber) {
@@ -109,7 +121,9 @@ public final class AllureReportGenerator {
             launchesResults = aggregatorGrabber.launchesResults();
         }
 
-        listeners.parallelStream().forEach(listener -> evaluateListener(() -> listener.onGenerationFinish(outputDirectory, launchesResults, new PluginContext(reportUrl)), listener.getName(), "after generation"));
+        effectiveListeners.parallelStream()
+            .forEach(listener -> evaluateListener(() -> listener.onGenerationFinish(outputDirectory, launchesResults, ctx), listener.getName(), "after generation"));
+
         return outputDirectory;
     }
 
