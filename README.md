@@ -4,10 +4,10 @@ Allure Portal (Allure Report Server)
 
 ![Static Badge](https://img.shields.io/badge/java-21-brightgreen)
 ![Static Badge](https://img.shields.io/badge/gradle-8.8-brightgreen)
+![Static Badge](https://img.shields.io/badge/Spring%20Boot-3-green)
 
-![Docker Image Version](https://img.shields.io/docker/v/kochetkovma/allure-server?label=DockerHub)
-![Docker Pulls](https://img.shields.io/docker/pulls/kochetkovma/allure-server?link=https)
-
+![Docker Image Version](https://img.shields.io/docker/v/kochetkovma/allure-server?label=DockerHub&link=https%3A%2F%2Fhub.docker.com%2Fr%2Fkochetkovma%2Fallure-server)
+![Docker Pulls](https://img.shields.io/docker/pulls/kochetkovma/allure-server?link=https%3A%2F%2Fhub.docker.com%2Fr%2Fkochetkovma%2Fallure-server)
 
 ## About
 
@@ -217,6 +217,119 @@ There is Oauth feature-toggle `app.security.enable-oauth2`
 > Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
 
 **By default `oauth` profile is not used and disabled**
+
+### Youtrack Integration (since 2.13.6) `new ⚡`
+
+Enable in `application.yaml`
+```yaml
+tms:
+  enabled: true # switched to true | Default: false
+  host: youtrack.com # set youtrack HOST - NOT URL - Just hostname | Default: "" 
+  api-base-url: https://${tms.host}/api # optional - set youtrack API URL or use default | | Default: https://${tms.host}/api
+  token: "my-token" # set youtrack token generated in Profile | Default: ""
+  issue-key-pattern: "[A-Za-z]+-\\d+" # optional - set issue key pattern | Default: "[A-Za-z]+-\\d+"
+  dry-run: false # optional - dry run mode. Set true for testing and watch AllureServer Logs | Default: false
+```
+
+OR in `docker-compose.yaml`
+```yaml
+    environment:
+      TMS_ENABLED: 'true'
+      TMS_HOST: youtrack.com
+      TMS_TOKEN: '<token-here>'
+      TMS_DRYRUN: 'false'
+```
+
+- Add Link to TMS issue to yor scenario
+```java
+@Issue("KEY-666")
+void test() {}
+```
+
+or
+```java
+@Link(value = "KEY-777", url = "https://youtrack.com/KEY-777")
+void test() {}
+```
+- Generate Report
+- Open Report in Browser
+- Open scenario `test` go to link `KEY-666` and click on `KEY-666`
+- In comments you will se statistics
+
+  | **Scenario** | ❌ `Failed`                                 | ✅ `Passed`                                 |
+  |--------------|--------------------------------------------|--------------------------------------------|
+  | Scenario 1   | **2** times [`latest` on 01.01.2024](link) | **3** times [`latest` on 01.01.2024](link) |
+  | Scenario 5    | **6** times [`latest` on 01.01.2023](link) | **7** times [`latest` on 01.01.2023](link) |
+
+- this comment with statistics will be updated on every report generation
+- your TOKEN should have permission: read issue comments, read/add/update issue comments  
+
+### Custom Report Label/Logo and Title (since 2.13.6) `new ⚡`
+
+Enable in `application.yaml`
+```yaml
+allure:
+    title: "BrewCode | Allure Report"
+    # FROM URL: https://avatars.githubusercontent.com/u/16944358?v=4
+    # FROM FILE: file:/images/logo.png
+    logo: "https://avatars.githubusercontent.com/u/16944358?v=4" # or file:/images/logo.png
+```
+
+OR in `docker-compose.yaml`
+```yaml
+    environment:
+        ALLURE_LOGO: "https://avatars.githubusercontent.com/u/16944358?v=4"
+        ALLURE_TITLE: "BrewCode | Allure Report"
+```
+> For using image from file you should put it into the container by volume
+> 
+> For using image from URL your should provide access to Company Network ot Internet from container
+
+### Plugin System for Java Developers (since 2.13.6) `new ⚡` `beta`
+Use `Java 21`
+1. Create interface in your project in package `ru.iopump.qa.allure.helper.plugin`. It has to be exactly the same as in [AllureServerPlugin.java](src%2Fmain%2Fjava%2Fru%2Fiopump%2Fqa%2Fallure%2Fhelper%2Fplugin%2FAllureServerPlugin.java)
+    ```java
+    package ru.iopump.qa.allure.helper.plugin;
+    
+    import io.qameta.allure.core.LaunchResults;
+    import org.springframework.beans.factory.BeanFactory;
+    import ru.iopump.qa.allure.properties.AllureProperties;
+    import ru.iopump.qa.allure.properties.TmsProperties;
+    
+    import java.nio.file.Path;
+    import java.util.Collection;
+    
+    public interface AllureServerPlugin {
+        void onGenerationStart(Collection<Path> resultsDirectories, Context context);
+        void onGenerationFinish(Path reportDirectory, Collection<LaunchResults> launchResults, Context context);
+        String getName();
+        default boolean isEnabled(Context context) {
+            return true;
+        }
+        interface Context {
+            AllureProperties getAllureProperties();
+            TmsProperties tmsProperties();
+            BeanFactory beanFactory();
+            String getReportUrl();
+        }
+    }
+    ```
+2. Crate your plugin like:
+   - [CustomReportMetaPlugin.java](src%2Fmain%2Fjava%2Fru%2Fiopump%2Fqa%2Fallure%2Fhelper%2Fplugin%2FCustomReportMetaPlugin.java)
+   - [YouTrackPlugin.java](src%2Fmain%2Fjava%2Fru%2Fiopump%2Fqa%2Fallure%2Fhelper%2Fplugin%2FYouTrackPlugin.java)
+3. Create `FAT JAR` with all deps. Try to get rid of external deps if possible
+4. Put your jar to container by volume to `/ext` folder
+5. Run the server
+6. Check logs. There is your plugin in message after plugins discovery and loading:
+  ```
+    [ALLURE SERVER CONFIGURATION] Allure server plugins loaded: [class ru.iopump.qa.allure.helper.plugin.CustomReportMetaPlugin:Logo Plugin, class ru.iopump.qa.allure.helper.plugin.YouTrackPlugin:YouTrack integration]
+  ```
+
+### Jira Integration (since 2.14.0) `coming soon`
+
+### Plugin API in MavenCentral with proper Documentation (since 2.14.0) `coming soon`
+
+### Custom HTTP Hooks (since 2.15.0) `coming soon`
 
 ### Special options
 
