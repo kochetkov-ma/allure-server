@@ -37,7 +37,7 @@ public class ServeRedirectHelper {
         }
 
         log.info("Redirect NOT evaluated: '{}'", from);
-        throw new RuntimeException("Redirect NOT evaluated " + from); //NOPMD
+        throw new RuntimeException("Redirect NOT evaluated " + from);
     }
 
     public void mapRequestTo(String urlPath, String staticResourcePath) {
@@ -62,7 +62,7 @@ public class ServeRedirectHelper {
 
         // Add base url if not
         if (!result.startsWith(cfg.reports().path())) {
-            result = cfg.reports().path() + result; //NOPMD
+            result = cfg.reports().path() + result;
         }
 
         // Remove '/index.html' if exists
@@ -82,12 +82,12 @@ public class ServeRedirectHelper {
 
         // Add first '/' if not
         if (result.charAt(0) != CHAR) {
-            result = CHAR + result; //NOPMD
+            result = CHAR + result;
         }
 
         // Add '/index.html' if not
         if (!result.endsWith(INDEX_HTML)) {
-            result = result + INDEX_HTML; //NOPMD
+            result = result + INDEX_HTML;
         }
 
         // Must be '/allure/123456890/index.html'

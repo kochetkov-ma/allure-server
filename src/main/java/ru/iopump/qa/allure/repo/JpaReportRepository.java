@@ -1,13 +1,14 @@
 package ru.iopump.qa.allure.repo;
 
-import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import ru.iopump.qa.allure.entity.ReportEntity;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public interface JpaReportRepository extends JpaRepository<ReportEntity, UUID> {

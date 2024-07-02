@@ -1,7 +1,5 @@
 package ru.iopump.qa.allure.gui.view;
 
-import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
-
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.html.Anchor;
 import com.vaadin.flow.component.html.Div;
@@ -10,14 +8,17 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import ru.iopump.qa.allure.gui.MainLayout;
 import ru.iopump.qa.util.ResourceUtil;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+
+import static ru.iopump.qa.allure.gui.MainLayout.ALLURE_SERVER;
 
 @Tag("about-view")
 @PageTitle("About | " + ALLURE_SERVER)
@@ -63,9 +64,9 @@ public class AboutView extends VerticalLayout {
     public static String getVersionOrDefault(@NonNull String defaultVersion) {
         try (final InputStream inputStream = ResourceUtil.getResourceAsStream("version.info")) {
             var version = IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-            log.info("App version from version.info = " + version); //NOPMD
+            log.info("App version from version.info = " + version);
             return StringUtils.isBlank(version) ? defaultVersion : version;
-        } catch (Exception e) { //NOPMD
+        } catch (Exception e) {
             log.error("Version error", e);
             return defaultVersion;
         }

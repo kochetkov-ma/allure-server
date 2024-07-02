@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.service; //NOPMD
+package ru.iopump.qa.allure.service;
 
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;

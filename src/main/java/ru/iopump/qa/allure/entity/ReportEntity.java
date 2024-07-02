@@ -48,20 +48,20 @@ public class ReportEntity {
     private boolean active;
     @Builder.Default
     @PositiveOrZero
-    private long level = 0L; //NOPMD
+    private long level = 0L;
     @Builder.Default
     @PositiveOrZero
     @Access(AccessType.PROPERTY)
     @Column(columnDefinition = "bigint not null default '0'")
-    private long size = 0L; //NOPMD
+    private long size = 0L;
     @Builder.Default
     @PositiveOrZero
     @Column(columnDefinition = "int not null default '0'")
-    private int version = 1; //NOPMD
+    private int version = 1;
     @Builder.Default
     @NotNull
     @Column(nullable = false, columnDefinition = "varchar(255) not null default ''")
-    private String buildUrl = ""; //NOPMD
+    private String buildUrl = "";
 
     public static long sizeKB(@Nullable Path path) {
         if (path == null || Files.notExists(path)) {

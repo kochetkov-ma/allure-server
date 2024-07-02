@@ -1,7 +1,8 @@
-package ru.iopump.qa.allure.helper; //NOPMD
+package ru.iopump.qa.allure.helper;
 
 import io.qameta.allure.Aggregator2;
 import io.qameta.allure.ConfigurationBuilder;
+import io.qameta.allure.Extension;
 import io.qameta.allure.ReportGenerator;
 import io.qameta.allure.ReportStorage;
 import io.qameta.allure.core.Configuration;
@@ -42,6 +43,7 @@ public final class AllureReportGenerator {
     private final ReportGenerator delegate;
     private final BeanFactory beanFactory;
     private final AggregatorGrabber aggregatorGrabber = new AggregatorGrabber();
+    private final Extension ciExecutor = new ExecutorCiPlugin();
 
     public AllureReportGenerator(@NonNull Collection<AllureServerPlugin> listeners, AllureProperties allureProperties, TmsProperties tmsProperties, BeanFactory beanFactory) {
         this.listeners = listeners;
@@ -55,7 +57,7 @@ public final class AllureReportGenerator {
         return ConfigurationBuilder
             .bundled()
             .withPlugins(loadPlugins())
-            .withExtensions(List.of(aggregatorGrabber))
+            .withExtensions(List.of(aggregatorGrabber, ciExecutor))
             .build();
     }
 
@@ -95,7 +97,7 @@ public final class AllureReportGenerator {
                 }
             }
             return to;
-        } catch (Exception exception) { //NOPMD
+        } catch (Exception exception) {
             throw new IllegalStateException("Error default plugins loading from resources '/plugins/**'", exception);
         }
     }

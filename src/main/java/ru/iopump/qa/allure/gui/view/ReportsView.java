@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.gui.view; //NOPMD
+package ru.iopump.qa.allure.gui.view;
 
 import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
@@ -79,7 +79,7 @@ public class ReportsView extends VerticalLayout {
                     try {
                         jpaReportService.internalDeleteByUUID(uuid);
                         Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                    } catch (Exception e) { //NOPMD
+                    } catch (Exception e) {
                         Notification.show("Deleting error: " + e.getLocalizedMessage(),
                             5000,
                             Notification.Position.TOP_START);

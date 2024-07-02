@@ -1,9 +1,10 @@
 package ru.iopump.qa.allure.model;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder

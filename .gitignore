@@ -46,6 +46,7 @@ id_rsa
 !**/resources/**/*.zip
 !**/resources/**/*.jar
 allure-server-store/
+allure-server-store-db/
 tmp/
 
 pg-secret.yaml

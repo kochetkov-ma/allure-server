@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.controller; //NOPMD
+package ru.iopump.qa.allure.controller;
 
 import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,7 +65,7 @@ public class AllureResultController {
     @DeleteMapping(path = "/{uuid}")
     @CacheEvict(value = CACHE, allEntries = true)
     public ResultResponse deleteResult(
-            @PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid
+        @PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid
     ) throws IOException {
         return resultService.internalDeleteByUUID(uuid);
     }
@@ -74,9 +74,9 @@ public class AllureResultController {
     @GetMapping(path = "/{uuid}")
     public ResultResponse getResult(@PathVariable @NotBlank @Pattern(regexp = PathUtil.UUID_PATTERN) String uuid) throws IOException {
         return StreamUtil.stream(getAllResult())
-                .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
-                .findFirst()
-                .orElse(ResultResponse.builder().build());
+            .filter(i -> uuid.equalsIgnoreCase(i.getUuid()))
+            .findFirst()
+            .orElse(ResultResponse.builder().build());
     }
 
     @Operation(summary = "Get all uploaded allure results archives")
@@ -102,19 +102,19 @@ public class AllureResultController {
 
     @SneakyThrows
     @Operation(summary = "Upload allure-results.zip with allure results files before generating report. " +
-            "Don't forgot memorize uuid from response for further report generation"
+        "Don't forgot memorize uuid from response for further report generation"
     )
     @PostMapping(consumes = {"multipart/form-data"})
     @ResponseStatus(HttpStatus.CREATED)
     @CacheEvict(value = CACHE, allEntries = true) // update results cache
     public UploadResponse uploadResults(
-            @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
-                    name = "allureResults",
-                    example = "allure-result.zip",
-                    required = true,
-                    content = @Content(mediaType = "application/zip")
-            )
-            @RequestParam MultipartFile allureResults
+        @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
+            name = "allureResults",
+            example = "allure-result.zip",
+            required = true,
+            content = @Content(mediaType = "application/zip")
+        )
+        @RequestParam MultipartFile allureResults
     ) {
 
         final String contentType = allureResults.getContentType();
@@ -122,13 +122,13 @@ public class AllureResultController {
         // Check Content-Type
         if (StringUtils.isNotBlank(contentType)) {
             Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
-                    "Content-Type must be '%s' but '%s'", "application/zip", contentType);
+                "Content-Type must be '%s' but '%s'", "application/zip", contentType);
         }
 
         // Check Extension
         if (allureResults.getOriginalFilename() != null) {
             Preconditions.checkArgument(allureResults.getOriginalFilename().endsWith(".zip"),
-                    "File must have '.zip' extension but '%s'", allureResults.getOriginalFilename());
+                "File must have '.zip' extension but '%s'", allureResults.getOriginalFilename());
         }
 
         // Unzip and save

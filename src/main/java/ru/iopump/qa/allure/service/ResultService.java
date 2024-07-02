@@ -97,7 +97,7 @@ public class ResultService {
             Files.createDirectories(resultDirectory);
             checkAndUnzipTo(io, tmpResultDirectory);
             move(tmpResultDirectory, resultDirectory);
-        } catch (Exception ex) { //NOPMD
+        } catch (Exception ex) {
             if (resultDirectory != null) {
                 // Clean on error
                 FileUtils.deleteQuietly(resultDirectory.toFile());
@@ -123,7 +123,7 @@ public class ResultService {
             final Path newFile = fromZip(unzipTo, zipEntry);
             try (final OutputStream fos = Files.newOutputStream(newFile)) {
                 int len;
-                while ((len = zis.read(buffer)) > 0) { //NOPMD
+                while ((len = zis.read(buffer)) > 0) {
                     fos.write(buffer, 0, len);
                 }
             }
@@ -138,16 +138,16 @@ public class ResultService {
 
     private void move(Path from, Path to) throws IOException {
         Files.find(from,
-                        1,
-                        (path, basicFileAttributes)
-                                -> basicFileAttributes.isDirectory() && (path.getFileName().toString()
-                                .matches("allure-.+|report.*")))
+                1,
+                (path, basicFileAttributes)
+                    -> basicFileAttributes.isDirectory() && (path.getFileName().toString()
+                    .matches("allure-.+|report.*")))
             .forEach(
                 nestedResultDir -> {
                     try {
                         Files.walkFileTree(nestedResultDir, new MoveFileVisitor(to));
                     } catch (IOException e) {
-                        throw new RuntimeException("Walk error " + nestedResultDir, e); //NOPMD
+                        throw new RuntimeException("Walk error " + nestedResultDir, e);
                     }
                 }
             );

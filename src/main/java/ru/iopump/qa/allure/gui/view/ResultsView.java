@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.gui.view; //NOPMD
+package ru.iopump.qa.allure.gui.view;
 
 import com.google.common.collect.ImmutableList;
 import com.vaadin.flow.component.Tag;
@@ -61,48 +61,48 @@ public class ResultsView extends VerticalLayout {
         this.dateTimeResolver.retrieve();
 
         this.results = new FilteredGrid<>(
-                asProvider(allureResultController),
-                cols()
+            asProvider(allureResultController),
+            cols()
         );
         this.generateButton = new Button("Generate report");
         this.uploadButton = new Button("Upload result");
 
         this.generateDialog = new ReportGenerateDialog(allureReportController);
         this.uploadDialog = new ResultUploadDialog(
-                (buffer) -> allureResultController.uploadResults(toMultiPartFile(buffer)),
-                (int) multipartProperties.getMaxFileSize().toBytes(),
-                "results"
+            (buffer) -> allureResultController.uploadResults(toMultiPartFile(buffer)),
+            (int) multipartProperties.getMaxFileSize().toBytes(),
+            "results"
         );
 
         uploadDialog.onClose(event -> results.getGrid().getDataProvider().refreshAll());
 
         this.deleteSelection = new Button("Delete selection",
-                new Icon(VaadinIcon.CLOSE_CIRCLE),
-                event -> {
-                    for (ResultResponse resultResponse : results.getGrid().getSelectedItems()) {
-                        String uuid = resultResponse.getUuid();
-                        try {
-                            allureResultController.deleteResult(uuid);
-                            Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
-                        } catch (Exception e) { //NOPMD
-                            Notification.show("Deleting error: " + e.getLocalizedMessage(),
-                                    5000,
-                                    Notification.Position.TOP_START);
-                            log.error("Deleting error", e);
-                        }
+            new Icon(VaadinIcon.CLOSE_CIRCLE),
+            event -> {
+                for (ResultResponse resultResponse : results.getGrid().getSelectedItems()) {
+                    String uuid = resultResponse.getUuid();
+                    try {
+                        allureResultController.deleteResult(uuid);
+                        Notification.show("Delete success: " + uuid, 2000, Notification.Position.TOP_START);
+                    } catch (Exception e) {
+                        Notification.show("Deleting error: " + e.getLocalizedMessage(),
+                            5000,
+                            Notification.Position.TOP_START);
+                        log.error("Deleting error", e);
                     }
-                    results.getGrid().deselectAll();
-                    results.getGrid().getDataProvider().refreshAll();
-                });
+                }
+                results.getGrid().deselectAll();
+                results.getGrid().getDataProvider().refreshAll();
+            });
         deleteSelection.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
         // Add first selected item on open generation dialog or empty bind
         generateDialog.addOpenedChangeListener(event -> {
             StreamUtil.stream(results.getGrid().getSelectedItems()).findFirst()
-                    .ifPresentOrElse(resultResponse -> generateDialog.getPayload().getBinder()
-                                    .setBean(new GenerateDto(resultResponse.getUuid(), null, null, false)),
-                            () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
-                    );
+                .ifPresentOrElse(resultResponse -> generateDialog.getPayload().getBinder()
+                        .setBean(new GenerateDto(resultResponse.getUuid(), null, null, false)),
+                    () -> generateDialog.getPayload().getBinder().setBean(new GenerateDto())
+                );
         });
 
         this.dateTimeResolver.onClientReady(() -> results.getGrid().getDataProvider().refreshAll());
@@ -112,22 +112,22 @@ public class ResultsView extends VerticalLayout {
     private static ListDataProvider<ResultResponse> asProvider(final AllureResultController allureResultController) {
         //noinspection unchecked
         final Collection<ResultResponse> collection = (Collection<ResultResponse>) Proxy
-                .newProxyInstance(Thread.currentThread().getContextClassLoader(),
-                        new Class[]{Collection.class},
-                        (proxy, method, args) -> method.invoke(allureResultController.getAllResult(), args));
+            .newProxyInstance(Thread.currentThread().getContextClassLoader(),
+                new Class[]{Collection.class},
+                (proxy, method, args) -> method.invoke(allureResultController.getAllResult(), args));
 
         return new ListDataProvider<>(collection);
     }
 
     private List<Col<ResultResponse>> cols() {
         return ImmutableList.<Col<ResultResponse>>builder()
-                .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
-                .add(Col.<ResultResponse>with()
-                        .name("Created")
-                        .value(e -> dateTimeResolver.printDate(e.getCreated()))
-                        .build())
-                .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
-                .build();
+            .add(Col.<ResultResponse>with().name("Uuid").value(prop("uuid")).build())
+            .add(Col.<ResultResponse>with()
+                .name("Created")
+                .value(e -> dateTimeResolver.printDate(e.getCreated()))
+                .build())
+            .add(Col.<ResultResponse>with().name("Size KB").value(prop("size")).type(Col.Type.NUMBER).build())
+            .build();
     }
 
     @PostConstruct

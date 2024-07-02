@@ -1,4 +1,4 @@
-package ru.iopump.qa.allure.controller; //NOPMD
+package ru.iopump.qa.allure.controller;
 
 import com.google.common.base.Preconditions;
 import io.qameta.allure.entity.ExecutorInfo;
@@ -65,20 +65,20 @@ public class AllureReportController {
     @GetMapping
     public Collection<ReportResponse> getAllReports(@RequestParam(required = false) String path) {
         return StreamUtil.stream(getAllCached())
-                .filter(i -> path == null || i.getPath().startsWith(path))
-                .collect(Collectors.toUnmodifiableSet());
+            .filter(i -> path == null || i.getPath().startsWith(path))
+            .collect(Collectors.toUnmodifiableSet());
     }
 
     @Cacheable(CACHE) // caching results
     public Collection<ReportResponse> getAllCached() {
         return StreamUtil.stream(reportService.getAll())
-                .map(entity -> new ReportResponse(
-                        entity.getUuid(),
-                        entity.getPath(),
-                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
-                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
-                ))
-                .collect(Collectors.toUnmodifiableList());
+            .map(entity -> new ReportResponse(
+                entity.getUuid(),
+                entity.getPath(),
+                entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
+            ))
+            .collect(Collectors.toUnmodifiableList());
     }
 
     @Operation(summary = "Generate report")
@@ -88,18 +88,18 @@ public class AllureReportController {
     public ReportResponse generateReport(@RequestBody @Valid ReportGenerateRequest reportGenerateRequest) throws IOException {
 
         final ReportEntity reportEntity = reportService.generate(
-                reportGenerateRequest.getReportSpec().getPathsAsPath(),
-                reportGenerateRequest.getResultsAsPath(resultService.getStoragePath()),
-                reportGenerateRequest.isDeleteResults(),
-                reportGenerateRequest.getReportSpec().getExecutorInfo(),
-                baseUrl()
+            reportGenerateRequest.getReportSpec().getPathsAsPath(),
+            reportGenerateRequest.getResultsAsPath(resultService.getStoragePath()),
+            reportGenerateRequest.isDeleteResults(),
+            reportGenerateRequest.getReportSpec().getExecutorInfo(),
+            baseUrl()
         );
 
         return new ReportResponse(
-                reportEntity.getUuid(),
-                reportEntity.getPath(),
-                reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
-                reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
+            reportEntity.getUuid(),
+            reportEntity.getPath(),
+            reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+            reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
         );
     }
 
@@ -110,39 +110,39 @@ public class AllureReportController {
     @ResponseStatus(HttpStatus.CREATED)
     @CacheEvict(value = CACHE, allEntries = true) // update results cache
     public ReportResponse uploadReport(
-            @PathVariable("reportPath") @NonNull String reportPath,
-            @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
-                    name = "allureResults",
-                    example = "allure-result.zip",
-                    required = true,
-                    content = @Content(mediaType = "application/zip")
-            )
-            @RequestParam MultipartFile allureReportArchive) {
+        @PathVariable("reportPath") @NonNull String reportPath,
+        @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
+            name = "allureResults",
+            example = "allure-result.zip",
+            required = true,
+            content = @Content(mediaType = "application/zip")
+        )
+        @RequestParam MultipartFile allureReportArchive) {
 
         final String contentType = allureReportArchive.getContentType();
 
         // Check Content-Type
         if (StringUtils.isNotBlank(contentType)) {
             Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
-                    "Content-Type must be '%s' but '%s'", "application/zip", contentType);
+                "Content-Type must be '%s' but '%s'", "application/zip", contentType);
         }
 
         // Check Extension
         if (allureReportArchive.getOriginalFilename() != null) {
             Preconditions.checkArgument(allureReportArchive.getOriginalFilename().endsWith(".zip"),
-                    "File must have '.zip' extension but '%s'", allureReportArchive.getOriginalFilename());
+                "File must have '.zip' extension but '%s'", allureReportArchive.getOriginalFilename());
         }
 
         // Unzip and save
         ReportEntity reportEntity = reportService
-                .uploadReport(reportPath, allureReportArchive.getInputStream(), new ExecutorInfo(), baseUrl());
+            .uploadReport(reportPath, allureReportArchive.getInputStream(), new ExecutorInfo(), baseUrl());
         log.info("File saved to file system '{}'", allureReportArchive);
 
         return new ReportResponse(
-                reportEntity.getUuid(),
-                reportEntity.getPath(),
-                reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
-                reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
+            reportEntity.getUuid(),
+            reportEntity.getPath(),
+            reportEntity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+            reportEntity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
         );
     }
 
@@ -151,13 +151,13 @@ public class AllureReportController {
     @CacheEvict(value = CACHE, allEntries = true)
     public Collection<ReportResponse> deleteAllHistory() {
         return reportService.clearAllHistory().stream()
-                .map(entity -> new ReportResponse(
-                        entity.getUuid(),
-                        entity.getPath(),
-                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
-                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
-                ))
-                .collect(Collectors.toUnmodifiableList());
+            .map(entity -> new ReportResponse(
+                entity.getUuid(),
+                entity.getPath(),
+                entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
+            ))
+            .collect(Collectors.toUnmodifiableList());
     }
 
     @Operation(summary = "Delete all reports or older than date in epoch seconds")
@@ -172,17 +172,17 @@ public class AllureReportController {
             deleted = reportService.deleteAllOlderThanDate(boundaryDate);
         }
         return deleted.stream()
-                .map(entity -> new ReportResponse(
-                        entity.getUuid(),
-                        entity.getPath(),
-                        entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
-                        entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
-                ))
-                .collect(Collectors.toUnmodifiableList());
+            .map(entity -> new ReportResponse(
+                entity.getUuid(),
+                entity.getPath(),
+                entity.generateUrl(baseUrl(), allureProperties.reports().dir()),
+                entity.generateLatestUrl(baseUrl(), allureProperties.reports().path())
+            ))
+            .collect(Collectors.toUnmodifiableList());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    private void constraintViolationException(HttpServletResponse response) throws IOException { //NOPMD
+    private void constraintViolationException(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value());
     }
 }

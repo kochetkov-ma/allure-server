@@ -87,7 +87,7 @@ public class ReportGenerateDialog extends Dialog {
                 info.setVisible(true);
                 info.setText("Success: " + res);
             }
-        } catch (Exception e) { //NOPMD
+        } catch (Exception e) {
             error.setVisible(true);
             error.setText("Error: " + e.getLocalizedMessage());
             log.error("Generation error", e);

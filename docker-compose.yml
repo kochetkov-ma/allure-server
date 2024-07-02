@@ -24,10 +24,12 @@ services:
       - postgres
 
   postgres:
-    image: postgres:latest
+    image: postgres:16.3-alpine
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: allure
     ports:
       - 5432:5432
+    volumes:
+      - ./allure-server-store-db:/var/lib/postgresql/data:rw

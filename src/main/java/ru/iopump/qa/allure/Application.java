@@ -19,9 +19,9 @@ import ru.iopump.qa.allure.properties.TmsProperties;
 @EnableTransactionManagement
 @EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class, TmsProperties.class})
 @EnableVaadin
-public class Application { //NOPMD
+public class Application {
 
-    public static void main(String[] args) { //NOPMD
+    public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
 }

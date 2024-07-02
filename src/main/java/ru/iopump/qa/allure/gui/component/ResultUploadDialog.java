@@ -24,7 +24,7 @@ import java.util.function.Function;
 import static ru.iopump.qa.util.Str.format;
 
 @Slf4j
-public class ResultUploadDialog extends Dialog { //NOPMD
+public class ResultUploadDialog extends Dialog {
 
     private static final long serialVersionUID = -4958469225519042248L;
     private final MemoryBuffer buffer;
@@ -54,7 +54,7 @@ public class ResultUploadDialog extends Dialog { //NOPMD
                         event.getFileName(), event.getContentLength(), uploadResponse
                     )), false
                 );
-            } catch (Exception ex) { //NOPMD
+            } catch (Exception ex) {
                 show(error("Internal error: " + ex.getLocalizedMessage()), true);
                 log.error("Uploading error", ex);
             }
