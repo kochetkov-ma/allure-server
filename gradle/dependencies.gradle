@@ -7,7 +7,7 @@ ext {
     guavaVersion = '33.2.1-jre'
     apacheIoVersion = '2.16.1'
     openApiVersion = '1.8.0'
-    allureVersion = '2.29.0'
+    allureVersion = '2.35.0'
 }
 dependencyManagement {
     imports {
