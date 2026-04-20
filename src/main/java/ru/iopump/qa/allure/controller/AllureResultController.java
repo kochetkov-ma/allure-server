@@ -1,11 +1,8 @@
 package ru.iopump.qa.allure.controller;
 
-import com.google.common.base.Preconditions;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +15,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.model.UploadResponse;
 import ru.iopump.qa.allure.service.PathUtil;
@@ -38,10 +35,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.stream.Collectors;
-
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 
 @RequiredArgsConstructor
 @RestController
@@ -50,6 +46,9 @@ import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 @RequestMapping(path = "/api/result")
 public class AllureResultController {
     final static String CACHE = "results";
+    private static final String ZIP_MIME = "application/zip";
+    private static final String ZIP_MIME_X = "application/x-zip-compressed";
+
     private final ResultService resultService;
 
     @Operation(summary = "Delete all allure results")
@@ -88,7 +87,7 @@ public class AllureResultController {
             LocalDateTime localDateTime = LocalDateTime.MIN;
             try {
                 BasicFileAttributes attr = Files.readAttributes(p, BasicFileAttributes.class);
-                localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), zeroZone());
+                localDateTime = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneOffset.UTC);
             } catch (IOException e) {
                 if (log.isErrorEnabled()) {
                     log.error("Error getting created date time of " + p, e);
@@ -117,19 +116,7 @@ public class AllureResultController {
         @RequestParam MultipartFile allureResults
     ) {
 
-        final String contentType = allureResults.getContentType();
-
-        // Check Content-Type
-        if (StringUtils.isNotBlank(contentType)) {
-            Preconditions.checkArgument(StringUtils.equalsAny(contentType, "application/zip", "application/x-zip-compressed"),
-                "Content-Type must be '%s' but '%s'", "application/zip", contentType);
-        }
-
-        // Check Extension
-        if (allureResults.getOriginalFilename() != null) {
-            Preconditions.checkArgument(allureResults.getOriginalFilename().endsWith(".zip"),
-                "File must have '.zip' extension but '%s'", allureResults.getOriginalFilename());
-        }
+        requireNonEmptyZip(allureResults, "allureResults");
 
         // Unzip and save
         Path path = resultService.unzipAndStore(allureResults.getInputStream());
@@ -137,8 +124,26 @@ public class AllureResultController {
         return UploadResponse.builder().fileName(allureResults.getOriginalFilename()).uuid(path.getFileName().toString()).build();
     }
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public void constraintViolationException(HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value());
+    /**
+     * Validates the multipart upload at the controller boundary: non-null, non-empty,
+     * correct Content-Type (when present) and {@code .zip} extension (when filename present).
+     * Any violation is translated to HTTP 400 via {@link GlobalExceptionHandler}.
+     */
+    private static void requireNonEmptyZip(MultipartFile file, String paramName) {
+        if (file == null || file.isEmpty() || file.getSize() == 0L) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Parameter '" + paramName + "' must be a non-empty multipart file");
+        }
+        final String contentType = file.getContentType();
+        if (StringUtils.isNotBlank(contentType)
+            && !StringUtils.equalsAny(contentType, ZIP_MIME, ZIP_MIME_X)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "Content-Type must be '" + ZIP_MIME + "' but was '" + contentType + "'");
+        }
+        final String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && !originalFilename.endsWith(".zip")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                "File must have '.zip' extension but was '" + originalFilename + "'");
+        }
     }
 }

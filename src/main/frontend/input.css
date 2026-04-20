@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+[x-cloak] { display: none !important; }
+
+@layer utilities {
+  .htmx-swapping { opacity: 0; transition: opacity 0.15s ease-out; }
+  .htmx-settling { opacity: 1; transition: opacity 0.15s ease-in; }
+  .htmx-request .htmx-indicator { display: inline-block; }
+  .htmx-indicator { display: none; }
+}

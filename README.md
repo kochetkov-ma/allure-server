@@ -19,7 +19,7 @@ There is simple API with Swagger(OpenAPI) Description.
 
 Just use Spring Boot Jar from Release Page.
 
-Web GUI has been available from Release v2.0.0
+A server-rendered Web UI is available since v2.0.0.
 
 Example on [allure.iopump.ru](http://allure.iopump.ru/)
 
@@ -104,7 +104,7 @@ Response:
 
 Memorize `url`
 
-> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
+> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in the Web UI!
 
 ### Access to generated reports
 
@@ -415,20 +415,18 @@ Example:
 
 ![alt text](github-action.png)
 
-### GUI
+### Web UI
 
 ##### See example on [allure.iopump.ru](http://allure.iopump.ru/)
 
-Allure Server provide WEB UI to access to reports and results.  
-By default WEB UI is available on path `/ui` and there is redirection from `/` to `/ui`   
-Example: `http://localhost:8080/ui`  
-WEB UI provides the same functions as a REST API  
-WEB UI is implemented with [Vaadin 14](https://vaadin.com/start/v14)
+Allure Server provides a server-rendered Web UI (htmx + JTE + Alpine.js + Tailwind CSS) to
+administer reports and results.  
+By default the Web UI is available under `/app` and the root path `/` redirects to `/app/reports`.  
+Example: `http://localhost:8080/app/reports`  
+The Web UI exposes the same operations as the REST API: upload, list, filter, sort,
+generate and delete reports / results.
 
-> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in GUI!
-
-> *Main Page*
-![alt text](ui-example.png)  
+> :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in the Web UI!
 
 ### Logging
 
@@ -438,7 +436,6 @@ Logging properties are located in `[application.yaml](src%2Fmain%2Fresources%2Fa
 logging:
   level:
     root: INFO
-    org.atmosphere: WARN # Vaadin (GUI) Server
     org.springframework: INFO
     org.springframework.core: WARN
     org.springframework.beans.factory.support: WARN

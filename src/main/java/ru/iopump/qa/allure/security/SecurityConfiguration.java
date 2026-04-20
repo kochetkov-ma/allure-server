@@ -15,6 +15,7 @@ import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import ru.iopump.qa.allure.config.WebConfiguration;
 import ru.iopump.qa.allure.properties.BasicProperties;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -42,13 +43,15 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .headers(it -> it.frameOptions(FrameOptionsConfig::sameOrigin))
-            .csrf(AbstractHttpConfigurer::disable)
-            .requestCache(it -> it.requestCache(new CustomRequestCache()));
+            .csrf(AbstractHttpConfigurer::disable);
 
         if (enableAnyAuth)
             http
                 .authorizeHttpRequests(it -> it
-                    .requestMatchers(SecurityUtils::isFrameworkInternalRequest).permitAll()
+                    .requestMatchers(WebConfiguration.CSS_PATH_PATTERN,
+                        WebConfiguration.JS_PATH_PATTERN,
+                        WebConfiguration.IMG_PATH_PATTERN).permitAll()
+                    .requestMatchers(WebConfiguration.APP_PATH_PATTERN).authenticated()
                     .anyRequest().authenticated());
 
         if (enableOAuth2)
@@ -57,7 +60,7 @@ public class SecurityConfiguration {
 
         if (enableBasicAuth)
             http
-                .httpBasic(withDefaults());
+                .httpBasic(it -> it.realmName("Allure Server"));
 
         return http.build();
     }

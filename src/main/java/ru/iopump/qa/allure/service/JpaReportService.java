@@ -17,7 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
@@ -29,6 +31,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +41,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
 import static ru.iopump.qa.allure.helper.Util.join;
 import static ru.iopump.qa.allure.service.PathUtil.str;
@@ -55,7 +57,7 @@ public class JpaReportService {
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
     private final JpaReportRepository repository;
-    private final ResultService reportUnzipService;
+    private final ResultService resultService;
 
     private final AtomicBoolean init = new AtomicBoolean();
 
@@ -63,7 +65,8 @@ public class JpaReportService {
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
-                            ServeRedirectHelper redirection
+                            ServeRedirectHelper redirection,
+                            ResultService resultService
     ) {
         this.reportsDir = cfg.reports().dirPath();
         this.cfg = cfg;
@@ -71,7 +74,7 @@ public class JpaReportService {
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
-        this.reportUnzipService = new ResultService(reportsDir);
+        this.resultService = resultService;
     }
 
     @PostConstruct
@@ -101,6 +104,24 @@ public class JpaReportService {
         FileUtils.deleteDirectory(reportsDir.resolve(uuid.toString()).toFile());
     }
 
+    /**
+     * Delete a single report by UUID. Fails with HTTP 404 if the report does not exist.
+     *
+     * @param uuid report UUID as string (validated by caller)
+     * @return the deleted entity
+     * @throws ResponseStatusException 404 if the report is not found
+     * @throws IOException             if the report directory cannot be removed
+     */
+    public ReportEntity deleteByUuid(@NonNull String uuid) throws IOException {
+        final UUID id = UUID.fromString(uuid);
+        final ReportEntity entity = repository.findOneByUuid(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report '" + uuid + "' not found"));
+        repository.deleteById(id);
+        FileUtils.deleteDirectory(reportsDir.resolve(id.toString()).toFile());
+        log.info("Report '{}' deleted", id);
+        return entity;
+    }
+
     public Collection<ReportEntity> deleteAll() throws IOException {
         var res = getAll();
         repository.deleteAll();
@@ -127,8 +148,9 @@ public class JpaReportService {
                                      @Nullable ExecutorInfo executorInfo,
                                      String baseUrl) {
 
-        // New report destination and entity
-        final Path destination = reportUnzipService.unzipAndStore(archiveInputStream);
+        // New report destination and entity — unzip pre-built report archive into the reports dir
+        // (uploadReport consumes an already-generated Allure report, not raw results).
+        final Path destination = resultService.unzipAndStore(archiveInputStream, reportsDir);
         final UUID uuid = UUID.fromString(destination.getFileName().toString());
         Preconditions.checkArgument(
             Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
@@ -154,7 +176,7 @@ public class JpaReportService {
         final ReportEntity newEntity = ReportEntity.builder()
             .uuid(uuid)
             .path(reportPath)
-            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .createdDateTime(LocalDateTime.now(ZoneOffset.UTC))
             .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
             .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
             .active(true)
@@ -242,7 +264,7 @@ public class JpaReportService {
         final ReportEntity newEntity = ReportEntity.builder()
             .uuid(uuid)
             .path(reportPath)
-            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .createdDateTime(LocalDateTime.now(ZoneOffset.UTC))
             .url(reportUrl)
             .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
             .active(true)

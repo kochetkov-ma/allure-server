@@ -1,6 +1,5 @@
 package ru.iopump.qa.allure;
 
-import com.vaadin.flow.spring.annotation.EnableVaadin;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -13,12 +12,10 @@ import ru.iopump.qa.allure.properties.BasicProperties;
 import ru.iopump.qa.allure.properties.CleanUpProperties;
 import ru.iopump.qa.allure.properties.TmsProperties;
 
-// @ImportAutoConfiguration({FeignAutoConfiguration.class, HttpMessageConvertersAutoConfiguration.class, JacksonAutoConfiguration.class})
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class, ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableTransactionManagement
 @EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class, TmsProperties.class})
-@EnableVaadin
 public class Application {
 
     public static void main(String[] args) {

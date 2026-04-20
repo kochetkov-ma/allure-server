@@ -6,6 +6,13 @@ spring:
   servlet:
     multipart.max-file-size: 100MB
     multipart.max-request-size: 100MB
+  mvc:
+    # Enable HiddenHttpMethodFilter so HTML <form method="post"> with hidden
+    # field _method=delete/put is routed to @DeleteMapping / @PutMapping handlers.
+    # Required by /app/reports confirm-delete dialog (server-rendered UI).
+    hiddenmethod:
+      filter:
+        enabled: true
   datasource:
     url: "jdbc:h2:file:./allure/db"
     # H2 default username
@@ -23,8 +30,16 @@ spring:
           default:
             loggerLevel: basic
 
-vaadin.urlMapping: "/ui/*"
 server.port: ${PORT:8080}
+
+### JTE server-side templating
+# Templates are precompiled by the gg.jte.gradle plugin (see build.gradle "jte { generate() }").
+# Generated Java sources land in build/generated-sources/jte/ and are compiled into the bootJar,
+# so runtime loads templates from the classpath — no src/main/jte on disk at runtime required.
+gg:
+  jte:
+    development-mode: false
+    use-precompiled-templates: true
 
 ### Security
 basic:
@@ -72,7 +87,6 @@ allure:
 logging:
   level:
     root: INFO
-    org.atmosphere: WARN # Vaadin (GUI) Server
     org.springframework: INFO
     org.springframework.core: WARN
     org.springframework.beans.factory.support: WARN

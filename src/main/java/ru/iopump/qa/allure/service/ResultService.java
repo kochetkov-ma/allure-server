@@ -77,7 +77,7 @@ public class ResultService {
     }
 
     /**
-     * Check archive, unzip and save to the file system.
+     * Check archive, unzip and save to the file system under this service's default {@link #storagePath}.
      * Directory with uuid name will contain archive content.
      *
      * @param archiveInputStream Will be closed automatically.
@@ -86,14 +86,32 @@ public class ResultService {
      */
     @NonNull
     public Path unzipAndStore(@NonNull InputStream archiveInputStream) throws IOException {
+        return unzipAndStore(archiveInputStream, storagePath);
+    }
+
+    /**
+     * Check archive, unzip and save to the file system under an explicit target root.
+     * Directory with uuid name will contain archive content.
+     * <p>
+     * This overload allows callers that are themselves Spring-managed beans (e.g. report service)
+     * to reuse this unzip primitive against a different target directory without instantiating a
+     * second {@code ResultService} bypassing Spring.
+     *
+     * @param archiveInputStream Will be closed automatically.
+     * @param targetRoot         Directory under which a new {@code <uuid>} folder will be created.
+     * @return Directory that contains the archive's content.
+     * @throws IOException IO Error
+     */
+    @NonNull
+    public Path unzipAndStore(@NonNull InputStream archiveInputStream, @NonNull Path targetRoot) throws IOException {
         Preconditions.checkArgument(archiveInputStream.available() > 0,
             "Passed InputStream is empty");
         Path tmpResultDirectory = null;
         Path resultDirectory = null;
         try (InputStream io = archiveInputStream) {
             final String uuid = UUID.randomUUID().toString();
-            tmpResultDirectory = storagePath.resolve(uuid + "_tmp");
-            resultDirectory = storagePath.resolve(uuid);
+            tmpResultDirectory = targetRoot.resolve(uuid + "_tmp");
+            resultDirectory = targetRoot.resolve(uuid);
             Files.createDirectories(resultDirectory);
             checkAndUnzipTo(io, tmpResultDirectory);
             move(tmpResultDirectory, resultDirectory);

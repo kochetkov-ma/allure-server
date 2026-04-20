@@ -4,13 +4,8 @@
 /keys
 /allure
 
-# Node
-/node
 /node_modules
 /target
-package.json
-webpack.config.js
-webpack.generated.js
 
 # Gradle
 gradlew.bat
@@ -55,3 +50,7 @@ CA.pem
 **/generated/**
 *generated*
 *-private*
+
+# Tailwind standalone binary + generated CSS
+/build/tailwind/
+/src/main/resources/static/css/app.css
