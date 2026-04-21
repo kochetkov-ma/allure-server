@@ -45,8 +45,8 @@ jobs:
           echo "Last tag: ${LAST_TAG} | branch: ${RAW_BRANCH} -> ${SANITIZED_BRANCH} | run: ${GITHUB_RUN_NUMBER}"
           echo "Resolved image tag: ${IMAGE_TAG}"
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      # TODO: re-enable linux/arm64 once QEMU build time is acceptable or a native arm64 runner is available.
+      # Server deployments are amd64, so branch builds are amd64-only for speed.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -62,7 +62,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: |
             ghcr.io/kochetkov-ma/allure-server:${{ steps.meta.outputs.image_tag }}
