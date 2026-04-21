@@ -1,0 +1,70 @@
+name: Branch Image
+
+# Publishes a GHCR-only Docker image for every push to any branch.
+# Tag format: <last-reachable-git-tag-without-v>-<sanitized-branch>.<run_number>
+# Tags (v*.*.*) are handled by release.yml — this workflow skips them.
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Full checkout (need tags for git describe)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          set -euo pipefail
+          LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)"
+          BASE_VERSION="${LAST_TAG#v}"
+          RAW_BRANCH="${GITHUB_REF_NAME}"
+          # Docker tag charset: [a-zA-Z0-9_.-], max 128, no leading '.' or '-'.
+          SANITIZED_BRANCH="$(echo "$RAW_BRANCH" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's#[^a-z0-9._-]+#-#g' \
+            | sed -E 's#^[.-]+##; s#[.-]+$##')"
+          IMAGE_TAG="${BASE_VERSION}-${SANITIZED_BRANCH}.${GITHUB_RUN_NUMBER}"
+          # Hard cap at 128 chars.
+          IMAGE_TAG="${IMAGE_TAG:0:128}"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Last tag: ${LAST_TAG} | branch: ${RAW_BRANCH} -> ${SANITIZED_BRANCH} | run: ${GITHUB_RUN_NUMBER}"
+          echo "Resolved image tag: ${IMAGE_TAG}"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image (GHCR only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/kochetkov-ma/allure-server:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
