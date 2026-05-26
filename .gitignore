@@ -55,3 +55,4 @@ CA.pem
 **/generated/**
 *generated*
 *-private*
+.pnpm-store/
