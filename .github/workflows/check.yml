@@ -3,7 +3,7 @@ name: Build / Test / Check
 on: [push, pull_request]
 
 env:
-  NODE_VERSION: 20.13.1
+  NODE_VERSION: 22.15.0
   GRADLE_VERSION: 8.8
 
 jobs:
