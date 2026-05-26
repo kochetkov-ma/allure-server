@@ -8,10 +8,10 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.51.0'
 
     // https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
-    id 'org.springframework.boot' version '3.3.1'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.5.14'
+    id 'io.spring.dependency-management' version '1.1.7'
 
-    id "com.vaadin" version "24.4.4"
+    id "com.vaadin" version "24.10.6"
     id "org.openapi.generator" version '7.6.0'
 }
 apply from: './gradle/dependencies.gradle'
@@ -19,6 +19,10 @@ apply from: './gradle/testing.gradle'
 
 group = theGroup
 archivesBaseName = theArchivesBaseName
+
+// Override Spring Boot BOM Tomcat version to pick up fixes for
+// CVE-2026-41293, CVE-2026-43512, CVE-2026-43515 (fixed in 10.1.55).
+ext['tomcat.version'] = '10.1.55'
 idea {
     module {
         downloadJavadoc = true
@@ -41,7 +45,7 @@ wrapper {
 }
 vaadin {
     nodeAutoUpdate = false
-    nodeVersion = 'v20.13.1'
+    nodeVersion = 'v22.15.0'
     pnpmEnable = true
     productionMode = true
     forceProductionBuild

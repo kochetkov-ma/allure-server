@@ -1,4 +1,5 @@
 FROM amazoncorretto:21-alpine
+RUN apk upgrade --no-cache libssl3 libcrypto3
 COPY build/libs/*.jar /allure-server-docker.jar
 # Set port
 EXPOSE ${PORT:-8080}
