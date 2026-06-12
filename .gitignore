@@ -1,3 +1,8 @@
+# Un-ignore from global ~/.gitignore_global (which ignores .claude/ and CLAUDE.md)
+!.claude/
+!.claude/**
+!CLAUDE.md
+
 /.gradle
 /.idea
 /build
@@ -54,3 +59,14 @@ CA.pem
 # Tailwind standalone binary + generated CSS
 /build/tailwind/
 /src/main/resources/static/css/app.css
+
+# Claude Code runtime noise (re-ignore inside the un-ignored .claude/)
+.claude/logs/
+.claude/brewtools/
+.claude/brewtools.log
+.claude/settings.local.json
+.claude/reports/
+.claude/tasks/*
+!.claude/tasks/DEPRECATED.md
+.claude/teams/*/trace.jsonl
+.claude/.current-*

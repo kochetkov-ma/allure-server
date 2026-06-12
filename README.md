@@ -2,8 +2,8 @@ Allure Portal (Allure Report Server)
 =================================
 ![Build / Test / Check](https://github.com/kochetkov-ma/allure-server/workflows/Build%20/%20Test%20/%20Check/badge.svg?branch=master)
 
-![Static Badge](https://img.shields.io/badge/java-21-brightgreen)
-![Static Badge](https://img.shields.io/badge/gradle-8.8-brightgreen)
+![Static Badge](https://img.shields.io/badge/java-25-brightgreen)
+![Static Badge](https://img.shields.io/badge/gradle-9.4.1-brightgreen)
 ![Static Badge](https://img.shields.io/badge/Spring%20Boot-3-green)
 
 ![Docker Image Version](https://img.shields.io/docker/v/kochetkovma/allure-server?label=DockerHub&link=https%3A%2F%2Fhub.docker.com%2Fr%2Fkochetkovma%2Fallure-server)
@@ -38,7 +38,7 @@ Use Helm Chart for Kubernetes from **[.helm/allure-server/README.md](.helm/allur
 
 Get the latest release [Releases](https://github.com/kochetkov-ma/allure-server/releases)   
 Download `allure-server.jar`  
-Update your jre(jdk) up to [Java 11](https://www.oracle.com/java/technologies/javase/jdk11-archive-downloads.html)  
+Update your jre(jdk) up to [Java 25](https://adoptium.net/temurin/releases/?version=25)  
 Execute command `java -jar allure-server.jar`
 
 Got to `http://localhost:8080` - will redirect to OpenAPI (Swagger UI)
@@ -286,7 +286,7 @@ OR in `docker-compose.yaml`
 > For using image from URL your should provide access to Company Network ot Internet from container
 
 ### Plugin System for Java Developers (since 2.13.6) `new ⚡` `beta`
-Use `Java 21`
+Use `Java 25`
 1. Create interface in your project in package `ru.iopump.qa.allure.helper.plugin`. It has to be exactly the same as in [AllureServerPlugin.java](src%2Fmain%2Fjava%2Fru%2Fiopump%2Fqa%2Fallure%2Fhelper%2Fplugin%2FAllureServerPlugin.java)
     ```java
     package ru.iopump.qa.allure.helper.plugin;
