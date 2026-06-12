@@ -175,8 +175,8 @@ class AdminUsersControllerTest {
     }
 
     @Test
-    @DisplayName("should return 403-equivalent redirect with error flash when DELETE targets the main admin")
-    void deleteMainAdmin_returns403() throws Exception {
+    @DisplayName("should redirect with error flash when DELETE targets the main admin")
+    void deleteMainAdmin_redirectsWithErrorFlash() throws Exception {
         // GIVEN — service throws MainAdminProtectionException for the main admin
         doThrow(new MainAdminProtectionException("The main administrator cannot be deleted."))
             .when(userManagementService).delete(eq(mainAdminEntity.getId()), any(UserEntity.class));
@@ -200,7 +200,7 @@ class AdminUsersControllerTest {
 
     @Test
     @DisplayName("should redirect with error flash when DELETE targets the actor themselves")
-    void deleteSelf_returns403() throws Exception {
+    void deleteSelf_redirectsWithErrorFlash() throws Exception {
         // GIVEN — service throws SelfProtectionException because actor == target
         doThrow(new SelfProtectionException("You cannot delete your own account."))
             .when(userManagementService).delete(eq(adminActor.getId()), any(UserEntity.class));

@@ -12,6 +12,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.entity.UserRole;
@@ -157,6 +158,22 @@ class UserManagementServiceTest {
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("User already exists: alice");
         verify(userRepository, never()).save(any(UserEntity.class));
+    }
+
+    @Test
+    @DisplayName("should map a unique-constraint violation to IllegalArgumentException when two admins create the same username concurrently")
+    void createUser_mapsDataIntegrityViolationToIllegalArgument() {
+        // GIVEN — the pre-check passes (no existing user), but the flush loses the unique-constraint race
+        when(userRepository.findByUsername("racer")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$hash");
+        when(userRepository.save(any(UserEntity.class)))
+            .thenThrow(new DataIntegrityViolationException("duplicate key value violates unique constraint"));
+
+        // WHEN / THEN — the integrity violation is remapped to the same IllegalArgumentException the controller maps
+        assertThatThrownBy(() -> userManagementService.createUser("racer", "Race Loser"))
+            .as("a concurrent duplicate-username insert must surface as IllegalArgumentException, not a raw 500")
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessageContaining("User already exists: racer");
     }
 
     @Test
@@ -344,6 +361,113 @@ class UserManagementServiceTest {
             .as("main admin self-reset must mark password as temporary")
             .isTrue();
         verify(userRepository).save(mainAdmin);
+    }
+
+    @Test
+    @DisplayName("should set blocked=true on the persisted entity when block succeeds")
+    void block_setsBlockedTrue_onPersistedEntity() {
+        // GIVEN — a deletable, non-self, non-main-admin target that starts unblocked
+        otherUser.setBlocked(false);
+        when(userRepository.findById(otherUser.getId())).thenReturn(Optional.of(otherUser));
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN — admin blocks the target
+        userManagementService.block(otherUser.getId(), admin);
+
+        // THEN — the entity handed to save() carries blocked=true (the actual mutation, not a stub)
+        final ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().isBlocked())
+            .as("block() must flip the persisted entity's blocked flag to true")
+            .isTrue();
+    }
+
+    @Test
+    @DisplayName("should set blocked=false on the persisted entity when unblock succeeds")
+    void unblock_setsBlockedFalse_onPersistedEntity() {
+        // GIVEN — a previously blocked target
+        otherUser.setBlocked(true);
+        when(userRepository.findById(otherUser.getId())).thenReturn(Optional.of(otherUser));
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN — admin unblocks the target
+        userManagementService.unblock(otherUser.getId(), admin);
+
+        // THEN — the entity handed to save() carries blocked=false
+        final ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().isBlocked())
+            .as("unblock() must flip the persisted entity's blocked flag to false")
+            .isFalse();
+    }
+
+    @Test
+    @DisplayName("should set role=ADMIN on the persisted entity when grantAdmin succeeds")
+    void grantAdmin_setsRoleAdmin_onPersistedEntity() {
+        // GIVEN — a regular USER target that is not the guest system account
+        otherUser.setRole(UserRole.USER);
+        when(userRepository.findById(otherUser.getId())).thenReturn(Optional.of(otherUser));
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN — admin grants ADMIN to the target
+        userManagementService.grantAdmin(otherUser.getId(), admin);
+
+        // THEN — the entity handed to save() carries role=ADMIN
+        final ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole())
+            .as("grantAdmin() must set the persisted entity's role to ADMIN")
+            .isEqualTo(UserRole.ADMIN);
+    }
+
+    @Test
+    @DisplayName("should set role=USER on the persisted entity when revokeAdmin succeeds")
+    void revokeAdmin_setsRoleUser_onPersistedEntity() {
+        // GIVEN — a non-self, non-main-admin target that currently holds ADMIN
+        otherUser.setRole(UserRole.ADMIN);
+        when(userRepository.findById(otherUser.getId())).thenReturn(Optional.of(otherUser));
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN — admin revokes ADMIN from the target
+        userManagementService.revokeAdmin(otherUser.getId(), admin);
+
+        // THEN — the entity handed to save() carries role=USER
+        final ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        assertThat(captor.getValue().getRole())
+            .as("revokeAdmin() must demote the persisted entity's role to USER")
+            .isEqualTo(UserRole.USER);
+    }
+
+    @Test
+    @DisplayName("should store a fresh hash and flag the password temporary on the persisted entity when resetPassword succeeds")
+    void resetPassword_setsTempHashAndFlag_onPersistedEntity() {
+        // GIVEN — a non-guest, non-main-admin target whose password starts non-temporary
+        otherUser.setPasswordTemporary(false);
+        otherUser.setPasswordHash("$2a$oldhash");
+        when(userRepository.findById(otherUser.getId())).thenReturn(Optional.of(otherUser));
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$resethash");
+        when(userRepository.save(any(UserEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // WHEN — admin resets the target's password
+        final UserManagementService.TempPasswordResult result =
+            userManagementService.resetPassword(otherUser.getId(), admin);
+
+        // THEN — the returned temp password has the expected length
+        assertThat(result.temporaryPassword())
+            .as("resetPassword() must return a temporary password of the expected length")
+            .hasSize(TEMP_PASSWORD_LENGTH);
+
+        // THEN — the entity handed to save() carries the new encoded hash flagged temporary
+        final ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository).save(captor.capture());
+        final UserEntity saved = captor.getValue();
+        assertThat(saved.getPasswordHash())
+            .as("resetPassword() must store the freshly encoded hash, not the previous one")
+            .isEqualTo("$2a$resethash");
+        assertThat(saved.isPasswordTemporary())
+            .as("resetPassword() must flag the persisted password as temporary")
+            .isTrue();
     }
 
     static Stream<Arguments> missingTargetMutations() {

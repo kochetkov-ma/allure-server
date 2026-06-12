@@ -1,9 +1,12 @@
 package ru.iopump.qa.allure.security;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,8 +39,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * Security wiring. Auth is always on; anonymous traffic is accepted for read-only
- * {@code /app/**} GET traffic (guest read-only UI) and for {@code /api/**} while the
- * runtime flag {@code requireApiAuth} is {@code false}.
+ * {@code /app/**} GET traffic (guest read-only UI) and for {@code /api/**} and
+ * {@code /allure/**} while the runtime flag {@code requireApiAuth} is {@code false}.
+ * Both {@code /api/**} and {@code /allure/**} share the same {@link #apiAuthorizationManager()}
+ * rule, so toggling {@code requireApiAuth} to {@code true} re-gates report content as well.
  * <p>
  * Mutations are protected at the matcher level: every POST/DELETE under
  * {@code /app/reports/**} and {@code /app/results/**}, the token-minting
@@ -50,12 +55,12 @@ import static org.springframework.security.config.Customizer.withDefaults;
  * Legacy {@code basic.auth.enable} is honored for backward compatibility: when set
  * to {@code true} every request that is not an unauthenticated static asset
  * ({@code /css|/js|/img}, {@code /favicon.ico}) requires authentication. That
- * specifically re-gates {@code /api/**} (writes) and {@code /allure/**} (report
- * content), which in default mode are otherwise reachable while {@code requireApiAuth}
- * is {@code false}, so deployments that relied on the flag for protection are not
- * silently opened up on upgrade. Static assets stay public so the login page can
- * render. The flag is deprecated; operators should migrate to the runtime
- * {@code requireApiAuth} toggle (admin settings UI).
+ * specifically forces {@code /api/**} (writes) and {@code /allure/**} (report content)
+ * to authenticated() unconditionally, regardless of the {@code requireApiAuth} toggle,
+ * so deployments that relied on the flag for protection are not silently opened up on
+ * upgrade. Static assets stay public so the login page can render. The flag is
+ * deprecated; operators should migrate to the runtime {@code requireApiAuth} toggle
+ * (admin settings UI).
  * Basic auth against the database is always available via {@link DbUserDetailsService}.
  */
 @Configuration
@@ -137,7 +142,12 @@ public class SecurityConfiguration {
                         .requestMatchers("/app/signin").authenticated()
                         .anyRequest().authenticated();
                 } else {
-                    it.requestMatchers("/allure/**").permitAll()
+                    // /allure/** (generated report content) is gated by the SAME runtime
+                    // toggle as /api/**: when requireApiAuth is true, anonymous report reads
+                    // are blocked (401); when false, the guest read-only fallback still serves
+                    // them. Without this, report content stayed anonymously open regardless of
+                    // the toggle (F9).
+                    it.requestMatchers("/allure/**").access(apiAuthorizationManager)
                         .requestMatchers("/api/**").access(apiAuthorizationManager)
                         .requestMatchers("/app/signin").authenticated();
                     // Mutations require an authenticated, non-guest principal even though
@@ -203,6 +213,31 @@ public class SecurityConfiguration {
         // Publish AuthenticationSuccessEvent so LastLoginListener can stamp lastLoginAt.
         providerManager.setAuthenticationEventPublisher(new DefaultAuthenticationEventPublisher(eventPublisher));
         return providerManager;
+    }
+
+    /**
+     * Emits a prominent startup WARN when the effective security posture is OPEN — i.e. the
+     * runtime {@code requireApiAuth} toggle is {@code false} AND legacy {@code basic.auth.enable}
+     * is {@code false}. In that state {@code /api/**} and {@code /allure/**} are anonymously
+     * reachable (guest fallback). Runs with the lowest precedence so it executes AFTER
+     * {@link SystemSettingsService} (also an {@link ApplicationRunner}) has seeded the DB-backed
+     * snapshot, so the value read here is the authoritative runtime posture, not the bootstrap
+     * yaml default.
+     */
+    @Bean
+    @Order(Ordered.LOWEST_PRECEDENCE)
+    public ApplicationRunner openPostureStartupWarning() {
+        return args -> {
+            final boolean requireApiAuth = systemSettingsService.isRequireApiAuth();
+            if (!requireApiAuth && !legacyBasicAuthEnabled) {
+                log.warn("[ALLURE SERVER SECURITY] OPEN POSTURE: 'require API auth' is OFF and "
+                    + "'basic.auth.enable' is false — /api/** and /allure/** are ANONYMOUSLY "
+                    + "REACHABLE (guest fallback). To lock down: enable the 'require API auth' "
+                    + "toggle in /app/admin/settings (runtime, authoritative) OR set "
+                    + "'basic.auth.enable=true' (deprecated). This is intentional backward-compat "
+                    + "behavior; ignore if this server is meant to be publicly readable.");
+            }
+        };
     }
 
     ///// PRIVATE /////

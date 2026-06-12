@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -71,9 +72,11 @@ public class ResultService {
         if (!Files.exists(storagePath)) {
             return Collections.emptySet();
         }
-        return Files.walk(storagePath, 1).skip(1)
-            .filter(p -> isDirectory(p))
-            .collect(Collectors.toUnmodifiableSet());
+        try (Stream<Path> walk = Files.walk(storagePath, 1)) {
+            return walk.skip(1)
+                .filter(p -> isDirectory(p))
+                .collect(Collectors.toUnmodifiableSet());
+        }
     }
 
     /**
@@ -131,36 +134,34 @@ public class ResultService {
     }
 
     private void checkAndUnzipTo(InputStream zipArchiveIo, Path unzipTo) throws IOException {
-        ZipInputStream zis = new ZipInputStream(zipArchiveIo);
         byte[] buffer = new byte[1024];
-        ZipEntry zipEntry = zis.getNextEntry();
-        if (zipEntry == null) {
-            throw new IllegalArgumentException("Passed InputStream is not a Zip Archive or empty");
-        }
-        while (zipEntry != null) {
-            final Path newFile = fromZip(unzipTo, zipEntry);
-            try (final OutputStream fos = Files.newOutputStream(newFile)) {
-                int len;
-                while ((len = zis.read(buffer)) > 0) {
-                    fos.write(buffer, 0, len);
-                }
+        try (ZipInputStream zis = new ZipInputStream(zipArchiveIo)) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            if (zipEntry == null) {
+                throw new IllegalArgumentException("Passed InputStream is not a Zip Archive or empty");
             }
-            log.info("Unzip new entry '{}'", newFile);
-            zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                final Path newFile = fromZip(unzipTo, zipEntry);
+                try (final OutputStream fos = Files.newOutputStream(newFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+                log.debug("Unzip new entry '{}'", newFile);
+                zipEntry = zis.getNextEntry();
+            }
         }
-        zis.closeEntry();
-        zis.close();
-
         log.info("Unzipping successfully finished to '{}'", unzipTo);
     }
 
     private void move(Path from, Path to) throws IOException {
-        Files.find(from,
-                1,
-                (path, basicFileAttributes)
-                    -> basicFileAttributes.isDirectory() && (path.getFileName().toString()
-                    .matches("allure-.+|report.*")))
-            .forEach(
+        try (Stream<Path> nested = Files.find(from,
+            1,
+            (path, basicFileAttributes)
+                -> basicFileAttributes.isDirectory() && (path.getFileName().toString()
+                .matches("allure-.+|report.*")))) {
+            nested.forEach(
                 nestedResultDir -> {
                     try {
                         Files.walkFileTree(nestedResultDir, new MoveFileVisitor(to));
@@ -169,12 +170,20 @@ public class ResultService {
                     }
                 }
             );
+        }
         Files.walkFileTree(from, new MoveFileVisitor(to));
     }
 
-    private Path fromZip(Path unzipTo, ZipEntry zipEntry) {
-        final Path entryPath = Paths.get(zipEntry.getName());
-        final Path destinationFileOrDir = unzipTo.resolve(entryPath);
+    private Path fromZip(Path unzipTo, ZipEntry zipEntry) throws IOException {
+        final String entryName = zipEntry.getName();
+        if (Paths.get(entryName).isAbsolute()) {
+            throw new IOException("Zip entry has absolute path: " + entryName);
+        }
+        final Path root = unzipTo.normalize();
+        final Path destinationFileOrDir = root.resolve(entryName).normalize();
+        if (!destinationFileOrDir.startsWith(root)) {
+            throw new IOException("Zip entry escapes target dir: " + entryName);
+        }
 
         if (isDirectory(destinationFileOrDir)) {
             FileUtil.createDir(destinationFileOrDir);

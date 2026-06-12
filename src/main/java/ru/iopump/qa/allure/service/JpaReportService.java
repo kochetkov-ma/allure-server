@@ -152,10 +152,11 @@ public class JpaReportService {
         // (uploadReport consumes an already-generated Allure report, not raw results).
         final Path destination = resultService.unzipAndStore(archiveInputStream, reportsDir);
         final UUID uuid = UUID.fromString(destination.getFileName().toString());
-        Preconditions.checkArgument(
-            Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
-            "Uploaded archive is not an Allure Report"
-        );
+        final boolean hasIndex;
+        try (var paths = Files.list(destination)) {
+            hasIndex = paths.anyMatch(path -> path.getFileName().toString().equals("index.html"));
+        }
+        Preconditions.checkArgument(hasIndex, "Uploaded archive is not an Allure Report");
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
@@ -312,15 +313,15 @@ public class JpaReportService {
                 );
 
                 // Delete last after max history
-                long deleted = allReports.stream()
-                    .skip(max)
-                    .peek(e -> log.info("Report '{}' will be deleted", e))
-                    .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
-                    .peek(repository::delete)
-                    .count();
+                final var toDelete = allReports.stream().skip(max).toList();
+                toDelete.forEach(e -> {
+                    log.info("Report '{}' will be deleted", e);
+                    deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile());
+                    repository.delete(e);
+                });
 
                 // Update level (safety)
-                created.setLevel(Math.max(created.getLevel() - deleted, 0));
+                created.setLevel(Math.max(created.getLevel() - (long) toDelete.size(), 0L));
             }
         }
     }

@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -78,9 +79,16 @@ public class UserManagementService {
             .blocked(false)
             .mainAdmin(false)
             .build();
-        final UserEntity saved = userRepository.save(created);
-        log.info("Admin created user '{}' (id={}) with temporary password", normalizedUsername, saved.getId());
-        return new TempPasswordResult(saved, tempPassword);
+        try {
+            final UserEntity saved = userRepository.save(created);
+            log.info("Admin created user '{}' (id={}) with temporary password", normalizedUsername, saved.getId());
+            return new TempPasswordResult(saved, tempPassword);
+        } catch (DataIntegrityViolationException ex) {
+            // Concurrency backstop: a second identical username can slip past the findByUsername
+            // pre-check and only collide on the unique constraint at flush. Map it to the same
+            // IllegalArgumentException so the controller renders the friendly flash toast.
+            throw new IllegalArgumentException("User already exists: " + normalizedUsername, ex);
+        }
     }
 
     public void delete(@NonNull UUID targetId, @NonNull UserEntity actor) {
