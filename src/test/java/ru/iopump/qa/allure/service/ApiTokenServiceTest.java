@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -12,6 +13,7 @@ import ru.iopump.qa.allure.entity.ApiTokenEntity;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.entity.UserRole;
 import ru.iopump.qa.allure.repo.ApiTokenRepository;
+import ru.iopump.qa.allure.repo.UserRepository;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -23,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +44,9 @@ class ApiTokenServiceTest {
 
     @Mock
     private ApiTokenRepository apiTokenRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @Mock
     private TokenPolicy tokenPolicy;
@@ -114,10 +120,11 @@ class ApiTokenServiceTest {
         when(apiTokenRepository.countActiveByUserId(eq(owner.getId()), any(Instant.class))).thenReturn(0L);
 
         // WHEN — create a token with a 30-day TTL
+        final Duration ttl = Duration.ofDays(30);
         final ApiTokenService.TokenIssueResult result =
-            apiTokenService.createToken(owner, "ci-pipeline", Duration.ofDays(30));
+            apiTokenService.createToken(owner, "ci-pipeline", ttl);
 
-        // THEN — plain value is returned, entity persisted with hash and lookup, expiresAt set
+        // THEN — plain value is returned, entity persisted with hash and lookup, expiresAt computed
         assertThat(result.plainToken())
             .as("plain token returned from createToken must carry the project prefix")
             .startsWith(TOKEN_PREFIX);
@@ -134,14 +141,16 @@ class ApiTokenServiceTest {
             .as("persisted name matches form input")
             .isEqualTo("ci-pipeline");
         assertThat(saved.getExpiresAt())
-            .as("expiresAt set for non-null TTL")
-            .isNotNull();
+            .as("expiresAt equals createdAt plus the requested TTL")
+            .isEqualTo(saved.getCreatedAt().plus(ttl));
         assertThat(saved.getRevokedAt())
             .as("new token is not revoked")
             .isNull();
         assertThat(saved.getUser())
             .as("owner linked on new token")
             .isEqualTo(owner);
+        // AND — the owning user row is locked before the count+insert (concurrency guard)
+        verify(userRepository).findByIdForUpdate(owner.getId());
     }
 
     @Test
@@ -327,6 +336,24 @@ class ApiTokenServiceTest {
             .isInstanceOf(TokenLimitExceededException.class)
             .hasMessageContaining("5 of 5");
         verify(apiTokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("should lock the owner row before counting active tokens when createToken runs")
+    void createTokenLocksOwnerRowBeforeCounting() {
+        // GIVEN — USER role under limit with no existing active tokens
+        when(tokenPolicy.maxActiveTokens(UserRole.USER)).thenReturn(USER_LIMIT);
+        when(apiTokenRepository.countActiveByUserId(eq(owner.getId()), any(Instant.class))).thenReturn(0L);
+
+        // WHEN — create a token
+        apiTokenService.createToken(owner, "ci-pipeline", null);
+
+        // THEN — the pessimistic write lock on the owner row is taken before the count,
+        // so concurrent creates serialize and cannot both pass the per-user cap
+        final InOrder inOrder = inOrder(userRepository, apiTokenRepository);
+        inOrder.verify(userRepository).findByIdForUpdate(owner.getId());
+        inOrder.verify(apiTokenRepository).countActiveByUserId(eq(owner.getId()), any(Instant.class));
+        inOrder.verify(apiTokenRepository).save(any(ApiTokenEntity.class));
     }
 
     @Test

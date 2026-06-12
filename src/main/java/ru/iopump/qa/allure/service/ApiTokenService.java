@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.ApiTokenEntity;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.repo.ApiTokenRepository;
+import ru.iopump.qa.allure.repo.UserRepository;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
@@ -44,6 +45,7 @@ public class ApiTokenService {
         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".toCharArray();
 
     private final ApiTokenRepository apiTokenRepository;
+    private final UserRepository userRepository;
     private final TokenPolicy tokenPolicy;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -87,15 +89,27 @@ public class ApiTokenService {
      * Create and persist a new token for {@code owner}. Returns both the entity
      * id and the plain token value — the plain value is available ONLY here.
      *
+     * <p>
+     * The per-user cap is a check-then-act sequence (count active, then insert). To
+     * stop two concurrent creates from both passing the count and over-shooting the
+     * limit, the owning user row is taken under a {@code PESSIMISTIC_WRITE} lock for
+     * the duration of this transaction via {@link UserRepository#findByIdForUpdate}.
+     * Concurrent creates for the same owner serialize on that row lock.
+     *
      * @param owner token owner (must be persisted)
      * @param name  human-readable name (e.g. "ci-pipeline")
      * @param ttl   optional lifetime; {@code null} means no expiration
      */
+    @Transactional
     public TokenIssueResult createToken(@NonNull UserEntity owner,
                                         @NonNull String name,
                                         Duration ttl) {
         Preconditions.checkArgument(!name.isBlank(), "token name must not be blank");
         Preconditions.checkArgument(owner.getId() != null, "owner must be persisted");
+
+        // Serialize concurrent creates for this owner: hold a write lock on the user
+        // row so the count+insert below cannot interleave with another create call.
+        userRepository.findByIdForUpdate(owner.getId());
 
         final Instant now = Instant.now();
         final int limit = tokenPolicy.maxActiveTokens(owner.getRole());

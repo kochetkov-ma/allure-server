@@ -63,9 +63,9 @@ class ApiTokenAuthenticationFilterTest {
 
         // THEN — SecurityContext authenticated, chain invoked, no 401 written
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        assertThat(authentication)
-            .as("a valid X-API-Token must populate the SecurityContext")
-            .isNotNull();
+        assertThat(authentication.isAuthenticated())
+            .as("a valid X-API-Token must populate the SecurityContext with an authenticated token")
+            .isTrue();
         assertThat(authentication.getPrincipal())
             .as("principal must be a Spring UserDetails, not the raw JPA entity")
             .isInstanceOf(org.springframework.security.core.userdetails.UserDetails.class);

@@ -54,8 +54,8 @@ gg:
 # (app.security.require-api-auth) and remove this flag.
 basic:
   auth:
-    username: admin
-    password: admin
+    username: ${BASIC_AUTH_USERNAME:admin}
+    password: ${BASIC_AUTH_PASSWORD:admin}
     enable: false
 
 # app.security.require-api-auth controls /api/** protection on FIRST startup only —
@@ -119,6 +119,6 @@ tms:
   enabled: false
   host: tms.localhost
   api-base-url: https://${tms.host}/api
-  token: "my-token"
+  token: ${TMS_TOKEN:}
   issue-key-pattern: "[A-Za-z]+-\\d+"
   dry-run: false

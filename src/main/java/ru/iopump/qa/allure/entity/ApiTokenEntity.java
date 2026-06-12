@@ -9,6 +9,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -44,6 +45,11 @@ public class ApiTokenEntity {
 
     @Id
     private UUID id;
+
+    @Version
+    @Column(nullable = false, columnDefinition = "bigint default 0")
+    @Builder.Default
+    private long version = 0;
 
     @NotNull
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
