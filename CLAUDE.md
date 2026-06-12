@@ -58,6 +58,7 @@ Java 25 + Gradle wrapper required. Tailwind binary auto-downloaded by `tailwindD
 | 6 | English only in all written artifacts: CLAUDE.md, `.claude/**/*.md`, comments, commits, PR text, docstrings, log messages. |
 | 7 | Tests: GIVEN/WHEN/THEN structure, concrete assertions (`isEqualTo`/`hasSize`, !=`isNotNull` alone), no `if` in tests. Detail: `.claude/rules/test-*.md`. |
 | 8 | No fabrication. Fact not in this repo -> ask. |
+| 9 | Git identity: this repo is bound to GitHub account `kochetkov-ma` ONLY. !=use any `tfin` account (`mkochetkov_tfin`, `GITHUB_TFIN_*`) for commits, author identity, or push here. See §5. |
 
 ## 4. Team
 
@@ -76,6 +77,21 @@ Team `default` | roster: `.claude/teams/default/team.md` | trace: `.claude/teams
 | persistence-jpa | `entity/`, `repo/`, `migration.sql` -- JPA schema, derived queries, datasource |
 | build-ci-qa | `build.gradle`, `.github/workflows/`, `Dockerfile`, test infra |
 | task-tracker | `.claude/features/**` -- board, task lifecycle, backlog grooming |
+
+## 5. Git identity (kochetkov-ma ONLY)
+
+> This repo belongs to `github.com/kochetkov-ma/allure-server`. ALL git operations use the **`kochetkov-ma`** account. NEVER use a `tfin` account (`mkochetkov_tfin`, `GITHUB_TFIN_USER`, `GITHUB_TFIN_TOKEN`) here -- it has no write access and pollutes commit authorship.
+
+Already wired in **local** repo config (survives any global `gh auth switch`):
+
+| `git config --local` key | Value |
+|--------------------------|-------|
+| `user.name` / `user.email` | `kochetkov-ma` / `apmatypa88@gmail.com` |
+| `credential.https://github.com.helper` | per-repo helper calling `gh auth token --user kochetkov-ma` (account-switch independent) |
+
+- Verify: `printf 'protocol=https\nhost=github.com\n\n' \| git credential fill` -> `username=kochetkov-ma`.
+- If push 403s with `mkochetkov_tfin`: the local helper was lost -- re-add it, do NOT `gh auth switch` as a workaround.
+- Commit authorship must show `kochetkov-ma <apmatypa88@gmail.com>`. Earlier `mkochetkov <mkochetkov@tfin.com>` commits predate this rule.
 
 ## Code Search
 
