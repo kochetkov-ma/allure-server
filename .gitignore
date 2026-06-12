@@ -70,3 +70,6 @@ CA.pem
 !.claude/tasks/DEPRECATED.md
 .claude/teams/*/trace.jsonl
 .claude/.current-*
+
+# Loose UI/dev screenshots at repo root (not doc assets)
+/*.png
