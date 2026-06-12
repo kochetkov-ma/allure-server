@@ -17,11 +17,12 @@ import ru.iopump.qa.allure.config.RedirectConfiguration;
 import ru.iopump.qa.allure.config.WebConfiguration;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.security.CurrentUserProvider;
+import ru.iopump.qa.allure.service.ApiTokenService;
 import ru.iopump.qa.allure.service.JpaReportService;
 import ru.iopump.qa.allure.service.ResultService;
 
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,7 +33,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -62,6 +62,12 @@ class ResultsWebControllerTest {
 
     @MockitoBean
     private JpaReportService reportService;
+
+    @MockitoBean
+    private ApiTokenService apiTokenService;
+
+    @MockitoBean
+    private CurrentUserProvider currentUserProvider;
 
     // ─────────────────────────── upload ───────────────────────────────────────
 
@@ -182,32 +188,6 @@ class ResultsWebControllerTest {
             .as("error message must mention the constraint rejection")
             .contains("Request rejected:");
         verify(resultService, never()).internalDeleteByUUID(any());
-    }
-
-    // ─────────────────────────── grid OOB ─────────────────────────────────────
-
-    @Test
-    @DisplayName("should return 200 with OOB counter fragment when GET /app/results/grid?q=xyz filters to empty list")
-    void gridOobCounter() throws Exception {
-        // GIVEN — resultService.getAll() returns empty collection (no results match query 'xyz')
-        when(resultService.getAll()).thenReturn(Collections.emptyList());
-
-        // WHEN — GET grid fragment with filter query that matches nothing
-        MvcResult result = mockMvc.perform(get("/app/results/grid").param("q", "xyz"))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        // THEN — OOB counter span rendered with hx-swap-oob and results-count id, showing count 0
-        String body = result.getResponse().getContentAsString();
-        assertThat(body)
-            .as("grid fragment must contain the OOB results-count span id")
-            .contains("id=\"results-count\"");
-        assertThat(body)
-            .as("grid fragment must carry hx-swap-oob attribute for htmx OOB swap")
-            .contains("hx-swap-oob=\"true\"");
-        assertThat(body)
-            .as("grid fragment must show count 0 when all results are filtered out")
-            .contains("0");
     }
 
     //// helpers ////

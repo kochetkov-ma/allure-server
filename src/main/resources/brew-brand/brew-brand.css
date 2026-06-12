@@ -1,0 +1,49 @@
+/* Brew.QA branding — overrides Allure sidebar brand only. Do not change Allure palette/layout. */
+:root {
+  --brew-gold: #EBBB40;
+  --brew-green: #649c67;
+  --brew-on-gold: #111111;
+}
+
+/* Hide original Allure brand text/logo */
+.side-nav__brand > * { display: none !important; }
+
+/* Paint our brand into the existing .side-nav__brand slot */
+.side-nav__brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+}
+.side-nav__brand .brew-brand-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+}
+.side-nav__brand .brew-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--brew-gold);
+  color: var(--brew-on-gold);
+  font-weight: 700;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1;
+}
+.side-nav__brand .brew-brand-word {
+  font-weight: 600;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+.side-nav__brand .brew-brand-word .brew-dot { color: var(--brew-gold); }
+.side-nav__brand .brew-brand-word .brew-qa  { color: var(--brew-green); }
+
+/* Collapsed sidebar — hide wordmark, keep badge */
+.side-nav_collapsed .side-nav__brand .brew-brand-word { display: none !important; }

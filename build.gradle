@@ -39,6 +39,29 @@ group = theGroup
 base {
     archivesName = theArchivesBaseName
 }
+
+// Version resolution order:
+//   1. -Pversion=<tag> passed on the Gradle CLI (CI release workflow)
+//   2. RELEASE_VERSION env var
+//   3. `git describe --tags --always --dirty` (local dev / untagged snapshot)
+//   4. literal 'dev' as last-resort fallback
+def resolveProjectVersion = {
+    if (project.hasProperty('version') && project.version != 'unspecified' && !project.version.toString().isBlank()) {
+        return project.version.toString()
+    }
+    def envVersion = System.env.RELEASE_VERSION
+    if (envVersion != null && !envVersion.toString().isBlank()) return envVersion.toString()
+    try {
+        def proc = ['git', 'describe', '--tags', '--always', '--dirty'].execute(null, rootDir)
+        proc.waitFor()
+        if (proc.exitValue() == 0) {
+            def out = proc.inputStream.text.trim()
+            if (!out.isBlank()) return out
+        }
+    } catch (ignored) { }
+    return 'dev'
+}
+version = resolveProjectVersion()
 idea {
     module {
         downloadJavadoc = true
@@ -59,19 +82,18 @@ wrapper {
         delete "$projectDir/gradlew.bat", "$projectDir/gradlew"
     }
 }
-classes {
-    doLast {
-        def resourcesDir = sourceSets.main.output.resourcesDir as File
-        def releaseVersion = System.env.RELEASE_VERSION as String
-        if (releaseVersion) {
-            new File(resourcesDir, "version.info").text = releaseVersion
-        } else {
-            new File(resourcesDir, "version.info").text = version
-        }
-    }
-}
 springBoot {
     mainClass = "ru.iopump.qa.allure.Application"
+    buildInfo {
+        properties {
+            additional = [
+                'git.commit': providers.exec {
+                    commandLine 'git', 'rev-parse', '--short', 'HEAD'
+                    ignoreExitValue = true
+                }.standardOutput.asText.map { it.trim() }.getOrElse('unknown')
+            ]
+        }
+    }
 }
 
 tasks.named("bootJar") {

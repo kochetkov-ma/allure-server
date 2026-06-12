@@ -42,16 +42,38 @@ gg:
     use-precompiled-templates: true
 
 ### Security
+# Authentication is always enabled. The bootstrap main administrator is seeded from
+# basic.auth.username / basic.auth.password on first startup; subsequent changes are
+# managed through the /app/admin/users UI (DB is authoritative).
+#
+# basic.auth.enable is DEPRECATED. It is still honored for backward compatibility:
+# when set to true every request except public static assets (css/js/img, favicon)
+# requires authentication — this explicitly includes /api/** and /allure/** (the
+# pre-2.x behavior), so deployments that relied on it stay protected after upgrade.
+# Prefer the runtime 'require API auth' toggle at /app/admin/settings
+# (app.security.require-api-auth) and remove this flag.
 basic:
   auth:
     username: admin
     password: admin
     enable: false
 
+# app.security.require-api-auth controls /api/** protection on FIRST startup only —
+# once the system-settings row is written the database value wins. Admins flip this
+# at runtime via /app/admin/settings.
+app:
+  security:
+    require-api-auth: false
+    enable-oauth2: false
+
 ### App Configuration
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    custom-css-url:
+      - /swagger/theme.css
+    custom-js-url:
+      - /swagger/brand.js
 
 # #################
 # Deprecated format. Not supported!

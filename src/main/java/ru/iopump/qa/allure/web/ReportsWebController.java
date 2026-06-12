@@ -1,9 +1,12 @@
 package ru.iopump.qa.allure.web;
 
 import io.qameta.allure.entity.ExecutorInfo;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
@@ -26,12 +29,17 @@ import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.service.JpaReportService;
 
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Path;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static ru.iopump.qa.allure.helper.Util.url;
@@ -50,38 +58,18 @@ import static ru.iopump.qa.allure.helper.Util.url;
 @Slf4j
 public class ReportsWebController {
 
-    static final String SORT_CREATED = "created";
-    static final String SORT_PATH = "path";
-    static final String SORT_UUID = "uuid";
-    static final String DIR_ASC = "asc";
-    static final String DIR_DESC = "desc";
-
     private static final String VIEW_INDEX = "reports/index";
-    private static final String VIEW_GRID = "reports/grid";
     private static final String REDIRECT_INDEX = "redirect:/app/reports";
 
     private final JpaReportService reportService;
     private final AllureProperties allureProperties;
 
     @GetMapping
-    public String index(@RequestParam(required = false) String q,
-                        @RequestParam(defaultValue = SORT_CREATED) String sort,
-                        @RequestParam(defaultValue = DIR_DESC) String dir,
-                        Model model) {
-        populate(model, q, sort, dir);
+    public String index(Model model) {
+        populate(model);
         model.addAttribute("title", "Reports");
         model.addAttribute("activeNav", "reports");
         return VIEW_INDEX;
-    }
-
-    @GetMapping("/grid")
-    public String grid(@RequestParam(required = false) String q,
-                       @RequestParam(defaultValue = SORT_CREATED) String sort,
-                       @RequestParam(defaultValue = DIR_DESC) String dir,
-                       Model model) {
-        populate(model, q, sort, dir);
-        model.addAttribute("oob", true);
-        return VIEW_GRID;
     }
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -145,81 +133,143 @@ public class ReportsWebController {
         return REDIRECT_INDEX;
     }
 
-    ///// PRIVATE /////
-
-    private void populate(Model model, String q, String sort, String dir) {
-        final String normalizedSort = normalizeSort(sort);
-        final String normalizedDir = normalizeDir(dir);
-        final String queryTrim = q == null ? "" : q.trim();
-
-        model.addAttribute("rows", loadRows(queryTrim, normalizedSort, normalizedDir));
-        model.addAttribute("q", queryTrim);
-        model.addAttribute("sort", normalizedSort);
-        model.addAttribute("dir", normalizedDir);
+    @PostMapping("/bulk-delete")
+    @CacheEvict(value = "reports", allEntries = true)
+    public String bulkDelete(@Valid @NotEmpty @RequestParam("uuids") List<UUID> uuids, RedirectAttributes flash) {
+        int deleted = 0;
+        int failed = 0;
+        for (UUID uuid : uuids) {
+            try {
+                reportService.deleteByUuid(uuid.toString());
+                deleted++;
+            } catch (ResponseStatusException ex) {
+                failed++;
+                log.warn("Bulk-delete: report '{}' skipped: {}", uuid, ex.getReason());
+            } catch (IOException | IllegalArgumentException ex) {
+                failed++;
+                log.error("Bulk-delete: report '{}' failed: {}", uuid, ex.getMessage(), ex);
+            }
+        }
+        final String level = failed == 0 ? "success" : (deleted == 0 ? "error" : "warning");
+        final String msg = failed == 0
+            ? "Deleted " + deleted + " report(s)"
+            : "Deleted " + deleted + " report(s), " + failed + " failed";
+        flash.addFlashAttribute("flash", toastMap(level, msg));
+        log.info("Bulk-delete on /app/reports: deleted={}, failed={}", deleted, failed);
+        return REDIRECT_INDEX;
     }
 
-    private List<ReportRow> loadRows(String queryTrim, String sort, String dir) {
+    ///// PRIVATE /////
+
+    private void populate(Model model) {
+        final List<ReportRow> rows = loadRows();
+        final long totalSize = rows.stream().mapToLong(ReportRow::sizeBytes).sum();
+
+        model.addAttribute("rows", rows);
+        model.addAttribute("totalCount", rows.size());
+        model.addAttribute("totalSizeDisplay", HumanSize.format(totalSize));
+    }
+
+    /**
+     * Load all reports, newest first. Filtering and sorting are performed entirely
+     * client-side (Alpine) in {@code reports/index.jte}; the server only fixes the
+     * initial chronological order.
+     */
+    private List<ReportRow> loadRows() {
         final Collection<ReportEntity> entities = reportService.getAll();
         final String baseUrl = url(allureProperties);
         final String reportsDir = allureProperties.reports().dir();
 
-        final Comparator<ReportEntity> comparator = comparatorFor(sort);
-        final Comparator<ReportEntity> effective = DIR_DESC.equals(dir) ? comparator.reversed() : comparator;
+        final Comparator<ReportEntity> byCreatedDesc =
+            Comparator.comparing(ReportEntity::getCreatedDateTime, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
 
-        Stream<ReportEntity> stream = entities.stream().sorted(effective);
-        if (!queryTrim.isEmpty()) {
-            final String needle = queryTrim.toLowerCase();
-            stream = stream.filter(e -> matches(e, needle));
+        final Stream<ReportEntity> stream = entities.stream().sorted(byCreatedDesc);
+
+        final Path reportsRoot = allureProperties.reports().dirPath();
+
+        return stream.map(e -> {
+            final long sizeBytes = directorySize(reportsRoot.resolve(e.getUuid().toString()));
+            final String rawBuildUrl = e.getBuildUrl();
+            return ReportRow.from(
+                e.getUuid().toString(),
+                e.getPath(),
+                formatCreated(e),
+                createdEpoch(e),
+                e.generateUrl(baseUrl, reportsDir),
+                sizeBytes,
+                HumanSize.format(sizeBytes),
+                rawBuildUrl,
+                buildLabel(rawBuildUrl)
+            );
+        }).toList();
+    }
+
+    /** Recursive byte count for a report directory; returns 0 when the path is missing or unreadable. */
+    private static long directorySize(Path dir) {
+        final java.io.File file = dir.toFile();
+        if (!file.isDirectory()) {
+            return 0L;
         }
-
-        return stream.map(e -> ReportRow.from(
-            e.getUuid().toString(),
-            e.getPath(),
-            toIsoUtc(e),
-            e.generateUrl(baseUrl, reportsDir)
-        )).toList();
-    }
-
-    private static Comparator<ReportEntity> comparatorFor(String sort) {
-        return switch (sort) {
-            case SORT_PATH -> Comparator.comparing(ReportEntity::getPath, Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER));
-            case SORT_UUID -> Comparator.comparing(e -> e.getUuid().toString());
-            default -> Comparator.comparing(ReportEntity::getCreatedDateTime, Comparator.nullsLast(Comparator.naturalOrder()));
-        };
-    }
-
-    private static boolean matches(ReportEntity entity, String needleLower) {
-        final String path = entity.getPath();
-        final String uuid = entity.getUuid() == null ? "" : entity.getUuid().toString();
-        if (path != null && path.toLowerCase().contains(needleLower)) {
-            return true;
+        try {
+            return FileUtils.sizeOfDirectory(file);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Unable to size report directory '{}': {}", dir, ex.getMessage());
+            return 0L;
         }
-        return uuid.toLowerCase().contains(needleLower);
     }
 
-    private static String toIsoUtc(ReportEntity entity) {
+    /**
+     * Render the last two non-empty path segments of a CI build URL (e.g. {@code jobs/12345}
+     * or {@code merge_requests/42}) so the grid keeps a recognizable, compact label while the
+     * full URL stays behind the link. Falls back to host, then to the raw string.
+     */
+    static String buildLabel(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        final String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return "";
+        }
+        try {
+            final URI uri = URI.create(trimmed);
+            final String p = uri.getPath();
+            final List<String> segments = (p == null || p.isEmpty())
+                ? List.of()
+                : Arrays.stream(p.split("/")).filter(s -> !s.isEmpty()).toList();
+            if (segments.isEmpty()) {
+                return uri.getHost() == null ? trimmed : uri.getHost();
+            }
+            if (segments.size() == 1) {
+                return segments.get(0);
+            }
+            return segments.get(segments.size() - 2) + "/" + segments.get(segments.size() - 1);
+        } catch (IllegalArgumentException ex) {
+            return trimmed;
+        }
+    }
+
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+
+    private static String formatCreated(ReportEntity entity) {
         if (entity.getCreatedDateTime() == null) {
             return "";
         }
-        // ReportEntity.getCreatedDateTime() returns a LocalDateTime already normalised to UTC.
-        return entity.getCreatedDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
+        // ReportEntity.getCreatedDateTime() is already stored as UTC LocalDateTime.
+        // Format once server-side so every viewer sees identical text regardless of browser timezone.
+        return entity.getCreatedDateTime().format(DISPLAY_DATE_FORMAT);
     }
 
-    private static String normalizeSort(String sort) {
-        if (sort == null) {
-            return SORT_CREATED;
+    /**
+     * Epoch milliseconds of the report creation instant for chronological (numeric) client-side
+     * sorting. The dd.MM.yyyy display string is not chronologically sortable; this raw value is.
+     * Returns {@code 0} when the creation time is unknown.
+     */
+    private static long createdEpoch(ReportEntity entity) {
+        if (entity.getCreatedDateTime() == null) {
+            return 0L;
         }
-        return switch (sort) {
-            case SORT_PATH, SORT_UUID, SORT_CREATED -> sort;
-            default -> SORT_CREATED;
-        };
-    }
-
-    private static String normalizeDir(String dir) {
-        if (DIR_ASC.equalsIgnoreCase(dir)) {
-            return DIR_ASC;
-        }
-        return DIR_DESC;
+        return entity.getCreatedDateTime().toInstant(ZoneOffset.UTC).toEpochMilli();
     }
 
     /**

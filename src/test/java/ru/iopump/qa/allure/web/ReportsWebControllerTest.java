@@ -17,9 +17,10 @@ import ru.iopump.qa.allure.config.RedirectConfiguration;
 import ru.iopump.qa.allure.config.WebConfiguration;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.security.CurrentUserProvider;
+import ru.iopump.qa.allure.service.ApiTokenService;
 import ru.iopump.qa.allure.service.JpaReportService;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
@@ -28,7 +29,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,6 +54,12 @@ class ReportsWebControllerTest {
 
     @MockitoBean
     private JpaReportService reportService;
+
+    @MockitoBean
+    private ApiTokenService apiTokenService;
+
+    @MockitoBean
+    private CurrentUserProvider currentUserProvider;
 
     // ─────────────────────────── upload ───────────────────────────────────────
 
@@ -127,32 +133,6 @@ class ReportsWebControllerTest {
             .as("rejected delete: flash level must be 'error'")
             .isEqualTo(LEVEL_ERROR);
         verify(reportService).deleteByUuid("bad-value");
-    }
-
-    // ─────────────────────────── grid OOB ─────────────────────────────────────
-
-    @Test
-    @DisplayName("should return 200 with OOB counter fragment when GET /app/reports/grid?q=xyz filters to empty list")
-    void gridOobCounter() throws Exception {
-        // GIVEN — service returns an empty collection so the filtered list is 0
-        when(reportService.getAll()).thenReturn(Collections.emptyList());
-
-        // WHEN — GET grid fragment with a query that matches nothing
-        MvcResult result = mockMvc.perform(get("/app/reports/grid").param("q", "xyz"))
-            .andExpect(status().isOk())
-            .andReturn();
-
-        // THEN — OOB counter paragraph rendered with the correct id and hx-swap-oob marker
-        String body = result.getResponse().getContentAsString();
-        assertThat(body)
-            .as("grid fragment must contain the OOB reports-count element id")
-            .contains("id=\"reports-count\"");
-        assertThat(body)
-            .as("grid fragment must carry hx-swap-oob attribute for htmx OOB swap")
-            .contains("hx-swap-oob=\"true\"");
-        assertThat(body)
-            .as("grid fragment must show 0 report(s) when list is empty")
-            .contains("0 report(s)");
     }
 
     //// helpers ////

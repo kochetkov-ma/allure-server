@@ -8,24 +8,21 @@
      @open-dialog.window="if ($event.detail && $event.detail.id === '${id}') open = true"
      @keydown.escape.window="open = false">
   <div x-show="open" x-cloak
-       class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50"
+       class="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm"
        @click.self="open = false" role="presentation">
     <div role="dialog" aria-modal="true" aria-labelledby="${id}-title"
-         class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-      <h2 id="${id}-title" class="text-lg font-semibold text-slate-900">${title}</h2>
-      <p class="mt-2 text-sm text-slate-700">${message}</p>
+         class="w-full max-w-md card p-6">
+      <h2 id="${id}-title" class="text-lg font-semibold text-text">${title}</h2>
+      <p class="mt-2 text-sm text-text-muted">${message}</p>
       <div class="mt-6 flex justify-end gap-2">
-        <button type="button" @click="open = false"
-                class="rounded border border-slate-300 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100">
-          Cancel
-        </button>
+        <button type="button" @click="open = false" class="btn-bordered">Cancel</button>
         <button type="button"
                 hx-delete="${confirmUrl}"
                 hx-target="${confirmTarget}"
                 hx-swap="outerHTML"
-                hx-on::after-request="$dispatch('htmx-done')"
+                hx-on::after-request="this.dispatchEvent(new CustomEvent('htmx-done', { bubbles: true }))"
                 @htmx-done="open = false"
-                class="rounded bg-red-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-red-700">
+                class="inline-flex items-center justify-center gap-1 rounded-md bg-error px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-error/80 focus:outline-none focus:ring-2 focus:ring-error">
           Confirm
         </button>
       </div>

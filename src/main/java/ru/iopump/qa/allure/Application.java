@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.properties.AppSecurityProperties;
 import ru.iopump.qa.allure.properties.BasicProperties;
 import ru.iopump.qa.allure.properties.CleanUpProperties;
 import ru.iopump.qa.allure.properties.TmsProperties;
@@ -15,7 +16,8 @@ import ru.iopump.qa.allure.properties.TmsProperties;
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class, ErrorMvcAutoConfiguration.class})
 @EnableCaching
 @EnableTransactionManagement
-@EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class, TmsProperties.class})
+@EnableConfigurationProperties({AllureProperties.class, CleanUpProperties.class, BasicProperties.class,
+    TmsProperties.class, AppSecurityProperties.class})
 public class Application {
 
     public static void main(String[] args) {

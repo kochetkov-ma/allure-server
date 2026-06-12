@@ -3,6 +3,7 @@ package ru.iopump.qa.allure.web;
 import io.qameta.allure.entity.ExecutorInfo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,13 +41,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static ru.iopump.qa.allure.helper.Util.url;
 
@@ -81,29 +84,17 @@ public class ResultsWebController {
 
     /** Results admin page — full layout with upload form, grid, dialogs. */
     @GetMapping
-    public String index(@RequestParam(name = "q", required = false) String query,
-                        @RequestParam(name = "sort", defaultValue = "createdAt") String sort,
-                        @RequestParam(name = "dir", defaultValue = "desc") String direction,
-                        Model model) throws IOException {
-        final String normalizedSort = normalizeSort(sort);
-        final String normalizedDir = normalizeDir(direction);
-
-        model.addAttribute("rows", loadRows(query, normalizedSort, normalizedDir));
-        model.addAttribute("q", StringUtils.defaultString(query));
-        model.addAttribute("sort", normalizedSort);
-        model.addAttribute("dir", normalizedDir);
+    public String index(Model model) throws IOException {
+        final List<ResultRow> rows = loadRows();
+        populateTotals(model, rows);
+        model.addAttribute("rows", rows);
         return "results/index";
     }
 
-    /** htmx fragment — returns only the {@code <tbody>} rows for live filter/sort swaps. */
-    @GetMapping("/grid")
-    public String grid(@RequestParam(name = "q", required = false) String query,
-                       @RequestParam(name = "sort", defaultValue = "createdAt") String sort,
-                       @RequestParam(name = "dir", defaultValue = "desc") String direction,
-                       Model model) throws IOException {
-        model.addAttribute("rows", loadRows(query, normalizeSort(sort), normalizeDir(direction)));
-        model.addAttribute("oob", true);
-        return "results/grid";
+    private static void populateTotals(Model model, List<ResultRow> rows) {
+        final long totalSize = rows.stream().mapToLong(ResultRow::sizeBytes).sum();
+        model.addAttribute("totalCount", rows.size());
+        model.addAttribute("totalSizeDisplay", HumanSize.format(totalSize));
     }
 
     /** Multipart upload of {@code allure-results.zip}; delegates to {@link ResultService#unzipAndStore}. */
@@ -132,7 +123,7 @@ public class ResultsWebController {
      * {@link JpaReportService#generate} call — REST endpoints stay untouched.
      */
     @PostMapping("/generate")
-    @CacheEvict(value = "results", allEntries = true)
+    @CacheEvict(value = {"reports", "results"}, allEntries = true)
     public String generate(@Valid @ModelAttribute("form") GenerateForm form,
                            BindingResult errors,
                            RedirectAttributes flash) {
@@ -184,52 +175,77 @@ public class ResultsWebController {
         return REDIRECT_SELF;
     }
 
+    /** Bulk-delete results. Best-effort: failures on individual UUIDs are logged, not fatal. */
+    @PostMapping("/bulk-delete")
+    @CacheEvict(value = "results", allEntries = true)
+    public String bulkDelete(@Valid @NotEmpty @RequestParam("uuids") List<UUID> uuids, RedirectAttributes flash) {
+        int deleted = 0;
+        int failed = 0;
+        for (UUID uuid : uuids) {
+            try {
+                resultService.internalDeleteByUUID(uuid.toString());
+                deleted++;
+            } catch (Exception e) {
+                failed++;
+                log.error("Bulk-delete: result '{}' failed: {}", uuid, e.getMessage(), e);
+            }
+        }
+        final String level = failed == 0 ? LEVEL_SUCCESS : (deleted == 0 ? LEVEL_ERROR : "warning");
+        final String msg = failed == 0
+            ? "Deleted " + deleted + " result(s)"
+            : "Deleted " + deleted + " result(s), " + failed + " failed";
+        addFlash(flash, level, msg);
+        log.info("Bulk-delete on /app/results: deleted={}, failed={}", deleted, failed);
+        return REDIRECT_SELF;
+    }
+
     //// PRIVATE ////
 
-    private List<ResultRow> loadRows(String query, String sort, String direction) throws IOException {
+    /**
+     * Load all results, newest first. Filtering and sorting are performed entirely
+     * client-side (Alpine) in {@code results/index.jte}; the server only fixes the
+     * initial chronological order.
+     */
+    private List<ResultRow> loadRows() throws IOException {
         final Collection<Path> all = resultService.getAll();
-        final Stream<ResultRow> rows = all.stream().map(ResultsWebController::toRow);
-
-        final Stream<ResultRow> filtered = StringUtils.isBlank(query)
-            ? rows
-            : rows.filter(r -> r.uuid().toLowerCase(Locale.ROOT).contains(query.toLowerCase(Locale.ROOT)));
-
-        final Comparator<ResultRow> comparator = comparatorFor(sort);
-        final Comparator<ResultRow> ordered = "asc".equals(direction) ? comparator : comparator.reversed();
-
-        return filtered.sorted(ordered).collect(Collectors.toUnmodifiableList());
+        return all.stream()
+            .map(ResultsWebController::toRow)
+            .sorted(Comparator.comparingLong(ResultRow::createdEpoch).reversed())
+            .collect(Collectors.toUnmodifiableList());
     }
 
-    private static Comparator<ResultRow> comparatorFor(String sort) {
-        return switch (sort) {
-            case "uuid" -> Comparator.comparing(ResultRow::uuid, String.CASE_INSENSITIVE_ORDER);
-            case "size" -> Comparator.comparingLong(ResultRow::sizeBytes);
-            default -> Comparator.comparing(ResultRow::createdAt, String.CASE_INSENSITIVE_ORDER);
-        };
-    }
-
-    private static String normalizeSort(String raw) {
-        if (raw == null) return "createdAt";
-        return switch (raw) {
-            case "uuid", "size", "createdAt" -> raw;
-            default -> "createdAt";
-        };
-    }
-
-    private static String normalizeDir(String raw) {
-        return "asc".equalsIgnoreCase(raw) ? "asc" : "desc";
-    }
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
     private static ResultRow toRow(Path dir) {
-        final long bytes = FileUtils.sizeOfDirectory(dir.toFile());
+        final long bytes = directorySize(dir);
         String createdAt = "";
+        long createdEpoch = 0L;
         try {
             final BasicFileAttributes attr = Files.readAttributes(dir, BasicFileAttributes.class);
-            createdAt = attr.creationTime().toInstant().toString();
+            // Format once server-side at fixed UTC so every viewer sees identical text,
+            // but keep the raw epoch for chronological (numeric) sorting.
+            createdEpoch = attr.creationTime().toMillis();
+            final LocalDateTime utc = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneOffset.UTC);
+            createdAt = utc.format(DISPLAY_DATE_FORMAT);
         } catch (IOException e) {
             log.error("Unable to read creation time for '{}'", dir, e);
         }
-        return new ResultRow(dir.getFileName().toString(), bytes, createdAt);
+        return new ResultRow(dir.getFileName().toString(), bytes,
+            ru.iopump.qa.allure.web.HumanSize.format(bytes), createdAt, createdEpoch);
+    }
+
+    /** Recursive byte count for a result directory; returns 0 when the path is missing or unreadable. */
+    private static long directorySize(Path dir) {
+        final java.io.File file = dir.toFile();
+        if (!file.isDirectory()) {
+            return 0L;
+        }
+        try {
+            return FileUtils.sizeOfDirectory(file);
+        } catch (IllegalArgumentException ex) {
+            log.warn("Unable to size result directory '{}': {}", dir, ex.getMessage());
+            return 0L;
+        }
     }
 
     /**
