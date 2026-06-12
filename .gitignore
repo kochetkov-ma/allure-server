@@ -73,3 +73,9 @@ CA.pem
 
 # Loose UI/dev screenshots at repo root (not doc assets)
 /*.png
+
+# grepai local index (generated, machine-specific)
+/.grepai/
+
+# Playwright MCP scratch artifacts
+/.playwright-mcp/

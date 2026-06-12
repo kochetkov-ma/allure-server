@@ -76,3 +76,7 @@ Team `default` | roster: `.claude/teams/default/team.md` | trace: `.claude/teams
 | persistence-jpa | `entity/`, `repo/`, `migration.sql` -- JPA schema, derived queries, datasource |
 | build-ci-qa | `build.gradle`, `.github/workflows/`, `Dockerfile`, test infra |
 | task-tracker | `.claude/features/**` -- board, task lifecycle, backlog grooming |
+
+## Code Search
+
+> **CRITICAL:** Use `grepai_search` FIRST for code exploration.
