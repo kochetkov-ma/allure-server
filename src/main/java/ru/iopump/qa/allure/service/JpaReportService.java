@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import io.qameta.allure.entity.ExecutorInfo;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NonNull;
@@ -19,7 +18,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ru.iopump.qa.allure.config.BrandingService;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
@@ -58,6 +59,7 @@ public class JpaReportService {
     private final ServeRedirectHelper redirection;
     private final JpaReportRepository repository;
     private final ResultService resultService;
+    private final BrandingService branding;
 
     private final AtomicBoolean init = new AtomicBoolean();
 
@@ -66,7 +68,8 @@ public class JpaReportService {
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
                             ServeRedirectHelper redirection,
-                            ResultService resultService
+                            ResultService resultService,
+                            BrandingService branding
     ) {
         this.reportsDir = cfg.reports().dirPath();
         this.cfg = cfg;
@@ -75,6 +78,7 @@ public class JpaReportService {
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
         this.resultService = resultService;
+        this.branding = branding;
     }
 
     @PostConstruct
@@ -142,6 +146,29 @@ public class JpaReportService {
         return repository.findAll(Sort.by("createdDateTime").descending());
     }
 
+    /**
+     * On-disk size (bytes) for a legacy report whose persisted {@link ReportEntity#getSize()} is
+     * unset (zero). Computed once via a directory walk and backfilled so subsequent renders read
+     * the persisted value instead of walking the report directory again. Callers with a non-zero
+     * persisted size should use it directly and never reach here.
+     *
+     * @param uuid report UUID as string
+     * @return size in bytes, or 0 when the report or its directory is gone
+     */
+    public long backfillReportSize(@NonNull String uuid) {
+        final UUID id = UUID.fromString(uuid);
+        return repository.findOneByUuid(id)
+            .map(entity -> {
+                final long computedKb = ReportEntity.sizeKB(reportsDir.resolve(id.toString()));
+                if (computedKb > 0L) {
+                    entity.setSize(computedKb);
+                    repository.saveAndFlush(entity);
+                }
+                return computedKb * 1024L;
+            })
+            .orElse(0L);
+    }
+
     @SneakyThrows
     public ReportEntity uploadReport(@NonNull String reportPath,
                                      @NonNull InputStream archiveInputStream,
@@ -157,6 +184,10 @@ public class JpaReportService {
             hasIndex = paths.anyMatch(path -> path.getFileName().toString().equals("index.html"));
         }
         Preconditions.checkArgument(hasIndex, "Uploaded archive is not an Allure Report");
+
+        // Uploaded reports skip generation, so branding is applied here to match generated reports
+        // instead of waiting for the next startup sweep. Idempotent (marker-file guarded).
+        branding.applyBranding(destination);
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)

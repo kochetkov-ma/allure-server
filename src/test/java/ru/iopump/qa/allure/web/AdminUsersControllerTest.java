@@ -28,6 +28,7 @@ import ru.iopump.qa.allure.service.UserManagementService;
 import ru.iopump.qa.allure.service.UserNotFoundException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -133,6 +134,35 @@ class AdminUsersControllerTest {
         assertThat(annotation.value())
             .as("@PreAuthorize expression must enforce ADMIN role to ensure USER role is rejected with 403")
             .isEqualTo("hasRole('ADMIN')");
+    }
+
+    @Test
+    @DisplayName("should HTML-escape a hostile displayName when rendering the users list")
+    void list_escapesHostileDisplayNameInRenderedHtml() throws Exception {
+        // GIVEN — a user row whose displayName carries a script-injection payload
+        final String hostileDisplayName = "<script>alert(1)</script>";
+        final UserEntity hostileUser = UserEntity.builder()
+            .id(UUID.randomUUID())
+            .username("hostile")
+            .displayName(hostileDisplayName)
+            .role(UserRole.USER)
+            .createdAt(Instant.now())
+            .build();
+        when(userManagementService.list()).thenReturn(List.of(hostileUser));
+
+        // WHEN — GET the users list page
+        MvcResult result = mockMvc.perform(get(USERS_PATH))
+            .andExpect(status().isOk())
+            .andReturn();
+
+        // THEN — JTE's auto-escaping interpolation renders the payload as inert markup
+        final String body = result.getResponse().getContentAsString();
+        assertThat(body)
+            .as("rendered HTML must contain the HTML-escaped displayName, not the raw script tag")
+            .contains("&lt;script&gt;alert(1)&lt;/script&gt;");
+        assertThat(body)
+            .as("rendered HTML must not contain the raw, executable script tag")
+            .doesNotContain(hostileDisplayName);
     }
 
     @Test
@@ -330,31 +360,6 @@ class AdminUsersControllerTest {
         final Map<?, ?> flash = extractFlashMap(result, FLASH_KEY);
         assertThat(flash.get(FLASH_LEVEL_KEY))
             .as("stale-UUID delete must produce an 'error' flash level instead of a raw 500")
-            .isEqualTo(LEVEL_ERROR);
-        assertThat(flash.get("message"))
-            .as("error flash must surface the 'User not found' detail")
-            .asString()
-            .contains("User not found");
-    }
-
-    @Test
-    @DisplayName("should redirect with error flash when POST /{id}/grant-admin targets a stale UUID")
-    void grantAdminStaleUser_redirectsWithErrorFlash() throws Exception {
-        // GIVEN — service throws the typed UserNotFoundException for a missing UUID
-        final UUID staleId = UUID.randomUUID();
-        doThrow(new UserNotFoundException("User not found: " + staleId))
-            .when(userManagementService).grantAdmin(eq(staleId), any(UserEntity.class));
-
-        // WHEN — POST grant-admin on the stale id
-        MvcResult result = mockMvc.perform(post(USERS_PATH + "/" + staleId + "/grant-admin"))
-            .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl(USERS_PATH))
-            .andReturn();
-
-        // THEN — error flash, not a 500
-        final Map<?, ?> flash = extractFlashMap(result, FLASH_KEY);
-        assertThat(flash.get(FLASH_LEVEL_KEY))
-            .as("stale-UUID grant-admin must produce an 'error' flash level instead of a raw 500")
             .isEqualTo(LEVEL_ERROR);
         assertThat(flash.get("message"))
             .as("error flash must surface the 'User not found' detail")

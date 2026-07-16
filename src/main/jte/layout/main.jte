@@ -1,4 +1,5 @@
 @import gg.jte.Content
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @param String title
 @param String activeNav
@@ -7,6 +8,7 @@
 @param boolean authEnabled = false
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 <!DOCTYPE html>
 <html lang="en" class="h-full">
   <head>
@@ -15,6 +17,10 @@
     <title>${title} — Brew Reporting</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
     <link rel="stylesheet" href="/css/app.css">
+    @if(csrf != null)
+    <meta name="_csrf" content="${csrf.getToken()}">
+    <meta name="_csrf_header" content="${csrf.getHeaderName()}">
+    @endif
     <script>
       (function () {
         try {
@@ -23,6 +29,12 @@
           document.documentElement.dataset.theme = s || p;
         } catch (e) { document.documentElement.dataset.theme = 'dark'; }
       })();
+      // Attach the CSRF token to every HTMX mutation (the /app surface is CSRF-protected).
+      document.addEventListener('htmx:configRequest', function (evt) {
+        var token = document.querySelector('meta[name="_csrf"]');
+        var header = document.querySelector('meta[name="_csrf_header"]');
+        if (token && header && token.content) { evt.detail.headers[header.content] = token.content; }
+      });
     </script>
     <script src="/js/htmx.min.js" defer></script>
     <script src="/js/alpine.min.js" defer></script>
@@ -68,7 +80,7 @@
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
             </svg>
           </button>
-          @template.partials.user_menu(user = currentUser, authEnabled = authEnabled, isAdmin = isAdmin, signInRequired = signInRequired)
+          @template.partials.user_menu(user = currentUser, authEnabled = authEnabled, isAdmin = isAdmin, signInRequired = signInRequired, csrf = csrf)
         </div>
       </div>
     </header>

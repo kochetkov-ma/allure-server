@@ -53,11 +53,11 @@ All other deps (Spring starters, security, JPA, hibernate-validator, h2, postgre
 | HTMX | 2.0.9 | `htmxVersion` |
 | Alpine.js | 3.15.11 | `alpineVersion` |
 
-## Compose example pins (`docker-compose.yml`)
+## Deploy example pins (`docker-compose.yml`, `docker-compose-h2.yml`, `.helm/allure-server/values.yaml`)
 
 | Image | Tag |
 |-------|-----|
-| `kochetkovma/allure-server` | 2.13.6 (example pin — bump on release) |
+| `kochetkovma/allure-server` | 2.13.9 (example pin — bump BOTH compose files + helm `image.tag` in lockstep on release) |
 | `postgres` | 16.3-alpine |
 
 ## Update procedure

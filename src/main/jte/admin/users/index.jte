@@ -1,5 +1,6 @@
 @import java.util.List
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.entity.UserRole
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @import ru.iopump.qa.allure.web.dto.UserRow
@@ -8,6 +9,7 @@
 @param boolean authEnabled = true
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 @param Map<String, String> flash = null
 @param Map<String, String> justCreatedUser = null
 @param Map<String, String> justResetUser = null
@@ -18,6 +20,7 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
         <section class="space-y-6" x-data="{ createOpen: false, confirmDelete: { open: false, id: '', username: '', typed: '' } }"
                  @keydown.escape.window="createOpen = false; confirmDelete.open = false">
@@ -128,6 +131,7 @@
                                             @if(row.canBlock())
                                                 @if(row.blocked())
                                                     <form method="post" action="/app/admin/users/${row.id().toString()}/unblock" class="inline">
+                                                        @template.partials.csrf(csrf = csrf)
                                                         <button type="submit"
                                                                 class="rounded-md border border-success/60 bg-transparent px-2 py-1 text-xs font-semibold text-success hover:bg-success/10">
                                                             Unblock
@@ -135,6 +139,7 @@
                                                     </form>
                                                 @else
                                                     <form method="post" action="/app/admin/users/${row.id().toString()}/block" class="inline">
+                                                        @template.partials.csrf(csrf = csrf)
                                                         <button type="submit"
                                                                 class="rounded-md border border-warning/60 bg-transparent px-2 py-1 text-xs font-semibold text-warning hover:bg-warning/10">
                                                             Block
@@ -150,6 +155,7 @@
                                             @if(row.canToggleAdmin())
                                                 @if(row.role() == UserRole.ADMIN)
                                                     <form method="post" action="/app/admin/users/${row.id().toString()}/revoke-admin" class="inline">
+                                                        @template.partials.csrf(csrf = csrf)
                                                         <button type="submit"
                                                                 class="rounded-md border border-border bg-transparent px-2 py-1 text-xs font-semibold text-text hover:text-primary hover:border-primary">
                                                             Revoke admin
@@ -157,6 +163,7 @@
                                                     </form>
                                                 @else
                                                     <form method="post" action="/app/admin/users/${row.id().toString()}/grant-admin" class="inline">
+                                                        @template.partials.csrf(csrf = csrf)
                                                         <button type="submit"
                                                                 class="rounded-md border border-primary/60 bg-transparent px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/10">
                                                             Grant admin
@@ -174,6 +181,7 @@
                                                 <form method="post" action="/app/admin/users/${row.id().toString()}/reset-password"
                                                       onsubmit="return confirm('Generate a new temporary password for ${row.username()}?');"
                                                       class="inline">
+                                                    @template.partials.csrf(csrf = csrf)
                                                     <button type="submit"
                                                             class="rounded-md border border-border bg-transparent px-2 py-1 text-xs font-semibold text-text hover:text-primary hover:border-primary">
                                                         Reset password
@@ -219,6 +227,7 @@
                             A temporary password will be generated and shown once. The user must change it on first sign-in.
                         </p>
                         <form method="post" action="/app/admin/users" class="mt-4 space-y-4">
+                            @template.partials.csrf(csrf = csrf)
                             <label class="flex flex-col text-sm text-text">
                                 <span class="mb-1 font-medium">Username</span>
                                 <input type="text" name="username" required minlength="1" maxlength="128"
@@ -253,6 +262,7 @@
                             and all their API tokens. Type the username to confirm.
                         </p>
                         <form method="post" :action="'/app/admin/users/' + confirmDelete.id" class="mt-4 space-y-4">
+                            @template.partials.csrf(csrf = csrf)
                             <input type="hidden" name="_method" value="delete">
                             <input type="text" x-model="confirmDelete.typed"
                                    :placeholder="confirmDelete.username"

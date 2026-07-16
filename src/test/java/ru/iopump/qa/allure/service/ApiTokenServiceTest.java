@@ -38,7 +38,6 @@ class ApiTokenServiceTest {
     private static final int MIN_PLAIN_TOKEN_LENGTH = 20;
     private static final String TOKEN_PREFIX = "bqa_";
 
-    private static final int GUEST_LIMIT = 5;
     private static final int USER_LIMIT = 10;
     private static final int ADMIN_LIMIT = 50;
 
@@ -50,6 +49,9 @@ class ApiTokenServiceTest {
 
     @Mock
     private TokenPolicy tokenPolicy;
+
+    @Mock
+    private AuthStampService authStampService;
 
     @InjectMocks
     private ApiTokenService apiTokenService;
@@ -172,7 +174,7 @@ class ApiTokenServiceTest {
     }
 
     @Test
-    @DisplayName("should return owning user and update lastUsedAt when authenticate hits active token")
+    @DisplayName("should return owning user and delegate lastUsedAt stamping to AuthStampService when authenticate hits an active token")
     void authenticateHappyPath() {
         // GIVEN — a live plain token and a matching persisted entity
         final String plain = apiTokenService.generate();
@@ -187,18 +189,21 @@ class ApiTokenServiceTest {
             .build();
         when(apiTokenRepository.findByTokenLookup(hash.substring(0, LOOKUP_LENGTH)))
             .thenReturn(List.of(entity));
+        final Instant before = Instant.now();
 
         // WHEN — authenticate with the plain value
         final Optional<UserEntity> result = apiTokenService.authenticate(plain);
 
-        // THEN — owner returned, lastUsedAt updated and persisted
+        // THEN — owner returned; lastUsedAt stamping is delegated to AuthStampService
+        // (best-effort, REQUIRES_NEW) with the token id and a fresh timestamp
         assertThat(result)
             .as("authenticate must return the owning UserEntity")
             .contains(owner);
-        assertThat(entity.getLastUsedAt())
-            .as("lastUsedAt must be set after a successful auth")
-            .isNotNull();
-        verify(apiTokenRepository).save(entity);
+        final ArgumentCaptor<Instant> touchedAt = ArgumentCaptor.forClass(Instant.class);
+        verify(authStampService).touchTokenLastUsed(eq(entity.getId()), touchedAt.capture());
+        assertThat(touchedAt.getValue())
+            .as("lastUsedAt stamp delegated to AuthStampService must fall between the pre-call instant and now")
+            .isBetween(before, Instant.now());
     }
 
     @Test
@@ -283,17 +288,18 @@ class ApiTokenServiceTest {
             .build();
         when(apiTokenRepository.findByIdAndUserId(tokenId, owner.getId()))
             .thenReturn(Optional.of(entity));
+        final Instant before = Instant.now();
 
         // WHEN — revoke
         final boolean revoked = apiTokenService.revoke(owner, tokenId);
 
-        // THEN — true returned, revokedAt set, save called
+        // THEN — true returned, revokedAt stamped within the call window, save called
         assertThat(revoked)
             .as("revoke of an active token returns true")
             .isTrue();
         assertThat(entity.getRevokedAt())
-            .as("revokedAt must be populated after revoke()")
-            .isNotNull();
+            .as("revokedAt must be stamped between the pre-call instant and now")
+            .isBetween(before, Instant.now());
         verify(apiTokenRepository).save(entity);
     }
 
@@ -316,9 +322,27 @@ class ApiTokenServiceTest {
     }
 
     @Test
-    @DisplayName("should throw TokenLimitExceededException when guest has 5 active tokens")
-    void createTokenThrowsWhenGuestLimitReached() {
-        // GIVEN — guest owner at the 5-token limit
+    @DisplayName("should throw TokenLimitExceededException when a USER has reached the per-role active-token limit")
+    void createTokenThrowsWhenUserLimitReached() {
+        // GIVEN — USER owner sitting exactly at the mocked per-role limit
+        // (GUEST is excluded from this scenario: createToken hard-rejects GUEST before
+        // the limit check ever runs — see createTokenRejectsGuestOwner)
+        when(tokenPolicy.maxActiveTokens(UserRole.USER)).thenReturn(USER_LIMIT);
+        when(apiTokenRepository.countActiveByUserId(eq(owner.getId()), any(Instant.class)))
+            .thenReturn((long) USER_LIMIT);
+
+        // WHEN / THEN — the next token is rejected; nothing is persisted
+        assertThatThrownBy(() -> apiTokenService.createToken(owner, "excess", null))
+            .as("owner at the active-token limit must raise TokenLimitExceededException")
+            .isInstanceOf(TokenLimitExceededException.class)
+            .hasMessageContaining(USER_LIMIT + " of " + USER_LIMIT);
+        verify(apiTokenRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("should reject creating a token for a GUEST owner before the limit check runs")
+    void createTokenRejectsGuestOwner() {
+        // GIVEN — a persisted GUEST-role owner
         final UserEntity guest = UserEntity.builder()
             .id(UUID.randomUUID())
             .username("guest")
@@ -326,16 +350,14 @@ class ApiTokenServiceTest {
             .role(UserRole.GUEST)
             .createdAt(Instant.now())
             .build();
-        when(tokenPolicy.maxActiveTokens(UserRole.GUEST)).thenReturn(GUEST_LIMIT);
-        when(apiTokenRepository.countActiveByUserId(eq(guest.getId()), any(Instant.class)))
-            .thenReturn((long) GUEST_LIMIT);
 
-        // WHEN / THEN — 6th token is rejected; nothing is persisted
-        assertThatThrownBy(() -> apiTokenService.createToken(guest, "excess", null))
-            .as("guest exceeding the 5-token limit must raise TokenLimitExceededException")
-            .isInstanceOf(TokenLimitExceededException.class)
-            .hasMessageContaining("5 of 5");
+        // WHEN / THEN — rejected at the role check, before any repository interaction
+        assertThatThrownBy(() -> apiTokenService.createToken(guest, "guest-token", null))
+            .as("GUEST accounts must never be able to own an API token")
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("Guest accounts cannot own API tokens");
         verify(apiTokenRepository, never()).save(any());
+        verify(tokenPolicy, never()).maxActiveTokens(any());
     }
 
     @Test
@@ -357,56 +379,21 @@ class ApiTokenServiceTest {
     }
 
     @Test
-    @DisplayName("should allow creating a new guest token after one of the 5 active tokens is revoked")
+    @DisplayName("should allow creating a new token after one of the limit's active tokens is revoked")
     void createTokenAllowsAfterRevokingOne() {
-        // GIVEN — guest owner with 4 active tokens (one of the original 5 revoked)
-        final UserEntity guest = UserEntity.builder()
-            .id(UUID.randomUUID())
-            .username("guest")
-            .displayName("Guest")
-            .role(UserRole.GUEST)
-            .createdAt(Instant.now())
-            .build();
-        final long activeAfterRevoke = GUEST_LIMIT - 1L;
-        when(tokenPolicy.maxActiveTokens(UserRole.GUEST)).thenReturn(GUEST_LIMIT);
-        when(apiTokenRepository.countActiveByUserId(eq(guest.getId()), any(Instant.class)))
+        // GIVEN — USER owner with one fewer than the limit active tokens (one of the originals revoked)
+        final long activeAfterRevoke = USER_LIMIT - 1L;
+        when(tokenPolicy.maxActiveTokens(UserRole.USER)).thenReturn(USER_LIMIT);
+        when(apiTokenRepository.countActiveByUserId(eq(owner.getId()), any(Instant.class)))
             .thenReturn(activeAfterRevoke);
 
         // WHEN — create a new token
         final ApiTokenService.TokenIssueResult result =
-            apiTokenService.createToken(guest, "replacement", Duration.ofDays(7));
+            apiTokenService.createToken(owner, "replacement", Duration.ofDays(7));
 
         // THEN — token is persisted and plain value returned
         assertThat(result.plainToken())
             .as("new plain token issued after revoking a previous one must carry the project prefix")
-            .startsWith(TOKEN_PREFIX);
-        verify(apiTokenRepository).save(any(ApiTokenEntity.class));
-    }
-
-    @Test
-    @DisplayName("should allow creating when repository-reported active count is below the limit (expired tokens excluded by query)")
-    void createTokenAllowsWhenExpiredTokensNotCountedAsActive() {
-        // GIVEN — guest owner: physically has 5 tokens total but repository returns 3 active
-        // (the remaining 2 are expired and excluded by countActiveByUserId's WHERE clause)
-        final UserEntity guest = UserEntity.builder()
-            .id(UUID.randomUUID())
-            .username("guest")
-            .displayName("Guest")
-            .role(UserRole.GUEST)
-            .createdAt(Instant.now())
-            .build();
-        final long expectedActiveExcludingExpired = 3L;
-        when(tokenPolicy.maxActiveTokens(UserRole.GUEST)).thenReturn(GUEST_LIMIT);
-        when(apiTokenRepository.countActiveByUserId(eq(guest.getId()), any(Instant.class)))
-            .thenReturn(expectedActiveExcludingExpired);
-
-        // WHEN — create a new token
-        final ApiTokenService.TokenIssueResult result =
-            apiTokenService.createToken(guest, "fresh", null);
-
-        // THEN — token is persisted because only 3 active tokens count
-        assertThat(result.plainToken())
-            .as("creation must succeed when active count (expired excluded) is below the limit")
             .startsWith(TOKEN_PREFIX);
         verify(apiTokenRepository).save(any(ApiTokenEntity.class));
     }

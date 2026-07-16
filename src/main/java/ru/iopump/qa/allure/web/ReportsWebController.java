@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
@@ -30,7 +29,6 @@ import ru.iopump.qa.allure.service.JpaReportService;
 
 import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -40,7 +38,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static ru.iopump.qa.allure.helper.Util.url;
 
@@ -183,12 +180,8 @@ public class ReportsWebController {
         final Comparator<ReportEntity> byCreatedDesc =
             Comparator.comparing(ReportEntity::getCreatedDateTime, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
 
-        final Stream<ReportEntity> stream = entities.stream().sorted(byCreatedDesc);
-
-        final Path reportsRoot = allureProperties.reports().dirPath();
-
-        return stream.map(e -> {
-            final long sizeBytes = directorySize(reportsRoot.resolve(e.getUuid().toString()));
+        return entities.stream().sorted(byCreatedDesc).map(e -> {
+            final long sizeBytes = reportSizeBytes(e);
             final String rawBuildUrl = e.getBuildUrl();
             return ReportRow.from(
                 e.getUuid().toString(),
@@ -199,23 +192,24 @@ public class ReportsWebController {
                 sizeBytes,
                 HumanSize.format(sizeBytes),
                 rawBuildUrl,
-                buildLabel(rawBuildUrl)
+                buildLabel(rawBuildUrl),
+                e.isActive(),
+                e.generateLatestUrl(baseUrl, reportsDir)
             );
         }).toList();
     }
 
-    /** Recursive byte count for a report directory; returns 0 when the path is missing or unreadable. */
-    private static long directorySize(Path dir) {
-        final java.io.File file = dir.toFile();
-        if (!file.isDirectory()) {
-            return 0L;
+    /**
+     * Report size in bytes, taken from the persisted {@link ReportEntity#getSize()} (stored in KB
+     * at upload/generate time) to avoid a recursive filesystem walk on every render. Legacy rows
+     * with an unset (zero) size are computed once and backfilled by {@link JpaReportService}.
+     */
+    private long reportSizeBytes(ReportEntity entity) {
+        final long persistedKb = entity.getSize();
+        if (persistedKb > 0L) {
+            return persistedKb * 1024L;
         }
-        try {
-            return FileUtils.sizeOfDirectory(file);
-        } catch (IllegalArgumentException ex) {
-            log.warn("Unable to size report directory '{}': {}", dir, ex.getMessage());
-            return 0L;
-        }
+        return reportService.backfillReportSize(entity.getUuid().toString());
     }
 
     /**
@@ -249,15 +243,34 @@ public class ReportsWebController {
         }
     }
 
-    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private static final String DEFAULT_DATE_PATTERN = "dd.MM.yyyy HH:mm:ss";
+    private DateTimeFormatter displayDateFormat;
 
-    private static String formatCreated(ReportEntity entity) {
+    /**
+     * Created-column formatter derived from {@code allure.date-format}; falls back to the default
+     * UTC pattern when the property is blank or invalid. Resolved once and cached.
+     */
+    private DateTimeFormatter displayDateFormat() {
+        if (displayDateFormat == null) {
+            final String pattern = allureProperties.dateFormat();
+            try {
+                displayDateFormat = DateTimeFormatter.ofPattern(
+                    StringUtils.isBlank(pattern) ? DEFAULT_DATE_PATTERN : pattern);
+            } catch (IllegalArgumentException ex) {
+                log.warn("Invalid allure.date-format '{}', using '{}'", pattern, DEFAULT_DATE_PATTERN);
+                displayDateFormat = DateTimeFormatter.ofPattern(DEFAULT_DATE_PATTERN);
+            }
+        }
+        return displayDateFormat;
+    }
+
+    private String formatCreated(ReportEntity entity) {
         if (entity.getCreatedDateTime() == null) {
             return "";
         }
         // ReportEntity.getCreatedDateTime() is already stored as UTC LocalDateTime.
         // Format once server-side so every viewer sees identical text regardless of browser timezone.
-        return entity.getCreatedDateTime().format(DISPLAY_DATE_FORMAT);
+        return entity.getCreatedDateTime().format(displayDateFormat());
     }
 
     /**

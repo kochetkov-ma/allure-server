@@ -1,5 +1,6 @@
 @import java.util.List
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.ReportRow
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @param List<ReportRow> rows
@@ -10,6 +11,7 @@
 @param boolean authEnabled = false
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 !{ var canMutate = currentUser != null && currentUser.authenticated(); }
 @template.layout.main(
     title = "Reports",
@@ -18,11 +20,12 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
       <section class="space-y-6"
                x-data="{
                  uploadOpen: false,
-                 cols: { path: '', uuid: '' },
+                 cols: { path: '', uuid: '', created: '', size: '', build: '' },
                  sortKey: '',
                  sortDir: 'none',
                  selected: new Set(),
@@ -36,9 +39,17 @@
                  rowMatches(r) {
                    const path = (r.dataset.path || '').toLowerCase();
                    const uuid = (r.dataset.uuid || '').toLowerCase();
+                   const created = (r.dataset.created || '').toLowerCase();
+                   const size = (r.dataset.sizeDisplay || '').toLowerCase();
+                   const build = (r.dataset.build || '').toLowerCase();
                    const pf = (this.cols.path || '').toLowerCase();
                    const uf = (this.cols.uuid || '').toLowerCase();
-                   return (!pf || path.includes(pf)) && (!uf || uuid.includes(uf));
+                   const cf = (this.cols.created || '').toLowerCase();
+                   const sf = (this.cols.size || '').toLowerCase();
+                   const bf = (this.cols.build || '').toLowerCase();
+                   return (!pf || path.includes(pf)) && (!uf || uuid.includes(uf))
+                       && (!cf || created.includes(cf)) && (!sf || size.includes(sf))
+                       && (!bf || build.includes(bf));
                  },
                  visibleUuids() {
                    const tbody = document.getElementById('reports-tbody');
@@ -108,7 +119,7 @@
                    rows.forEach(r => tbody.appendChild(r));
                  }
                }"
-               x-effect="sortRows(); cols.path; cols.uuid; recomputeTotals()">
+               x-effect="sortRows(); cols.path; cols.uuid; cols.created; cols.size; cols.build; recomputeTotals()">
         @template.partials.breadcrumb(items = new String[]{"Admin", "Reports"})
 
         <div class="flex items-baseline justify-between gap-4 flex-wrap">
@@ -148,6 +159,7 @@
                 method="post"
                 enctype="multipart/form-data"
                 class="space-y-3">
+            @template.partials.csrf(csrf = csrf)
             <p class="text-sm text-text-muted">
               Upload a zipped Allure report directory. The <em>path</em> is a logical grouping key
               (for example <code class="font-mono text-primary">myteam/nightly</code>), not a filesystem path. The latest upload
@@ -212,9 +224,27 @@
                          aria-label="Filter by uuid"
                          class="form-field text-xs font-normal">
                 </th>
-                <th scope="col" class="px-3 py-1.5"></th>
-                <th scope="col" class="px-3 py-1.5"></th>
-                <th scope="col" class="px-3 py-1.5"></th>
+                <th scope="col" class="px-3 py-1.5">
+                  <input type="text"
+                         x-model="cols.created"
+                         placeholder="filter created"
+                         aria-label="Filter by created"
+                         class="form-field text-xs font-normal">
+                </th>
+                <th scope="col" class="px-3 py-1.5">
+                  <input type="text"
+                         x-model="cols.size"
+                         placeholder="filter size"
+                         aria-label="Filter by size"
+                         class="form-field text-xs font-normal">
+                </th>
+                <th scope="col" class="px-3 py-1.5">
+                  <input type="text"
+                         x-model="cols.build"
+                         placeholder="filter build"
+                         aria-label="Filter by build"
+                         class="form-field text-xs font-normal">
+                </th>
                 <th scope="col" class="px-3 py-1.5"></th>
               </tr>
             </thead>
@@ -245,6 +275,7 @@
                 <span x-text="'Delete ' + selected.size + ' report(s)? This cannot be undone.'"></span>
               </p>
               <form action="/app/reports/bulk-delete" method="post" class="mt-6 flex justify-end gap-2">
+                @template.partials.csrf(csrf = csrf)
                 <template x-for="u in Array.from(selected)" :key="u">
                   <input type="hidden" name="uuids" :value="u">
                 </template>
@@ -275,6 +306,7 @@
                 </p>
                 <p class="mt-2 text-xs font-mono text-text-muted" x-text="uuid"></p>
                 <form :action="'/app/reports/' + uuid" method="post" class="mt-6 flex justify-end gap-2">
+                  @template.partials.csrf(csrf = csrf)
                   <input type="hidden" name="_method" value="delete">
                   <button type="button" @click="open = false" class="btn-bordered">Cancel</button>
                   <button type="submit"

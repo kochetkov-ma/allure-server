@@ -20,8 +20,9 @@
         data-created="${r.created() == null ? "" : r.created()}"
         data-created-epoch="${r.createdEpoch()}"
         data-size-bytes="${r.sizeBytes()}"
-        x-show="(!cols.path || $el.dataset.path.toLowerCase().includes(cols.path.toLowerCase()))
-             && (!cols.uuid || $el.dataset.uuid.toLowerCase().includes(cols.uuid.toLowerCase()))">
+        data-size-display="${r.sizeDisplay() == null ? "" : r.sizeDisplay()}"
+        data-build="${r.buildLabel()}"
+        x-show="rowMatches($el)">
       <td class="px-2 py-3 align-middle text-center">
         @if(canMutate)
         <input type="checkbox"
@@ -36,7 +37,18 @@
         <div class="flex items-start gap-2">
           <span class="font-medium text-text">${r.path()}</span>
           @template.partials.copy_button(value = r.path())
+          @if(r.active())
+            <span class="inline-flex items-center rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success"
+                  title="Latest report for this path">Active</span>
+          @endif
         </div>
+        @if(r.active())
+          <a href="${r.latestUrl()}"
+             target="_blank"
+             rel="noopener"
+             title="Stable latest link for this path"
+             class="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">latest ↗</a>
+        @endif
       </td>
       <td class="px-3 py-3 align-top font-mono text-xs text-text-muted break-all text-left">
         <div class="flex items-start gap-2">

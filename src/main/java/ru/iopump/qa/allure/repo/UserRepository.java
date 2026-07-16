@@ -4,11 +4,13 @@ import jakarta.persistence.LockModeType;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.iopump.qa.allure.entity.UserEntity;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,4 +37,14 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from UserEntity u where u.id = :id")
     Optional<UserEntity> findByIdForUpdate(@Param("id") @NonNull UUID id);
+
+    /**
+     * Non-versioned bulk stamp of {@code lastLoginAt}. Stateless Basic API clients
+     * re-authenticate on every request; using this instead of an entity save keeps the
+     * {@code @Version} untouched so concurrent same-user logins cannot collide on an
+     * optimistic-lock check and propagate a failure into the authentication flow.
+     */
+    @Modifying
+    @Query("update UserEntity u set u.lastLoginAt = :now where u.id = :id")
+    int touchLastLoginAt(@Param("id") @NonNull UUID id, @Param("now") @NonNull Instant now);
 }

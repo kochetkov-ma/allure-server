@@ -49,10 +49,13 @@ class LastLoginIntegrationTest {
     @Test
     @DisplayName("should stamp lastLoginAt on the user row after a successful Basic authentication")
     void basicAuth_stampsLastLoginAt() throws Exception {
-        // GIVEN — the seeded admin has no lastLoginAt yet
+        // GIVEN — the seeded admin has no lastLoginAt yet, and its default-password temporary flag
+        // is cleared so the ApiTempPasswordGuardFilter permits the Basic call to /api/report
+        // (an unrotated temporary password is blocked on the stateless surface — C1-5).
         final Instant before = Instant.now();
         userRepository.findByUsername(ADMIN_USER).ifPresent(u -> {
             u.setLastLoginAt(null);
+            u.setPasswordTemporary(false);
             userRepository.save(u);
         });
         assertThat(userRepository.findByUsername(ADMIN_USER).orElseThrow().getLastLoginAt())
@@ -62,7 +65,7 @@ class LastLoginIntegrationTest {
         // WHEN — admin authenticates via Basic auth
         mockMvc.perform(get(API_REPORT_PATH)
                 .header(HttpHeaders.AUTHORIZATION, basicAuthHeader(ADMIN_USER, ADMIN_PASS)))
-            .andExpect(status().is2xxSuccessful());
+            .andExpect(status().isOk());
 
         // THEN — lastLoginAt is populated and not before the request started
         final UserEntity refreshed = userRepository.findByUsername(ADMIN_USER).orElseThrow();

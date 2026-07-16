@@ -74,7 +74,7 @@ Fix: introduce Flyway, `V1__init.sql` from current schema, switch `ddl-auto` to 
 | `application-oauth.yaml` | Google OAuth2, opt-in via `spring.profiles.active=oauth` |
 | `src/main/resources/config/allure.yml` (+ `allure-cucumber.yml`, `allure-junit.yml`) | Allure generator plugin list |
 
-Security CFG model (always-on auth): `basic.auth.username/password` seed the bootstrap main admin on FIRST startup only -> DB authoritative afterwards (`/app/admin/users`). `basic.auth.enable` = deprecated no-op (logged warning). `app.security.require-api-auth` = bootstrap default for `/api/**` protection; runtime value lives in system-settings DB row, flipped via `/app/admin/settings`.
+Security CFG model (always-on auth): `basic.auth.username/password` seed the bootstrap main admin on FIRST startup only -> DB authoritative afterwards (`/app/admin/users`). `basic.auth.enable` = deprecated but HONORED (logs a startup warning): `true` restores legacy lock-everything — every request except public static assets requires auth, incl. `/api/**` and `/allure/**`, ignoring the `require-api-auth` toggle — NOT a no-op. `app.security.require-api-auth` = bootstrap default for `/api/**` + `/allure/**` protection; runtime value lives in system-settings DB row, flipped via `/app/admin/settings`.
 
 ### Env var pattern — etalon
 

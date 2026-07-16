@@ -117,8 +117,8 @@ public class AllureReportController {
     public ReportResponse uploadReport(
         @PathVariable("reportPath") @NonNull @NotBlank(message = "reportPath must not be blank") String reportPath,
         @Parameter(description = "File as multipart body. File must be an zip archive and not be empty. Nested type is 'application/zip'",
-            name = "allureResults",
-            example = "allure-result.zip",
+            name = "allureReportArchive",
+            example = "allure-report.zip",
             required = true,
             content = @Content(mediaType = "application/zip")
         )

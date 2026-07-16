@@ -1,4 +1,5 @@
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @import ru.iopump.qa.allure.web.dto.SystemSettingsView
 @param SystemSettingsView settings
@@ -6,6 +7,7 @@
 @param boolean authEnabled = true
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 @param Map<String, String> flash = null
 @template.layout.main(
     title = "System Settings",
@@ -14,6 +16,7 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
         <section class="space-y-6">
             @template.partials.breadcrumb(items = new String[]{"Admin", "Settings"})
@@ -34,6 +37,7 @@
                     </p>
                 </header>
                 <form method="post" action="/app/admin/settings/require-api-auth" class="flex items-center gap-3">
+                    @template.partials.csrf(csrf = csrf)
                     <input type="hidden" name="requireApiAuth" value="${!settings.requireApiAuth()}">
                     <div class="flex items-center gap-3 rounded-md border border-border-subtle bg-surface px-4 py-2">
                         <span class="text-sm font-medium text-text-muted">Current:</span>

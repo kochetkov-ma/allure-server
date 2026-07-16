@@ -45,7 +45,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -209,14 +211,33 @@ public class ResultsWebController {
     private List<ResultRow> loadRows() throws IOException {
         final Collection<Path> all = resultService.getAll();
         return all.stream()
-            .map(ResultsWebController::toRow)
+            .map(this::toRow)
             .sorted(Comparator.comparingLong(ResultRow::createdEpoch).reversed())
             .collect(Collectors.toUnmodifiableList());
     }
 
-    private static final DateTimeFormatter DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
+    private static final String DEFAULT_DATE_PATTERN = "dd.MM.yyyy HH:mm:ss";
+    private DateTimeFormatter displayDateFormat;
 
-    private static ResultRow toRow(Path dir) {
+    /**
+     * Created-column formatter derived from {@code allure.date-format}; falls back to the default
+     * UTC pattern when the property is blank or invalid. Resolved once and cached.
+     */
+    private DateTimeFormatter displayDateFormat() {
+        if (displayDateFormat == null) {
+            final String pattern = allureProperties.dateFormat();
+            try {
+                displayDateFormat = DateTimeFormatter.ofPattern(
+                    StringUtils.isBlank(pattern) ? DEFAULT_DATE_PATTERN : pattern);
+            } catch (IllegalArgumentException ex) {
+                log.warn("Invalid allure.date-format '{}', using '{}'", pattern, DEFAULT_DATE_PATTERN);
+                displayDateFormat = DateTimeFormatter.ofPattern(DEFAULT_DATE_PATTERN);
+            }
+        }
+        return displayDateFormat;
+    }
+
+    private ResultRow toRow(Path dir) {
         final long bytes = directorySize(dir);
         String createdAt = "";
         long createdEpoch = 0L;
@@ -226,7 +247,7 @@ public class ResultsWebController {
             // but keep the raw epoch for chronological (numeric) sorting.
             createdEpoch = attr.creationTime().toMillis();
             final LocalDateTime utc = LocalDateTime.ofInstant(attr.creationTime().toInstant(), ZoneOffset.UTC);
-            createdAt = utc.format(DISPLAY_DATE_FORMAT);
+            createdAt = utc.format(displayDateFormat());
         } catch (IOException e) {
             log.error("Unable to read creation time for '{}'", dir, e);
         }
@@ -234,14 +255,38 @@ public class ResultsWebController {
             ru.iopump.qa.allure.web.HumanSize.format(bytes), createdAt, createdEpoch);
     }
 
+    private static final int SIZE_CACHE_MAX = 10_000;
+
+    /**
+     * Bounded LRU cache of recursively-computed result directory sizes, keyed by directory path
+     * plus its last-modified time. Result directories are effectively immutable once extracted, so
+     * a hit spares the recursive {@link FileUtils#sizeOfDirectory} walk on every /app/results
+     * render as history grows. The last-modified key component self-invalidates an entry if the
+     * directory is ever rewritten in place; the LRU bound caps memory for deleted/rotated dirs.
+     */
+    private static final Map<String, Long> SIZE_CACHE = Collections.synchronizedMap(
+        new LinkedHashMap<>(64, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Long> eldest) {
+                return size() > SIZE_CACHE_MAX;
+            }
+        });
+
     /** Recursive byte count for a result directory; returns 0 when the path is missing or unreadable. */
     private static long directorySize(Path dir) {
         final java.io.File file = dir.toFile();
         if (!file.isDirectory()) {
             return 0L;
         }
+        final String key = dir.toAbsolutePath() + ":" + file.lastModified();
+        final Long cached = SIZE_CACHE.get(key);
+        if (cached != null) {
+            return cached;
+        }
         try {
-            return FileUtils.sizeOfDirectory(file);
+            final long bytes = FileUtils.sizeOfDirectory(file);
+            SIZE_CACHE.put(key, bytes);
+            return bytes;
         } catch (IllegalArgumentException ex) {
             log.warn("Unable to size result directory '{}': {}", dir, ex.getMessage());
             return 0L;

@@ -30,6 +30,11 @@ Example on [allure.iopump.ru](http://allure.iopump.ru/)
 There is a docker image on Docker Hub: [allure-server](https://hub.docker.com/r/kochetkovma/allure-server)
 Running as Docker container look at: [readme](https://hub.docker.com/r/kochetkovma/allure-server)
 
+Images are also published to GitHub Container Registry (GHCR) at
+`ghcr.io/kochetkov-ma/allure-server`: release tags (e.g. `:latest` and the version
+tag) are pushed by the release workflow, and a separate image is built and pushed
+for every branch push.
+
 ### Kubernetes
 
 Use Helm Chart for Kubernetes from **[.helm/allure-server/README.md](.helm/allure-server/README.md)**
@@ -41,7 +46,75 @@ Download `allure-server.jar`
 Update your jre(jdk) up to [Java 25](https://adoptium.net/temurin/releases/?version=25)  
 Execute command `java -jar allure-server.jar`
 
-Got to `http://localhost:8080` - will redirect to OpenAPI (Swagger UI)
+Go to `http://localhost:8080` - the root path `/` redirects to the Web UI at `/app/reports`.
+The OpenAPI (Swagger UI) is available at `http://localhost:8080/swagger-ui.html`.
+
+### Authentication and Access Control
+
+Authentication is **always on** and backed by the database. There is no switch to
+run the server with security disabled.
+
+#### Users and roles
+
+Three roles exist:
+
+- `GUEST` — read-only fallback used for anonymous visitors (no login).
+- `USER` — can upload results and generate / delete reports.
+- `ADMIN` — everything, plus user and settings management.
+
+A single main administrator is seeded on first startup from
+`BASIC_AUTH_USERNAME` / `BASIC_AUTH_PASSWORD` (default `admin` / `admin`). While
+the default password is still in effect, a **password change is forced** on first
+login (you are redirected to `/app/profile/password`) before anything else is
+allowed.
+
+> :warning: **Upgraders:** set `BASIC_AUTH_PASSWORD` to a strong secret before
+> exposing the server. The shipped `admin` / `admin` default only exists to
+> bootstrap the very first login.
+
+Additional users are managed by an admin in the Web UI at `/app/admin/users`.
+
+#### Read access, guest mode and the require-api-auth toggle
+
+By default (`app.security.require-api-auth=false`) the server is open and
+guest-readable: `/api/**` and the generated report content under `/allure/**` are
+reachable anonymously through the read-only `GUEST` fallback. An admin can flip the
+runtime **require API auth** toggle at `/app/admin/settings` to require an
+authenticated, non-guest principal for those paths. This toggle is
+runtime-authoritative — its value lives in the database, and
+`app.security.require-api-auth` only seeds the initial value on first startup.
+
+Mutations (upload, generate, delete, token minting, password change) always
+require an authenticated, non-guest user, regardless of the toggle.
+
+#### API tokens
+
+REST clients authenticate with a personal API token instead of a password. Mint
+and revoke tokens on the Profile page at `/app/profile`. The plaintext token value
+is shown **exactly once** at creation — copy it immediately. The number of active
+tokens per user is capped per role.
+
+Send the token in the `X-API-Token` header (no `Bearer` prefix):
+
+```shell
+curl -H "X-API-Token: <token>" 'http://localhost:8080/api/report'
+```
+
+Add this header to any REST call below when `require-api-auth` is enabled;
+otherwise the request returns `401 Unauthorized`.
+
+#### OAuth2
+
+An optional `oauth` Spring profile adds OAuth2 login (Google by default), gated by
+`app.security.enable-oauth2` (default `false`). See the OAuth2 feature section below.
+
+#### Legacy basic.auth.enable (deprecated)
+
+`basic.auth.enable` is **deprecated but still honored**. When set to `true` it
+restores the legacy "lock everything" behavior: every request except public static
+assets requires authentication, including `/api/**` and `/allure/**`, regardless of
+the require-api-auth toggle. Prefer the runtime toggle above and leave this flag
+`false`.
 
 ### Upload results or use [GitHub Actions](#github-actions)
 
@@ -51,6 +124,7 @@ Make some allure results and create `zip` archive with these results, for exampl
 ```shell
 curl -X POST 'http://localhost:8080/api/result' \
 -H  "accept: */*" \
+-H  "X-API-Token: <token>" \
 -H  "Content-Type: multipart/form-data" \
 -F "allureResults=@allure-results.zip;type=application/x-zip-compressed"
 ```
@@ -73,6 +147,7 @@ For generate new report execute `POST` request with `json` body:
 
 ```shell
 curl --location --request POST 'http://localhost:8080/api/report' \
+--header 'X-API-Token: <token>' \
 --header 'Content-Type: application/json' \
 --data-raw '{
   "reportSpec": {
@@ -214,7 +289,7 @@ Pass your `OAUTH2_GOOGLE_ALLURE_CLIENT_ID` and `OAUTH2_GOOGLE_ALLURE_CLIENT_SECR
 
 There is Oauth feature-toggle `app.security.enable-oauth2`
 
-> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
+> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/reference/features/external-config.html)
 
 **By default `oauth` profile is not used and disabled**
 
@@ -338,12 +413,12 @@ Use `Java 25`
 > Since version `1.10.0` there are new options for Cleanup,
 > but also some old options have been renamed to integrate with the Spring Boot @ConfigurationProperties approach. And also the yaml format is used
 
-Old format is no longer supported, but you can convert reports created before 1.2.0 - just set '
-allure.support.old.format' to 'true' in Spring Configutaion:
+Old format is no longer supported, but you can convert reports created before 1.2.0 - just set
+`allure.support-old-format` to `true` in the Spring configuration:
 
-- system vars (JVM option) `-Dallure.support.old.format=true`
-- environment vars `export allure.support.old.format=true`
-- in docker environment vars `-e allure.support.old.format=true`
+- system vars (JVM option) `-Dallure.support-old-format=true`
+- environment vars `export ALLURE_SUPPORT_OLD_FORMAT=true`
+- in docker environment vars `-e ALLURE_SUPPORT_OLD_FORMAT=true`
 
 **ENV**                      | **TYPE**                 | **DEFAULT**              | **DESCRIPTION**
 ------------------------------|--------------------------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,16 +432,18 @@ allure.support-old-format    | boolean                  | false                 
 JAVA_OPTS                    | string                   | -Xms256m -Xmx2048m       | Java memory options for container
 allure.date-format           | string                   | yy/MM/dd HH:mm:ss        | Date Time format in grid
 allure.server-base-url       | string                   |                          | Define custom base url for results. If your server behind the proxy or other troubles to get server external hostname. Don't forget about '/' at the end
-basic.auth.enable            | boolean                  | false                    | Enable Basic Authentication
-basic.auth.username          | string                   | admin                    | Username for basic auth
-basic.auth.password          | string                   | admin                    | Password for basic auth
+basic.auth.enable            | boolean                  | false                    | **DEPRECATED** (still honored). `true` = legacy "lock everything": auth required for ALL requests incl. `/api/**` and `/allure/**`, ignoring the require-api-auth toggle. Prefer `app.security.require-api-auth`
+basic.auth.username          | string                   | admin                    | Username used to SEED the DB main admin on first startup. Not a live static credential — edit users at `/app/admin/users`
+basic.auth.password          | string                   | admin                    | Password used to SEED the DB main admin on first startup. If left at the default, a password change is forced on first login. Set a strong secret
+app.security.require-api-auth | boolean                 | false                    | Bootstrap default for requiring auth on `/api/**` and `/allure/**`. Runtime-authoritative value lives in the DB, flip at `/app/admin/settings`. `false` = open / guest-readable posture
+app.security.enable-oauth2   | boolean                  | false                    | Enable OAuth2 login (also activate the `oauth` Spring profile)
 allure.clean.dryRun          | boolean                  | false                    | Don't delete but print logs. For testing
 allure.clean.time            | LocalTime "HH[:mm][:ss]" | 00:00                    | Time to check reports age/ Scheduler start once per day
 allure.clean.ageDays         | int                      | 90                       | Max age for all reports. But exclude specified paths in 'allure.clean.paths'
 allure.clean.paths[].path    | String                   | manual_uploaded          | Report path
 allure.clean.paths[].ageDays | int                      | 30                       | Max age for reports with this path
 
-> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/docs/1.5.5.RELEASE/reference/html/boot-features-external-config.html)
+> Every spring boot setting can be passed through ENV variables with a little changes according to [spring boot cfg docs](https://docs.spring.io/spring-boot/reference/features/external-config.html)
 > For example: `allure.report.host` transform to `ALLURE_REPORT_HOST`
 
 > Postgres database supported!
@@ -425,6 +502,17 @@ By default the Web UI is available under `/app` and the root path `/` redirects 
 Example: `http://localhost:8080/app/reports`  
 The Web UI exposes the same operations as the REST API: upload, list, filter, sort,
 generate and delete reports / results.
+
+![Reports page](reports-dark.png)
+
+The UI is organized into a few pages:
+
+- **Reports** (`/app/reports`) — list, filter, sort, generate and delete reports.
+- **Results** (`/app/results`) — upload allure-results archives and manage uploaded results.
+- **Profile** (`/app/profile`) — change your password and mint / revoke API tokens.
+- **Admin** (`/app/admin`) — manage users (`/app/admin/users`) and flip the require-api-auth setting (`/app/admin/settings`); admin-only.
+
+![Results page](results-light.png)
 
 > :warning: **Generated Reports, and their History are grouping by `path` key. This key means something like `project` or `job` or `branch`. The latest report with the same `path` will be active**: It is not a real path - it's a logical path. The same situation with `path` column in the Web UI!
 

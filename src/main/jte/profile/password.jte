@@ -1,10 +1,12 @@
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @param boolean forced = false
 @param CurrentUserView currentUser = null
 @param boolean authEnabled = true
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 @param Map<String, String> flash = null
 @template.layout.main(
     title = "Change Password",
@@ -13,6 +15,7 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
         <section class="space-y-6">
             @template.partials.breadcrumb(items = new String[]{"Account", "Change password"})
@@ -32,6 +35,7 @@
 
             <section class="max-w-md card p-5">
                 <form method="post" action="/app/profile/password" class="space-y-4">
+                    @template.partials.csrf(csrf = csrf)
                     <label class="flex flex-col text-sm text-text">
                         <span class="mb-1 font-medium">Current password</span>
                         <input type="password" name="currentPassword" required autocomplete="current-password" class="form-field">

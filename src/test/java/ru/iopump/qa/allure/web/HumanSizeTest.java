@@ -46,25 +46,8 @@ class HumanSizeTest {
 
         // THEN — the rendered string matches the expected IEC text exactly
         assertThat(actual)
-            .as("HumanSize.format(%d) must render exactly '%s'", bytes, expected)
-            .isEqualTo(expected);
-    }
-
-    @ParameterizedTest(name = "boundary {0} bytes")
-    @DisplayName("should keep a '.' decimal separator (Locale.ROOT) so values are stable across locales")
-    @CsvSource({
-        "1536, '1.5 KB'",
-        "1572864, '1.5 MB'"
-    })
-    void format_usesDotDecimalSeparator(long bytes, String expected) {
-        // GIVEN — a fractional value that requires a decimal separator
-
-        // WHEN — formatting it
-        final String actual = HumanSize.format(bytes);
-
-        // THEN — the separator is a dot, never a locale-specific comma
-        assertThat(actual)
-            .as("HumanSize.format(%d) must use '.' as the decimal separator", bytes)
+            .as("HumanSize.format(%d) must render exactly '%s', with '.' as the decimal separator "
+                + "(Locale.ROOT), never a locale-specific comma", bytes, expected)
             .isEqualTo(expected)
             .doesNotContain(",");
     }
