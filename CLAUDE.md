@@ -14,6 +14,7 @@
 | Testing | writing/fixing tests, slices, fixtures | `.claude/convention/testing-conventions.md` |
 | Task board | tracking/transitioning ANY task, grooming backlog, overall status | `.claude/features/board.md` (canonical) + `.claude/features/TRACKER.md` (procedure); auto-rule `.claude/rules/tasks.md`; dump unclear items in `.claude/features/backlog/` as `*.md`; skill `.claude/skills/task-board/`. Old `.claude/tasks/` deprecated (pointer only) |
 | Team / agents | delegating work, picking an owner agent | §4 + `.claude/teams/default/team.md`; definitions in `.claude/agents/` |
+| Memory sync | instruction memory drifted from code (after big merges/refactors) | skill `.claude/skills/memory-sync/` -- `/memory-sync [session\|branch\|recent[:N]\|all]` |
 
 ## 1. What allure-server is
 

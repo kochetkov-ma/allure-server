@@ -29,3 +29,5 @@ open-source release artifact. A stray root-level `migration.sql` exists with no 
 
 ## Notes
 Running log: decisions, blockers, PR/commit/report links.
+
+2026-07-16 (M-DEEP-REVIEW-COMPAT): review reconfirmed the `ddl-auto: update` multi-replica CREATE-TABLE race (A3-4) and the never-executed root `migration.sql` (A3-2; its header is now marked manual/reference-only). Report: .claude/reports/20260716-153949_deep-review/.
