@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.entity.UserRole;
 import ru.iopump.qa.allure.properties.BasicProperties;
@@ -29,6 +29,14 @@ import java.util.UUID;
  * </ul>
  * Running as an {@link ApplicationRunner} (not {@code @PostConstruct}) guarantees
  * the JPA layer is fully initialised before the first INSERT.
+ * <p>
+ * Cold start is race-tolerant across replicas sharing one database: two instances can both
+ * observe an empty table and both attempt the seed INSERT; the loser's flush fails the unique
+ * {@code username} constraint. Each seed INSERT therefore catches
+ * {@link DataIntegrityViolationException} and treats the row the winner just wrote as authoritative
+ * instead of crashing (mirrors {@code SystemSettingsService}). {@code run} is intentionally NOT
+ * {@code @Transactional} so a caught violation does not poison an outer transaction — each
+ * repository write commits on its own.
  */
 @Component
 @RequiredArgsConstructor
@@ -48,7 +56,6 @@ public class UserSeeder implements ApplicationRunner {
     private final CurrentUserProvider currentUserProvider;
 
     @Override
-    @Transactional
     public void run(ApplicationArguments args) {
         seedGuest();
         seedMainAdmin();
@@ -56,22 +63,27 @@ public class UserSeeder implements ApplicationRunner {
     }
 
     private void seedGuest() {
-        userRepository.findByUsername(CurrentUserProvider.GUEST_USERNAME).orElseGet(() -> {
-            final UserEntity guest = UserEntity.builder()
-                .id(UUID.randomUUID())
-                .username(CurrentUserProvider.GUEST_USERNAME)
-                .displayName("Guest")
-                .role(UserRole.GUEST)
-                .createdAt(Instant.now())
-                .passwordHash(null)
-                .passwordTemporary(false)
-                .blocked(false)
-                .mainAdmin(false)
-                .build();
+        if (userRepository.findByUsername(CurrentUserProvider.GUEST_USERNAME).isPresent()) {
+            return;
+        }
+        final UserEntity guest = UserEntity.builder()
+            .id(UUID.randomUUID())
+            .username(CurrentUserProvider.GUEST_USERNAME)
+            .displayName("Guest")
+            .role(UserRole.GUEST)
+            .createdAt(Instant.now())
+            .passwordHash(null)
+            .passwordTemporary(false)
+            .blocked(false)
+            .mainAdmin(false)
+            .build();
+        try {
             userRepository.save(guest);
             log.info("Seeded user '{}' with role {}", guest.getUsername(), guest.getRole());
-            return guest;
-        });
+        } catch (DataIntegrityViolationException raceLost) {
+            // Another replica inserted the guest row between the existence check and this INSERT.
+            log.info("Guest user row was inserted concurrently by another instance — using the existing row");
+        }
     }
 
     private void seedMainAdmin() {
@@ -122,8 +134,13 @@ public class UserSeeder implements ApplicationRunner {
             .blocked(false)
             .mainAdmin(true)
             .build();
-        userRepository.save(admin);
-        log.info("Seeded main administrator '{}'", username);
+        try {
+            userRepository.save(admin);
+            log.info("Seeded main administrator '{}'", username);
+        } catch (DataIntegrityViolationException raceLost) {
+            // Another replica seeded the administrator concurrently — the winner's row stands.
+            log.info("Main administrator row was inserted concurrently by another instance — using the existing row");
+        }
     }
 
     /**

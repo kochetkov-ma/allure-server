@@ -32,6 +32,8 @@ dependencies {
     /* Spring Boot — all versions managed by Spring Boot BOM. */
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    /* Actuator — exposes /actuator/health for the Docker HEALTHCHECK. */
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
     implementation 'org.hibernate.validator:hibernate-validator'
     implementation 'org.springframework.boot:spring-boot-starter-security'

@@ -25,7 +25,9 @@ public record ReportRow(
     long sizeBytes,
     String sizeDisplay,
     String buildUrl,
-    String buildLabel
+    String buildLabel,
+    boolean active,
+    String latestUrl
 ) {
 
     public static ReportRow from(String uuid,
@@ -36,10 +38,14 @@ public record ReportRow(
                                  long sizeBytes,
                                  String sizeDisplay,
                                  String buildUrl,
-                                 String buildLabel) {
+                                 String buildLabel,
+                                 boolean active,
+                                 String latestUrl) {
         final String shortId = uuid == null || uuid.length() < 8 ? uuid : uuid.substring(0, 8) + "…";
         return new ReportRow(uuid, shortId, path, created, createdEpoch, url, sizeBytes, sizeDisplay,
             buildUrl == null ? "" : buildUrl,
-            buildLabel == null ? "" : buildLabel);
+            buildLabel == null ? "" : buildLabel,
+            active,
+            latestUrl == null ? "" : latestUrl);
     }
 }

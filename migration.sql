@@ -1,3 +1,9 @@
+-- MANUAL / reference-only operator script. NOT auto-applied at boot: the app has no
+-- spring.sql.init wiring and no Flyway/Liquibase, so nothing executes this file
+-- automatically. Run the relevant statements by hand against the target database when
+-- performing the noted version upgrades. (Versioned migrations via Flyway are a
+-- separate, deferred task.)
+
 -- version 2.10.0
 -- New column
 ALTER TABLE REPORT_ENTITY

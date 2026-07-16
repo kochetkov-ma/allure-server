@@ -5,8 +5,6 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,7 +18,6 @@ import org.springframework.security.authorization.AuthorizationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer.FrameOptionsConfig;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,10 +25,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import ru.iopump.qa.allure.config.WebConfiguration;
+import ru.iopump.qa.allure.entity.SystemSettingsEntity;
 import ru.iopump.qa.allure.entity.UserRole;
 import ru.iopump.qa.allure.properties.AppSecurityProperties;
 import ru.iopump.qa.allure.properties.BasicProperties;
+import ru.iopump.qa.allure.repo.SystemSettingsRepository;
 import ru.iopump.qa.allure.repo.UserRepository;
 import ru.iopump.qa.allure.service.SystemSettingsService;
 
@@ -51,6 +51,17 @@ import static org.springframework.security.config.Customizer.withDefaults;
  * principal (see {@link #mutationAuthorizationManager()}). Admin-only paths
  * ({@code /app/admin/**}) are additionally protected by
  * {@code @PreAuthorize("hasRole('ADMIN')")} on the relevant controllers.
+ * <p>
+ * CSRF protection is enabled for the browser surface (any state-changing {@code /app/**}
+ * request and {@code /logout}) via a JS-readable {@link CookieCsrfTokenRepository}; templates
+ * emit the token as a hidden form field and a {@code <meta>} tag consumed by HTMX. The
+ * stateless {@code /api/**} and {@code /allure/**} surfaces are exempt
+ * ({@code ignoringRequestMatchers}) so token/Basic clients need not carry a CSRF token.
+ * <p>
+ * A temporary (admin-issued / default) password must be rotated before it can authenticate
+ * against the stateless surfaces: {@link ApiTempPasswordGuardFilter} rejects such principals on
+ * {@code /api/**} and {@code /allure/**} (Basic/session logins), while the {@code /app} rotation
+ * flow stays reachable so the user can set a new password.
  * <p>
  * Legacy {@code basic.auth.enable} is honored for backward compatibility: when set
  * to {@code true} every request that is not an unauthenticated static asset
@@ -74,14 +85,17 @@ public class SecurityConfiguration {
     private final DbUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final SystemSettingsService systemSettingsService;
+    private final SystemSettingsRepository systemSettingsRepository;
     private final boolean enableOAuth2;
     private final boolean legacyBasicAuthEnabled;
+    private final boolean apiAuthBootstrapDefault;
 
     public SecurityConfiguration(ApiTokenAuthenticationFilter apiTokenFilter,
                                  UserRepository userRepository,
                                  DbUserDetailsService userDetailsService,
                                  PasswordEncoder passwordEncoder,
                                  SystemSettingsService systemSettingsService,
+                                 SystemSettingsRepository systemSettingsRepository,
                                  BasicProperties basicProperties,
                                  AppSecurityProperties appSecurityProperties) {
         this.apiTokenFilter = apiTokenFilter;
@@ -89,8 +103,10 @@ public class SecurityConfiguration {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.systemSettingsService = systemSettingsService;
+        this.systemSettingsRepository = systemSettingsRepository;
         this.enableOAuth2 = appSecurityProperties.enableOauth2();
         this.legacyBasicAuthEnabled = basicProperties.enable();
+        this.apiAuthBootstrapDefault = appSecurityProperties.requireApiAuth();
 
         if (legacyBasicAuthEnabled) {
             log.warn("[ALLURE SERVER SECURITY] 'basic.auth.enable=true' is DEPRECATED. For backward "
@@ -112,13 +128,26 @@ public class SecurityConfiguration {
 
         http
             .headers(it -> it.frameOptions(FrameOptionsConfig::sameOrigin))
-            .csrf(AbstractHttpConfigurer::disable)
+            // CSRF is enforced for the browser surface (state-changing /app/** forms + /logout):
+            // the UI is served over cookies while HiddenHttpMethodFilter is on, so mutations would
+            // otherwise be forgeable cross-site. The token repository is a JS-readable cookie so
+            // HTMX can echo it via a meta tag; templates also embed it as a hidden form field.
+            // The stateless /api/** and /allure/** surfaces are exempt so token/Basic clients
+            // (CI pipelines, Allure plugins) are unaffected and carry no CSRF token.
+            .csrf(it -> it
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/api/**", "/allure/**"))
             // API-token filter runs before the Basic-auth filter so a valid X-API-Token header
             // short-circuits username/password evaluation.
             .addFilterBefore(apiTokenFilter, UsernamePasswordAuthenticationFilter.class)
             // Force-password-change runs AFTER authorization so only the resolved authenticated
             // principal is inspected. Unauthenticated requests are never redirected.
             .addFilterAfter(new ForcePasswordChangeFilter(userRepository), AuthorizationFilter.class)
+            // Same ordering rationale as above: block a temporary/default password on the
+            // stateless /api/** and /allure/** surfaces (Basic/session) until it is rotated. A
+            // deliberately-minted API token is exempt (see the filter). /app/** is untouched so
+            // the rotation flow stays reachable.
+            .addFilterAfter(new ApiTempPasswordGuardFilter(userRepository), AuthorizationFilter.class)
             .authorizeHttpRequests(it -> {
                 // Static assets are always public so the login page can render even in
                 // legacy lock-everything mode. /swagger/** and /icon.svg are Swagger-UI and
@@ -131,6 +160,13 @@ public class SecurityConfiguration {
                         "/swagger/**",
                         "/icon.svg",
                         "/favicon.ico").permitAll();
+                // Actuator liveness/readiness: /actuator/health (and its /liveness, /readiness
+                // groups) must be reachable pre-auth in BOTH modes so the Docker HEALTHCHECK
+                // works even under legacy 'basic.auth.enable=true' (where anyRequest() would
+                // otherwise gate it to authenticated() → 401). Only health is exposed here; no
+                // other actuator endpoint is opened. Registered before the legacy vs non-legacy
+                // branch so first-match-wins makes it public in both. GET-only, so no CSRF concern.
+                it.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
                 if (legacyBasicAuthEnabled) {
                     // Backward-compat: pre-branch behavior required authentication for the
                     // whole surface. Because authorizeHttpRequests is first-match-wins, the
@@ -219,16 +255,21 @@ public class SecurityConfiguration {
      * Emits a prominent startup WARN when the effective security posture is OPEN — i.e. the
      * runtime {@code requireApiAuth} toggle is {@code false} AND legacy {@code basic.auth.enable}
      * is {@code false}. In that state {@code /api/**} and {@code /allure/**} are anonymously
-     * reachable (guest fallback). Runs with the lowest precedence so it executes AFTER
-     * {@link SystemSettingsService} (also an {@link ApplicationRunner}) has seeded the DB-backed
-     * snapshot, so the value read here is the authoritative runtime posture, not the bootstrap
-     * yaml default.
+     * reachable (guest fallback).
+     * <p>
+     * The value is read straight from the persisted settings row (falling back to the yaml
+     * bootstrap default when the row is not yet present) rather than from
+     * {@link SystemSettingsService}'s in-memory cache. Both are {@link ApplicationRunner}s with no
+     * relative {@code @Order}, so consulting the cache here could observe an unprimed value and
+     * emit a false OPEN-POSTURE warning; the authoritative DB read makes this deterministic
+     * regardless of runner ordering (CF-4).
      */
     @Bean
-    @Order(Ordered.LOWEST_PRECEDENCE)
     public ApplicationRunner openPostureStartupWarning() {
         return args -> {
-            final boolean requireApiAuth = systemSettingsService.isRequireApiAuth();
+            final boolean requireApiAuth = systemSettingsRepository.findById(SystemSettingsEntity.SINGLETON_ID)
+                .map(SystemSettingsEntity::isRequireApiAuth)
+                .orElse(apiAuthBootstrapDefault);
             if (!requireApiAuth && !legacyBasicAuthEnabled) {
                 log.warn("[ALLURE SERVER SECURITY] OPEN POSTURE: 'require API auth' is OFF and "
                     + "'basic.auth.enable' is false — /api/** and /allure/** are ANONYMOUSLY "

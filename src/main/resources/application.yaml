@@ -92,6 +92,11 @@ allure:
   # FROM FILE: file:/images/logo.png
   logo: ""
   resultsDir: allure/results/
+  # Decompression limits for the results upload (zip-bomb / disk-fill guard). Multipart limits cap
+  # only the compressed body, so cumulative decompressed size and entry count are capped separately.
+  upload:
+    max-uncompressed-bytes: ${ALLURE_UPLOAD_MAX_UNCOMPRESSED_BYTES:4294967296} # 4 GiB
+    max-entries: ${ALLURE_UPLOAD_MAX_ENTRIES:100000}
   reports:
     dir: allure/reports/
     path: reports/

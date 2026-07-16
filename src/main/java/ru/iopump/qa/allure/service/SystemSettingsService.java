@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import ru.iopump.qa.allure.entity.SystemSettingsEntity;
 import ru.iopump.qa.allure.properties.AppSecurityProperties;
 import ru.iopump.qa.allure.repo.SystemSettingsRepository;
@@ -120,7 +122,15 @@ public class SystemSettingsService implements ApplicationRunner {
         entity.setUpdatedByUsername(actorUsername);
         final SystemSettingsEntity saved = systemSettingsRepository.save(entity);
         final Snapshot snapshot = Snapshot.of(saved);
-        cache.set(snapshot);
+        // Publish to the lock-free read cache ONLY after the DB commit succeeds. Setting it
+        // inside the transaction would leave the cache diverged from the persisted row if the
+        // transaction later rolled back — /api/** could then fail OPEN on a stale snapshot.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                cache.set(snapshot);
+            }
+        });
         log.info("System settings updated by '{}': requireApiAuth={}", actorUsername, requireApiAuth);
         return snapshot;
     }

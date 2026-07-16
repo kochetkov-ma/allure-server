@@ -17,7 +17,9 @@ import java.util.Map;
 @Component
 public final class TokenPolicy {
 
-    public static final int GUEST_MAX_ACTIVE_TOKENS = 5;
+    // Guests own zero tokens — ApiTokenService.createToken hard-rejects the role; the
+    // zero cap keeps the policy consistent with that single source of truth.
+    public static final int GUEST_MAX_ACTIVE_TOKENS = 0;
     public static final int USER_MAX_ACTIVE_TOKENS = 10;
     public static final int ADMIN_MAX_ACTIVE_TOKENS = 50;
 

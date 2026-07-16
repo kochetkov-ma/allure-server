@@ -41,6 +41,12 @@ public class RedirectConfiguration implements WebMvcConfigurer {
         registry.addRedirectViewController("swagger", swaggerPath);
         registry.addRedirectViewController("api", swaggerPath);
         registry.addRedirectViewController("/", "/app/reports");
+        // Legacy Vaadin /ui/* bookmarks -> current /app/* surface.
+        registry.addRedirectViewController("/ui", "/app/reports");
+        registry.addRedirectViewController("/ui/", "/app/reports");
+        registry.addRedirectViewController("/ui/results", "/app/results");
+        registry.addRedirectViewController("/ui/about", "/app/about");
+        registry.addRedirectViewController("/ui/swagger", swaggerPath);
     }
 
     @Override

@@ -5,9 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.entity.UserRole;
 import ru.iopump.qa.allure.repo.UserRepository;
@@ -17,11 +20,16 @@ import ru.iopump.qa.allure.service.SystemSettingsService;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -53,6 +61,12 @@ class AlwaysOnAuthIntegrationTest {
     private static final String API_REPORT_PATH = "/api/report";
     private static final String APP_REPORTS_PATH = "/app/reports";
     private static final String APP_ADMIN_USERS = "/app/admin/users";
+    private static final String APP_RESULTS_PATH = "/app/results";
+    private static final String APP_RESULTS_UPLOAD_PATH = "/app/results/upload";
+    private static final String ALLURE_RESULTS_FIXTURE = "allure-results.zip";
+    private static final String FLASH_KEY = "flash";
+    private static final String FLASH_LEVEL_KEY = "level";
+    private static final String LEVEL_SUCCESS = "success";
     private static final String USER_NAME = "regular";
     private static final String USER_PASS = "UserPass99";
 
@@ -84,8 +98,8 @@ class AlwaysOnAuthIntegrationTest {
 
         // WHEN — anonymous GET /api/report
         mockMvc.perform(get(API_REPORT_PATH))
-            // THEN — allowed (2xx)
-            .andExpect(status().is2xxSuccessful());
+            // THEN — allowed (200)
+            .andExpect(status().isOk());
     }
 
     @Test
@@ -110,7 +124,11 @@ class AlwaysOnAuthIntegrationTest {
     @Test
     @DisplayName("should allow authenticated Basic admin GET /api/report regardless of requireApiAuth flag")
     void apiReport_withBasicAdmin_allowed() throws Exception {
-        // GIVEN — admin credentials from bootstrap seeder (admin/admin)
+        // GIVEN — admin credentials from bootstrap seeder, with the forced-rotation flag cleared:
+        // the default admin/admin password is seeded as temporary and the ApiTempPasswordGuardFilter
+        // now blocks a temporary password on /api/** (C1-5), so a legitimately-onboarded admin has
+        // already rotated.
+        clearTemporaryPassword(ADMIN_USER);
         final String basicAuth = basicAuthHeader(ADMIN_USER, ADMIN_PASS);
 
         // WHEN — authenticated GET /api/report
@@ -118,6 +136,34 @@ class AlwaysOnAuthIntegrationTest {
                 .header(HttpHeaders.AUTHORIZATION, basicAuth))
             // THEN — allowed (2xx)
             .andExpect(status().is2xxSuccessful());
+    }
+
+    @Test
+    @DisplayName("should return 403 for Basic /api/report when the password is still temporary (C1-5)")
+    void apiReport_withTempPasswordBasic_forbidden() throws Exception {
+        // GIVEN — a seeded USER whose passwordTemporary flag is still set (default/admin-issued
+        // password not yet rotated). Such a principal must not reach the stateless API surface via
+        // Basic before rotating (finding C1-5).
+        final String tempName = "tempapiuser";
+        final String tempPass = "TempApiPass1";
+        userRepository.findByUsername(tempName).ifPresent(userRepository::delete);
+        userRepository.save(UserEntity.builder()
+            .id(UUID.randomUUID())
+            .username(tempName)
+            .displayName(tempName)
+            .role(UserRole.USER)
+            .createdAt(Instant.now())
+            .passwordHash(passwordEncoder.encode(tempPass))
+            .passwordTemporary(true)
+            .blocked(false)
+            .mainAdmin(false)
+            .build());
+
+        // WHEN — the temp-password user authenticates via Basic on /api/report
+        // THEN — 403: authentication succeeds but the guard blocks API access until rotation
+        mockMvc.perform(get(API_REPORT_PATH)
+                .header(HttpHeaders.AUTHORIZATION, basicAuthHeader(tempName, tempPass)))
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -136,10 +182,63 @@ class AlwaysOnAuthIntegrationTest {
     void appReportsUpload_anonymousRejected() throws Exception {
         // GIVEN — anonymous request to a mutating /app handler
 
-        // WHEN — anonymous POST /app/reports/upload
+        // WHEN — anonymous POST /app/reports/upload (with a valid CSRF token so the request is
+        // rejected by authorization, not the CSRF filter)
         // THEN — challenged with 401 (anonymous mutation not allowed)
-        mockMvc.perform(post("/app/reports/upload"))
+        mockMvc.perform(post("/app/reports/upload").with(csrf()))
             .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("should redirect (never 403) an authenticated real multipart POST /app/results/upload carrying a valid CSRF token")
+    void resultsUpload_realMultipartWithValidCsrf_notForbidden() throws Exception {
+        // GIVEN — an authenticated admin (temp-password rotation cleared so ForcePasswordChangeFilter
+        // does not intercept) posting a genuine multipart/form-data request, matching the browser
+        // upload form's enctype and its '_csrf' hidden field (partials/csrf.jte). This exercises the
+        // real HiddenHttpMethodFilter + CsrfFilter interplay on the multipart body, which the plain
+        // (non-multipart) posts elsewhere in this class do not cover.
+        clearTemporaryPassword(ADMIN_USER);
+        final String basicAuth = basicAuthHeader(ADMIN_USER, ADMIN_PASS);
+        final MockMultipartFile zipFile = new MockMultipartFile(
+            "file", ALLURE_RESULTS_FIXTURE, "application/zip",
+            new ClassPathResource(ALLURE_RESULTS_FIXTURE).getInputStream());
+
+        // WHEN — the multipart POST carries a valid CSRF token (SecurityMockMvcRequestPostProcessors#csrf
+        // submits it through the same request-parameter channel the rendered hidden field would use)
+        final MvcResult result = mockMvc.perform(multipart(APP_RESULTS_UPLOAD_PATH)
+                .file(zipFile)
+                .header(HttpHeaders.AUTHORIZATION, basicAuth)
+                .with(csrf()))
+            // THEN — never 403: the controller reaches its handler and always redirects
+            .andExpect(status().is3xxRedirection())
+            .andExpect(redirectedUrl(APP_RESULTS_PATH))
+            .andReturn();
+
+        // AND — the upload genuinely succeeded end-to-end, not merely swallowed into an error redirect
+        @SuppressWarnings("unchecked")
+        final Map<String, Object> flash = (Map<String, Object>) result.getFlashMap().get(FLASH_KEY);
+        assertThat(flash.get(FLASH_LEVEL_KEY))
+            .as("multipart upload with a valid CSRF token must succeed through the real filter chain")
+            .isEqualTo(LEVEL_SUCCESS);
+    }
+
+    @Test
+    @DisplayName("should return 403 for a real multipart POST /app/results/upload with no CSRF token")
+    void resultsUpload_realMultipartWithoutCsrf_forbidden() throws Exception {
+        // GIVEN — the same authenticated multipart request as the positive case (valid zip file
+        // part, admin Basic credentials) but with no '_csrf' part or header at all
+        clearTemporaryPassword(ADMIN_USER);
+        final String basicAuth = basicAuthHeader(ADMIN_USER, ADMIN_PASS);
+        final MockMultipartFile zipFile = new MockMultipartFile(
+            "file", ALLURE_RESULTS_FIXTURE, "application/zip",
+            new ClassPathResource(ALLURE_RESULTS_FIXTURE).getInputStream());
+
+        // WHEN — the multipart POST omits the CSRF token
+        // THEN — CsrfFilter rejects the request before authorization is even evaluated
+        mockMvc.perform(multipart(APP_RESULTS_UPLOAD_PATH)
+                .file(zipFile)
+                .header(HttpHeaders.AUTHORIZATION, basicAuth))
+            .andExpect(status().isForbidden());
     }
 
     @Test
@@ -147,9 +246,9 @@ class AlwaysOnAuthIntegrationTest {
     void appProfileTokens_anonymousRejected() throws Exception {
         // GIVEN — anonymous visitor (resolves to seeded guest in the controller layer)
 
-        // WHEN — anonymous POST /app/profile/tokens
+        // WHEN — anonymous POST /app/profile/tokens (valid CSRF token so authorization is the gate)
         // THEN — chain blocks before the controller; 401 challenge
-        mockMvc.perform(post("/app/profile/tokens").param("name", "evil").param("ttl", ""))
+        mockMvc.perform(post("/app/profile/tokens").with(csrf()).param("name", "evil").param("ttl", ""))
             .andExpect(status().isUnauthorized());
     }
 
@@ -162,6 +261,7 @@ class AlwaysOnAuthIntegrationTest {
         // THEN — chain blocks before the controller; 401 challenge (not protected by accident
         // of the guest row having no password hash)
         mockMvc.perform(post("/app/profile/password")
+                .with(csrf())
                 .param("currentPassword", "x")
                 .param("newPassword", "y")
                 .param("confirmPassword", "y"))
@@ -169,24 +269,17 @@ class AlwaysOnAuthIntegrationTest {
     }
 
     @Test
-    @DisplayName("should reject guest-token POST /app/profile/password with 403 (guest cannot rotate password)")
-    void appProfilePassword_guestTokenRejected() throws Exception {
-        // GIVEN — a token minted for the seeded guest user; guest is ROLE_GUEST
+    @DisplayName("should refuse to mint an API token for the guest principal (F4 /app-mutation bypass closed at the service boundary)")
+    void appProfilePassword_guestTokenRejected() {
+        // GIVEN — the seeded guest principal (ROLE_GUEST)
         final UserEntity guest = userRepository.findByUsername(CurrentUserProvider.GUEST_USERNAME).orElseThrow();
-        final ApiTokenService.TokenIssueResult issued =
-            apiTokenService.createToken(guest, "guest-pw-token", null);
-        try {
-            // WHEN — POST /app/profile/password authenticated as guest via token
-            // THEN — guest principal is rejected by mutationAuthorizationManager (403 forbidden)
-            mockMvc.perform(post("/app/profile/password")
-                    .header(ApiTokenAuthenticationFilter.HEADER_NAME, issued.plainToken())
-                    .param("currentPassword", "x")
-                    .param("newPassword", "y")
-                    .param("confirmPassword", "y"))
-                .andExpect(status().isForbidden());
-        } finally {
-            apiTokenService.revoke(guest, issued.entityId());
-        }
+
+        // WHEN / THEN — a guest can no longer obtain a token, so it can never authenticate to
+        // attempt a password rotation. The guest-token bypass is now closed at creation time
+        // (ApiTokenService), ahead of the chain's ROLE_GUEST rejection in mutationAuthorizationManager.
+        assertThatThrownBy(() -> apiTokenService.createToken(guest, "guest-pw-token", null))
+            .as("guest accounts must not be able to own API tokens (mutation-surface bypass closed at source)")
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -201,6 +294,7 @@ class AlwaysOnAuthIntegrationTest {
         // THEN — the mutation matcher PERMITS the non-guest principal, so the request reaches the
         // controller (not 401, not 403). The controller re-renders/redirects on validation outcome.
         mockMvc.perform(post("/app/profile/password")
+                .with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, basicAuth)
                 .param("currentPassword", USER_PASS)
                 .param("newPassword", "NewUserPass1")
@@ -234,6 +328,7 @@ class AlwaysOnAuthIntegrationTest {
         // THEN — the matcher permits (non-guest), the request reaches the controller and redirects.
         // A 401/403 here would mean the matcher wrongly blocked the legit rotation flow.
         mockMvc.perform(post("/app/profile/password")
+                .with(csrf())
                 .header(HttpHeaders.AUTHORIZATION, basicAuth)
                 .param("currentPassword", forcedPass)
                 .param("newPassword", "RotatedPass1")
@@ -313,23 +408,17 @@ class AlwaysOnAuthIntegrationTest {
     }
 
     @Test
-    @DisplayName("should return 403 for a guest-owned X-API-Token on /api/report when requireApiAuth is true")
-    void apiReport_withGuestToken_forbidden() throws Exception {
-        // GIVEN — a token minted for the seeded guest user (simulating the F4 bypass)
+    @DisplayName("should refuse to mint an API token for the guest principal (F4 /api bypass closed at the service boundary)")
+    void apiReport_withGuestToken_forbidden() {
+        // GIVEN — the seeded guest principal (ROLE_GUEST)
         final UserEntity guest = userRepository.findByUsername(CurrentUserProvider.GUEST_USERNAME).orElseThrow();
-        final ApiTokenService.TokenIssueResult issued =
-            apiTokenService.createToken(guest, "guest-token", null);
-        systemSettingsService.updateRequireApiAuth(true, "test-actor");
-        try {
-            // WHEN — GET /api/report authenticated as guest via token
-            // THEN — guest principal must not pass the API gate (403 forbidden)
-            mockMvc.perform(get(API_REPORT_PATH)
-                    .header(ApiTokenAuthenticationFilter.HEADER_NAME, issued.plainToken()))
-                .andExpect(status().isForbidden());
-        } finally {
-            apiTokenService.revoke(guest, issued.entityId());
-            systemSettingsService.updateRequireApiAuth(false, "test-actor");
-        }
+
+        // WHEN / THEN — the guest-token bypass is now closed at creation time: a token bound to the
+        // shared GUEST principal can never be minted, so it can never unlock the protected /api/**
+        // surface. Defense-in-depth remains in the chain (apiAuthorizationManager rejects ROLE_GUEST).
+        assertThatThrownBy(() -> apiTokenService.createToken(guest, "guest-token", null))
+            .as("guest accounts must not be able to own API tokens (API-surface bypass closed at source)")
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -383,6 +472,7 @@ class AlwaysOnAuthIntegrationTest {
         // configured success URL, whereas a REST/AJAX client (no html Accept) gets a 204.
         // THEN — 302 to /app/reports (no raw 404 from an unmapped /login)
         mockMvc.perform(post("/logout")
+                .with(csrf())
                 .header(HttpHeaders.ACCEPT, org.springframework.http.MediaType.TEXT_HTML_VALUE))
             .andExpect(status().is3xxRedirection())
             .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers

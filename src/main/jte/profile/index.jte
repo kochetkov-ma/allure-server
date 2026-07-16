@@ -1,5 +1,6 @@
 @import java.util.List
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.entity.UserRole
 @import ru.iopump.qa.allure.web.dto.CreateTokenForm
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
@@ -10,6 +11,7 @@
 @param boolean authEnabled = false
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 @param Map<String, String> flash = null
 @param Map<String, String> justCreatedToken = null
 @param long activeTokenCount = 0
@@ -30,6 +32,7 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
         <section class="space-y-6" x-data="{ createOpen: false, form: { name: '', expiration: 'DAYS_30' } }"
                  @keydown.escape.window="createOpen = false">
@@ -138,6 +141,7 @@
                                                 <form method="post" action="/app/profile/tokens/${row.id().toString()}"
                                                       onsubmit="return confirm('Revoke token ${row.name()}? This cannot be undone.');"
                                                       class="inline">
+                                                    @template.partials.csrf(csrf = csrf)
                                                     <input type="hidden" name="_method" value="delete">
                                                     <button type="submit"
                                                             class="rounded-md border border-error/60 bg-transparent px-2 py-1 text-xs font-semibold text-error hover:bg-error/10">
@@ -177,6 +181,7 @@
                                 The plain token value will be shown exactly once after creation. Store it safely.
                             </p>
                             <form method="post" action="/app/profile/tokens" class="mt-4 space-y-4">
+                                @template.partials.csrf(csrf = csrf)
                                 <label class="flex flex-col text-sm text-text">
                                     <span class="mb-1 font-medium">Name</span>
                                     <input type="text" name="name" x-model="form.name"

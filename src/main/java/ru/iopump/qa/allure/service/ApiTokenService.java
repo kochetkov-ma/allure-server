@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.ApiTokenEntity;
 import ru.iopump.qa.allure.entity.UserEntity;
+import ru.iopump.qa.allure.entity.UserRole;
 import ru.iopump.qa.allure.repo.ApiTokenRepository;
 import ru.iopump.qa.allure.repo.UserRepository;
 
@@ -47,6 +48,7 @@ public class ApiTokenService {
     private final ApiTokenRepository apiTokenRepository;
     private final UserRepository userRepository;
     private final TokenPolicy tokenPolicy;
+    private final AuthStampService authStampService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     /**
@@ -106,6 +108,12 @@ public class ApiTokenService {
                                         Duration ttl) {
         Preconditions.checkArgument(!name.isBlank(), "token name must not be blank");
         Preconditions.checkArgument(owner.getId() != null, "owner must be persisted");
+
+        // Service is the single source of truth for the guest ban — the web layer also
+        // blocks it, but a token bound to the shared GUEST principal must never be minted.
+        if (owner.getRole() == UserRole.GUEST) {
+            throw new IllegalStateException("Guest accounts cannot own API tokens");
+        }
 
         // Serialize concurrent creates for this owner: hold a write lock on the user
         // row so the count+insert below cannot interleave with another create call.
@@ -184,9 +192,8 @@ public class ApiTokenService {
                         token.getId(), owner.getUsername());
                     return Optional.empty();
                 }
-                token.setLastUsedAt(now);
-                apiTokenRepository.save(token);
-                return Optional.of(owner);
+                authStampService.touchTokenLastUsed(token.getId(), now);
+                return Optional.ofNullable(owner);
             });
     }
 

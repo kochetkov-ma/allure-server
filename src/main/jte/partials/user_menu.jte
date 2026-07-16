@@ -1,8 +1,10 @@
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @param CurrentUserView user
 @param boolean authEnabled
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 !{
   var displayName = user == null ? "Guest" : user.displayName();
   var username = user == null ? "guest" : user.username();
@@ -56,6 +58,7 @@
            role="menuitem">Sign in</a>
       @else
         <form action="/logout" method="post" class="block">
+          @template.partials.csrf(csrf = csrf)
           <button type="submit"
                   class="w-full text-left px-3 py-1.5 text-sm text-text hover:bg-surface hover:text-primary"
                   role="menuitem">Logout</button>

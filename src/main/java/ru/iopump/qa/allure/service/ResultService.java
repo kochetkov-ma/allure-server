@@ -6,7 +6,9 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import ru.iopump.qa.allure.helper.MoveFileVisitor;
 import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.properties.AllureProperties;
@@ -36,14 +38,22 @@ import static java.nio.file.Files.isDirectory;
 @Slf4j
 public class ResultService {
     private final Path storagePath;
+    private final long maxUncompressedBytes;
+    private final long maxEntries;
 
     @Autowired
     public ResultService(AllureProperties cfg) {
-        this(Paths.get(cfg.resultsDir()));
+        this(Paths.get(cfg.resultsDir()), cfg.upload());
     }
 
     ResultService(final Path storagePath) {
+        this(storagePath, new AllureProperties.Upload());
+    }
+
+    ResultService(final Path storagePath, final AllureProperties.Upload upload) {
         this.storagePath = storagePath;
+        this.maxUncompressedBytes = upload.maxUncompressedBytes();
+        this.maxEntries = upload.maxEntries();
     }
 
     public ResultResponse internalDeleteByUUID(String uuid) throws IOException {
@@ -135,16 +145,33 @@ public class ResultService {
 
     private void checkAndUnzipTo(InputStream zipArchiveIo, Path unzipTo) throws IOException {
         byte[] buffer = new byte[1024];
+        long totalBytes = 0;
+        long entryCount = 0;
         try (ZipInputStream zis = new ZipInputStream(zipArchiveIo)) {
             ZipEntry zipEntry = zis.getNextEntry();
             if (zipEntry == null) {
                 throw new IllegalArgumentException("Passed InputStream is not a Zip Archive or empty");
             }
             while (zipEntry != null) {
+                if (++entryCount > maxEntries) {
+                    throw tooLarge("Zip entry count exceeds the limit of " + maxEntries + " entries (possible zip bomb)");
+                }
+                // Cheap early reject on the DECLARED size. It is optional (-1 when unknown) and spoofable,
+                // so real enforcement is the cumulative byte counter on the stream below.
+                final long declaredSize = zipEntry.getSize();
+                if (declaredSize > maxUncompressedBytes) {
+                    throw tooLarge("Zip entry '" + zipEntry.getName() + "' declares size " + declaredSize
+                        + " bytes, exceeding the uncompressed limit of " + maxUncompressedBytes + " bytes");
+                }
                 final Path newFile = fromZip(unzipTo, zipEntry);
                 try (final OutputStream fos = Files.newOutputStream(newFile)) {
                     int len;
                     while ((len = zis.read(buffer)) > 0) {
+                        totalBytes += len;
+                        if (totalBytes > maxUncompressedBytes) {
+                            throw tooLarge("Cumulative uncompressed size exceeds the limit of "
+                                + maxUncompressedBytes + " bytes (possible zip bomb)");
+                        }
                         fos.write(buffer, 0, len);
                     }
                 }
@@ -153,6 +180,15 @@ public class ResultService {
             }
         }
         log.info("Unzipping successfully finished to '{}'", unzipTo);
+    }
+
+    /**
+     * Build a 413 Payload Too Large signal (mapped by the central exception handler) for a rejected
+     * upload. Thrown mid-extraction; the caller's on-error cleanup removes the partial output.
+     */
+    private static ResponseStatusException tooLarge(String reason) {
+        log.warn("Upload rejected: {}", reason);
+        return new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, reason);
     }
 
     private void move(Path from, Path to) throws IOException {

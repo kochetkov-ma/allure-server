@@ -107,10 +107,10 @@ class LegacyBasicAuthIntegrationTest {
         final String basicAuth = basicAuthHeader(ADMIN_USER, ADMIN_PASS);
 
         // WHEN — authenticated GET /api/report
-        // THEN — allowed (2xx): valid Basic creds satisfy the legacy authenticated() gate
+        // THEN — allowed (200): valid Basic creds satisfy the legacy authenticated() gate
         mockMvc.perform(get(API_REPORT_PATH)
                 .header(HttpHeaders.AUTHORIZATION, basicAuth))
-            .andExpect(status().is2xxSuccessful());
+            .andExpect(status().isOk());
     }
 
     ///// helpers /////

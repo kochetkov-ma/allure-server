@@ -1,5 +1,6 @@
 @import java.util.List
 @import java.util.Map
+@import org.springframework.security.web.csrf.CsrfToken
 @import ru.iopump.qa.allure.web.dto.CurrentUserView
 @import ru.iopump.qa.allure.web.dto.ResultRow
 @param List<ResultRow> rows
@@ -10,6 +11,7 @@
 @param boolean authEnabled = false
 @param boolean isAdmin = false
 @param boolean signInRequired = false
+@param CsrfToken csrf = null
 !{ var canMutate = currentUser != null && currentUser.authenticated(); }
 @template.layout.main(
     title = "Results",
@@ -18,6 +20,7 @@
     authEnabled = authEnabled,
     isAdmin = isAdmin,
     signInRequired = signInRequired,
+    csrf = csrf,
     content = @`
         <section class="space-y-6"
                  x-data="{
@@ -25,7 +28,7 @@
                    generateOpen: false,
                    uploadOpen: false,
                    bulkConfirmOpen: false,
-                   cols: { uuid: '' },
+                   cols: { uuid: '', created: '', size: '' },
                    sortKey: '',
                    sortDir: 'none',
                    totals: { count: ${totalCount}, sizeDisplay: '${totalSizeDisplay}' },
@@ -61,6 +64,17 @@
                      if (bytes < GB) return (bytes / MB).toFixed(1) + ' MB';
                      if (bytes < TB) return (bytes / GB).toFixed(1) + ' GB';
                      return (bytes / TB).toFixed(1) + ' TB';
+                   },
+                   applyFilters() {
+                     const tbody = document.getElementById('results-tbody');
+                     if (!tbody) return;
+                     const cf = (this.cols.created || '').toLowerCase();
+                     const sf = (this.cols.size || '').toLowerCase();
+                     Array.from(tbody.querySelectorAll('tr[data-uuid]')).forEach(r => {
+                       const created = (r.dataset.createdat || '').toLowerCase();
+                       const size = (r.cells && r.cells[3] ? r.cells[3].textContent : '').trim().toLowerCase();
+                       r.hidden = !((!cf || created.includes(cf)) && (!sf || size.includes(sf)));
+                     });
                    },
                    recomputeTotals() {
                      const tbody = document.getElementById('results-tbody');
@@ -100,7 +114,7 @@
                      rows.forEach(r => tbody.appendChild(r));
                    }
                  }"
-                 x-effect="sortRows(); cols.uuid; recomputeTotals()"
+                 x-effect="sortRows(); applyFilters(); cols.uuid; cols.created; cols.size; recomputeTotals()"
                  @keydown.escape.window="generateOpen = false">
 
             @template.partials.breadcrumb(items = new String[]{"Home", "Results"})
@@ -152,6 +166,7 @@
                       action="/app/results/upload"
                       enctype="multipart/form-data"
                       class="mt-4 space-y-4">
+                    @template.partials.csrf(csrf = csrf)
                     @template.partials.dropzone(name = "file", label = "allure-results archive", hint = "allure-results ZIP · drop here or click to browse")
                     <div class="flex justify-end">
                         <button type="submit" class="btn-primary">Upload</button>
@@ -189,8 +204,20 @@
                                        aria-label="Filter by uuid"
                                        class="form-field text-xs font-normal">
                             </th>
-                            <th scope="col" class="px-4 py-1.5"></th>
-                            <th scope="col" class="px-4 py-1.5"></th>
+                            <th scope="col" class="px-4 py-1.5">
+                                <input type="text"
+                                       x-model="cols.created"
+                                       placeholder="filter created"
+                                       aria-label="Filter by created"
+                                       class="form-field text-xs font-normal">
+                            </th>
+                            <th scope="col" class="px-4 py-1.5">
+                                <input type="text"
+                                       x-model="cols.size"
+                                       placeholder="filter size"
+                                       aria-label="Filter by size"
+                                       class="form-field text-xs font-normal">
+                            </th>
                             <th scope="col" class="px-4 py-1.5"></th>
                         </tr>
                     </thead>
@@ -217,6 +244,7 @@
                         <p class="mt-2 text-sm text-text-muted"
                            x-text="'Delete ' + selected.length + ' result(s)? This cannot be undone.'"></p>
                         <form action="/app/results/bulk-delete" method="post" class="mt-6 flex justify-end gap-2">
+                            @template.partials.csrf(csrf = csrf)
                             <template x-for="u in selected" :key="u">
                                 <input type="hidden" name="uuids" :value="u">
                             </template>
@@ -245,6 +273,7 @@
                         </p>
 
                         <form method="post" action="/app/results/generate" class="mt-4 space-y-4">
+                            @template.partials.csrf(csrf = csrf)
                             <template x-for="u in selected" :key="u">
                                 <input type="hidden" name="resultUuids" :value="u">
                             </template>

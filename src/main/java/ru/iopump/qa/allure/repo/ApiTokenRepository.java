@@ -39,4 +39,13 @@ public interface ApiTokenRepository extends JpaRepository<ApiTokenEntity, UUID> 
     @Modifying
     @Query("delete from ApiTokenEntity t where t.user.id = :userId")
     int deleteAllByUserId(@Param("userId") @NonNull UUID userId);
+
+    /**
+     * Non-versioned bulk stamp of {@code lastUsedAt} for the auth hot path. Deliberately
+     * avoids loading + saving the entity so it never bumps {@code @Version} and cannot
+     * raise an optimistic-lock failure when concurrent requests share a token.
+     */
+    @Modifying
+    @Query("update ApiTokenEntity t set t.lastUsedAt = :now where t.id = :id")
+    int touchLastUsedAt(@Param("id") @NonNull UUID id, @Param("now") @NonNull Instant now);
 }

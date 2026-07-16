@@ -4,16 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import ru.iopump.qa.allure.helper.AllureReportGenerator;
-import ru.iopump.qa.allure.repo.JpaReportRepository;
-import ru.iopump.qa.allure.service.JpaReportService;
+import ru.iopump.qa.allure.security.CurrentUserProvider;
+import ru.iopump.qa.allure.service.ApiTokenService;
 import ru.iopump.qa.allure.service.ResultService;
 
 import java.util.Map;
@@ -22,8 +23,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+/**
+ * {@code @WebMvcTest} slice for {@link AllureResultController}. Security is excluded
+ * (endpoint authorization is covered by the security integration suite); the RFC 7807
+ * {@link GlobalExceptionHandler} is imported explicitly so ProblemDetail translation
+ * still applies inside the narrowed slice.
+ */
+@WebMvcTest(
+    controllers = AllureResultController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
+@Import(GlobalExceptionHandler.class)
 class AllureResultControllerTest {
 
     @Autowired
@@ -35,14 +45,17 @@ class AllureResultControllerTest {
     @MockitoBean
     private ResultService resultService;
 
+    // ApiTokenAuthenticationFilter is a @Component servlet Filter, auto-detected by the
+    // @WebMvcTest slice scan even with Boot's security auto-configuration excluded; its
+    // ApiTokenService constructor dependency must still be satisfiable.
     @MockitoBean
-    private JpaReportService jpaReportService;
+    private ApiTokenService apiTokenService;
 
+    // GlobalModelAdvice is a @ControllerAdvice scanned application-wide by @WebMvcTest
+    // (its basePackageClasses scoping only limits where it applies at runtime, not
+    // whether it is instantiated); its CurrentUserProvider dependency must be mockable.
     @MockitoBean
-    private JpaReportRepository jpaReportRepository;
-
-    @MockitoBean
-    private AllureReportGenerator allureReportGenerator;
+    private CurrentUserProvider currentUserProvider;
 
     // ─────────────────────────────────── A2 tests ──────────────────────────────────────
 

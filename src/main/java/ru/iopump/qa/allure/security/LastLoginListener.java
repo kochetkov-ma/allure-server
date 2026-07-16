@@ -9,7 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import ru.iopump.qa.allure.entity.UserEntity;
 import ru.iopump.qa.allure.repo.UserRepository;
+import ru.iopump.qa.allure.service.AuthStampService;
 
+import java.time.Duration;
 import java.time.Instant;
 
 /**
@@ -28,23 +30,43 @@ import java.time.Instant;
 @Slf4j
 public class LastLoginListener {
 
+    /**
+     * Minimum age of the previous stamp before a re-authentication triggers a new write.
+     * Stateless Basic API clients re-auth on every request; without this throttle each
+     * request would issue a redundant UPDATE.
+     */
+    private static final Duration STAMP_INTERVAL = Duration.ofMinutes(1);
+
     private final UserRepository userRepository;
+    private final AuthStampService authStampService;
 
     @EventListener
     @Transactional
     public void onAuthenticationSuccess(AuthenticationSuccessEvent event) {
-        final Authentication authentication = event.getAuthentication();
-        if (authentication == null) {
-            return;
+        try {
+            final Authentication authentication = event.getAuthentication();
+            if (authentication == null) {
+                return;
+            }
+            final String username = authentication.getName();
+            if (username == null || username.isBlank() || "anonymousUser".equals(username)) {
+                return;
+            }
+            final Instant now = Instant.now();
+            userRepository.findByUsername(username).ifPresent(user -> {
+                final Instant last = user.getLastLoginAt();
+                if (last != null && last.isAfter(now.minus(STAMP_INTERVAL))) {
+                    return;
+                }
+                // Stamp in a fresh transaction (REQUIRES_NEW): a write failure commits/rolls
+                // back independently and cannot mark this listener's transaction rollback-only.
+                authStampService.touchUserLastLogin(user.getId(), now);
+                log.debug("Stamped lastLoginAt for '{}'", username);
+            });
+        } catch (RuntimeException ex) {
+            // A failure here must never bubble back into the authentication flow and turn
+            // a valid login into an HTTP 500.
+            log.debug("Failed to stamp lastLoginAt (ignored)", ex);
         }
-        final String username = authentication.getName();
-        if (username == null || username.isBlank() || "anonymousUser".equals(username)) {
-            return;
-        }
-        userRepository.findByUsername(username).ifPresent(user -> {
-            user.setLastLoginAt(Instant.now());
-            userRepository.save(user);
-            log.debug("Stamped lastLoginAt for '{}'", username);
-        });
     }
 }

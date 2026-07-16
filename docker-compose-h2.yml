@@ -3,11 +3,18 @@ services:
   allure-server:
     # For local debug #
     # build: .
-    image: kochetkovma/allure-server:2.13.6
+    image: kochetkovma/allure-server:2.13.9
     ports:
       - 8080:8080
     volumes:
       - ./tmp/allure:/allure/:rw
-    environment:
-      SPRING_PROFILES_ACTIVE: oauth
-      # BASIC_AUTH_ENABLE: true
+    # Default H2 quickstart: no profile needed. Authentication is DB-backed -
+    # a bootstrap admin (admin/admin) is seeded on first start and must be changed at login.
+    #
+    # Optional: enable Google OAuth2 login by activating the 'oauth' profile. Both
+    # credentials are REQUIRED when the profile is on (see application-oauth.yaml),
+    # otherwise the application context fails to start. Uncomment the block below:
+    # environment:
+    #   SPRING_PROFILES_ACTIVE: oauth
+    #   OAUTH2_GOOGLE_ALLURE_CLIENT_ID: <your-google-client-id>
+    #   OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET: <your-google-client-secret>

@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -13,10 +16,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.server.ResponseStatusException;
 import ru.iopump.qa.allure.entity.ReportEntity;
-import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.model.ReportGenerateRequest;
 import ru.iopump.qa.allure.model.ReportSpec;
-import ru.iopump.qa.allure.repo.JpaReportRepository;
+import ru.iopump.qa.allure.properties.AllureProperties;
+import ru.iopump.qa.allure.security.CurrentUserProvider;
+import ru.iopump.qa.allure.service.ApiTokenService;
 import ru.iopump.qa.allure.service.JpaReportService;
 import ru.iopump.qa.allure.service.ResultService;
 
@@ -31,8 +35,18 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+/**
+ * {@code @WebMvcTest} slice for {@link AllureReportController}. Security is excluded
+ * (endpoint authorization is covered by the security integration suite); the RFC 7807
+ * {@link GlobalExceptionHandler} is imported explicitly so ProblemDetail translation
+ * still applies inside the narrowed slice.
+ */
+@WebMvcTest(
+    controllers = AllureReportController.class,
+    excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
+@Import(GlobalExceptionHandler.class)
+@EnableConfigurationProperties(AllureProperties.class)
 class AllureReportControllerTest {
 
     private static final String EXISTING_UUID = "a1913f97-a5b5-469b-8459-d7dd66ef55bc";
@@ -51,11 +65,17 @@ class AllureReportControllerTest {
     @MockitoBean
     private ResultService resultService;
 
+    // ApiTokenAuthenticationFilter is a @Component servlet Filter, auto-detected by the
+    // @WebMvcTest slice scan even with Boot's security auto-configuration excluded; its
+    // ApiTokenService constructor dependency must still be satisfiable.
     @MockitoBean
-    private JpaReportRepository jpaReportRepository;
+    private ApiTokenService apiTokenService;
 
+    // GlobalModelAdvice is a @ControllerAdvice scanned application-wide by @WebMvcTest
+    // (its basePackageClasses scoping only limits where it applies at runtime, not
+    // whether it is instantiated); its CurrentUserProvider dependency must be mockable.
     @MockitoBean
-    private AllureReportGenerator allureReportGenerator;
+    private CurrentUserProvider currentUserProvider;
 
     // ─────────────────────────────────── A1 tests ──────────────────────────────────────
 
