@@ -76,7 +76,5 @@ CA.pem
 # Playwright MCP scratch artifacts
 /.playwright-mcp/
 
-# brewcode:semble -- keep state.json (setup config), drop per-session runtime noise
-.claude/semble/telemetry.jsonl
-.claude/semble/reminder.json
-.claude/semble/.prefetch-ts
+# brewcode:semble -- index and setup state are per-machine
+.claude/semble/
