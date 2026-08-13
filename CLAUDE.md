@@ -92,4 +92,5 @@ Already wired in **local** repo config (survives any global `gh auth switch`):
 
 - Verify: `printf 'protocol=https\nhost=github.com\n\n' \| git credential fill` -> `username=kochetkov-ma`.
 - If push 403s with `mkochetkov_tfin`: the local helper was lost -- re-add it, do NOT `gh auth switch` as a workaround.
-- Commit authorship must show `kochetkov-ma <apmatypa88@gmail.com>`. Earlier `mkochetkov <mkochetkov@tfin.com>` commits predate this rule.
+- Commit authorship must show `kochetkov-ma <apmatypa88@gmail.com>`. History on `feature/phase-1-vaadin-removal` was rewritten to purge the last two `mkochetkov <mkochetkov@tfin.com>` commits -- no `tfin` authorship remains on any live ref.
+- `gh` CLI: the globally active account may be `mkochetkov_tfin`, and `gh` has no per-repo account setting. `git` is safe (local helper pins the account), but prefix every `gh` call here: `GH_TOKEN=$(gh auth token --user kochetkov-ma) gh <cmd>`.
