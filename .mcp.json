@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "grepai": {
-      "command": "grepai",
-      "args": ["mcp-serve"],
-      "cwd": "/Users/mkochetkov/IdeaProjects/allure-server"
-    }
-  }
-}

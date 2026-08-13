@@ -93,7 +93,3 @@ Already wired in **local** repo config (survives any global `gh auth switch`):
 - Verify: `printf 'protocol=https\nhost=github.com\n\n' \| git credential fill` -> `username=kochetkov-ma`.
 - If push 403s with `mkochetkov_tfin`: the local helper was lost -- re-add it, do NOT `gh auth switch` as a workaround.
 - Commit authorship must show `kochetkov-ma <apmatypa88@gmail.com>`. Earlier `mkochetkov <mkochetkov@tfin.com>` commits predate this rule.
-
-## Code Search
-
-> **CRITICAL:** Use `grepai_search` FIRST for code exploration.
