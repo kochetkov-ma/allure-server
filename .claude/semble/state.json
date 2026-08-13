@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "profile": "code",
+  "projectRoot": "/Users/mkochetkov/IdeaProjects/allure-server",
+  "approvedVersion": "0.5.4",
+  "version": "5.6.0",
+  "generated_by": "brewcode:semble-setup",
+  "completed": [
+    "mcp",
+    "warm",
+    "smoke",
+    "prereq",
+    "permissions",
+    "guidance",
+    "agents"
+  ],
+  "phase": "ready",
+  "enabled": true,
+  "scope": "user",
+  "cacheRoot": "/Users/mkochetkov/Library/Caches/semble-code",
+  "repoHash": "6ba7fd5da2818fdf821d5e77b669a1273c38e99fe13b7129552c8c8482fb0fe0",
+  "notes": [],
+  "resumePrompt": "/brewcode:semble-setup resume",
+  "last_updated": "2026-08-13",
+  "last_verified_at": "2026-08-13"
+}
