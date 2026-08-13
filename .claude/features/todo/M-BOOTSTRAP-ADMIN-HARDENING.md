@@ -9,6 +9,7 @@ updated: 2026-07-16
 tags: [security, auth]
 links:
   - .claude/reports/20260716-153949_deep-review/
+spec: pending
 ---
 
 ## Context

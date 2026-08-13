@@ -9,6 +9,7 @@ updated: 2026-06-11
 tags: [security, config, tech-debt]
 links:
   - src/main/resources/application.yaml
+spec: pending
 ---
 
 ## Context

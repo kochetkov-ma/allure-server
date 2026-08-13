@@ -1,0 +1,137 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-deadline-guard.mjs"
+            ],
+            "timeout": 5
+          }
+        ],
+        "matcher": ".*"
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-router.mjs"
+            ],
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-reminder.mjs"
+            ],
+            "timeout": 5
+          }
+        ],
+        "matcher": "Bash|Grep"
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-deadline-cleanup.mjs"
+            ],
+            "timeout": 3
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-session.mjs"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-prefetch.mjs"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-stats.mjs"
+            ],
+            "timeout": 5
+          }
+        ],
+        "matcher": "mcp__semble_code__search|mcp__semble_code__find_related|Bash|Grep|Glob|Read"
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-stats.mjs"
+            ],
+            "timeout": 5
+          }
+        ],
+        "matcher": "mcp__semble_code__search|mcp__semble_code__find_related|Bash|Grep|Glob|Read"
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-subagent.mjs"
+            ],
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "mcp__semble_code__search",
+      "mcp__semble_code__find_related"
+    ]
+  }
+}

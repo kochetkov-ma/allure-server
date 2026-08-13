@@ -63,7 +63,7 @@ Java 25 + Gradle wrapper required. Tailwind binary auto-downloaded by `tailwindD
 
 ## 4. Team
 
-Team `default` | roster: `.claude/teams/default/team.md` | trace: `.claude/teams/default/trace.jsonl` | manage: `/brewcode:teams status default`
+Team `default` | 11 domain agents + `intent-guard` (review-only) | roster: `.claude/teams/default/team.md` | trace: `.claude/teams/default/trace.jsonl` via `.claude/teams/default/trace-ops.sh` | manage: `/brewcode:teams-setup [status|upgrade|enable|disable|uninstall|purge] default`
 
 | Agent | Domain |
 |-------|--------|
@@ -73,11 +73,12 @@ Team `default` | roster: `.claude/teams/default/team.md` | trace: `.claude/teams
 | result-service | `service/ResultService`, path utils -- upload intake, ZIP extraction, filesystem ops |
 | generation-pipeline | `helper/AllureReportGenerator` + plugin SPI -- Allure core, plugin lifecycle |
 | plugin-youtrack | `helper/plugin/YouTrackPlugin`, `api/youtrack/` -- TMS, Feign, OpenAPI codegen |
-| vaadin-gui | LEGACY -- Vaadin removed; pending refresh for the JTE+HTMX web UI (`web/`, `src/main/jte/`) |
+| web-ui | `web/`, `src/main/jte/`, `src/main/frontend/` -- JTE templates, HTMX, Alpine.js, Tailwind |
 | config-security | `properties/`, `config/`, `security/` -- CP, `SecurityFilterChain`, OAuth2/DB auth |
 | persistence-jpa | `entity/`, `repo/`, `migration.sql` -- JPA schema, derived queries, datasource |
 | build-ci-qa | `build.gradle`, `.github/workflows/`, `Dockerfile`, test infra |
 | task-tracker | `.claude/features/**` -- board, task lifecycle, backlog grooming |
+| intent-guard | -- review-only anti-drift check (asked vs delivered); explicit invocation, never an owner |
 
 ## 5. Git identity (kochetkov-ma ONLY)
 
@@ -94,3 +95,12 @@ Already wired in **local** repo config (survives any global `gh auth switch`):
 - If push 403s with `mkochetkov_tfin`: the local helper was lost -- re-add it, do NOT `gh auth switch` as a workaround.
 - Commit authorship must show `kochetkov-ma <apmatypa88@gmail.com>`. History on `feature/phase-1-vaadin-removal` was rewritten to purge the last two `mkochetkov <mkochetkov@tfin.com>` commits -- no `tfin` authorship remains on any live ref.
 - `gh` CLI: the globally active account may be `mkochetkov_tfin`, and `gh` has no per-repo account setting. `git` is safe (local helper pins the account), but prefix every `gh` call here: `GH_TOKEN=$(gh auth token --user kochetkov-ma) gh <cmd>`.
+
+<!-- BEGIN brewcode:semble -->
+## Code Search
+
+> Semantic search first: ONE `mcp__semble_code__search` with `repo` = absolute project root,
+> `top_k=5`, `max_snippet_lines=10` — then open the hit at `start_line`.
+> `rg`/Grep stays for exact identifiers, regexes, paths and exhaustive enumeration.
+> Not indexed: `.json`/`.csv`, `.mdx`/`.txt`. Details: `.claude/rules/semble-first.md`.
+<!-- END brewcode:semble -->

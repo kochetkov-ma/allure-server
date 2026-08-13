@@ -62,7 +62,6 @@ CA.pem
 
 # Claude Code runtime noise (re-ignore inside the un-ignored .claude/)
 .claude/logs/
-.claude/brewtools/
 .claude/brewtools.log
 .claude/settings.local.json
 .claude/reports/
@@ -76,3 +75,6 @@ CA.pem
 
 # Playwright MCP scratch artifacts
 /.playwright-mcp/
+
+# brewcode:semble
+.claude/semble/

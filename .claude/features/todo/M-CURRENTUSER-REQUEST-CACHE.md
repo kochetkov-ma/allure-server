@@ -9,6 +9,7 @@ updated: 2026-07-16
 tags: [performance, web]
 links:
   - .claude/reports/20260716-153949_deep-review/
+spec: none
 ---
 
 ## Context

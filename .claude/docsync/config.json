@@ -1,0 +1,1 @@
+{ "version": "5.6.0", "content_version": "5.6.0", "generated_by": "brewdoc:docsync-setup", "last_updated": "2026-08-13", "enabled": true, "threshold_days": 7, "exclude": ["node_modules/**","**/CHANGELOG.md","dist/**","build/**","vendor/**",".claude/plugins/**"] }

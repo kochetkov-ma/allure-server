@@ -9,6 +9,7 @@ updated: 2026-06-11
 tags: [db, tech-debt, critical]
 links:
   - .claude/convention/project-architecture.md
+spec: pending
 ---
 
 ## Context

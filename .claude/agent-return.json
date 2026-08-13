@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "passTokens": 1000,
+  "fileTokens": 2500,
+  "version": "5.6.0",
+  "generated_by": "brewtools:agent-return-setup",
+  "last_updated": "2026-08-13"
+}
