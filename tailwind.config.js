@@ -15,7 +15,6 @@ module.exports = {
         'border-subtle': 'rgb(var(--border-subtle) / <alpha-value>)',
         primary: 'rgb(var(--primary) / <alpha-value>)',
         'primary-hi': 'rgb(var(--primary-hi) / <alpha-value>)',
-        'on-primary': 'rgb(var(--on-primary) / <alpha-value>)',
         text: 'rgb(var(--text) / <alpha-value>)',
         'text-muted': 'rgb(var(--text-muted) / <alpha-value>)',
         success: 'rgb(var(--success) / <alpha-value>)',

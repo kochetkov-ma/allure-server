@@ -7,8 +7,8 @@
 ## Overall status
 
 - **Release line:** last tag `v2.13.9`; branch `feature/phase-1-vaadin-removal` (not yet merged to `master`) carries the unreleased modernization wave (Vaadin UI replaced with htmx + JTE + Tailwind; Java 25 / Spring Boot 3.4 / Gradle 9, exact pins in `../convention/versions.md`; CI publishes branch images to GHCR, tags to Docker Hub + GHCR).
-- **Counts:** backlog 0 | todo 12 | progress 0 | closed 3.
-- **Current focus:** M-DEEP-REVIEW-COMPAT is CLOSED -- deep anti-regression review of `feature/phase-1-vaadin-removal` vs `master v2.13.9` done, `./gradlew clean build` GREEN (251 tests). Branch is ready to commit, then merge to `master`. Deferred hardening queued: M-BOOTSTRAP-ADMIN-HARDENING + M-ENV-SECRETS (secret/default hygiene), M-FLYWAY-MIGRATIONS, M-SETTINGS-CLUSTER-COHERENCE, M-UI-LOGIN-FORM, M-CURRENTUSER-REQUEST-CACHE.
+- **Counts:** backlog 0 | todo 12 | progress 0 | closed 4.
+- **Current focus:** M-DEEP-REVIEW-COMPAT is CLOSED -- deep anti-regression review of `feature/phase-1-vaadin-removal` vs `master v2.13.9` done, `./gradlew clean build` GREEN (251 tests). Branch additionally carries the uncommitted M-UI-BRAND-POLISH visual batch (canonical BrewPage brand + light palette + wrap/charset fixes) on top of the pushed deep-review commits. Branch is ready to commit, then merge to `master`. Deferred hardening queued: M-BOOTSTRAP-ADMIN-HARDENING + M-ENV-SECRETS (secret/default hygiene), M-FLYWAY-MIGRATIONS, M-SETTINGS-CLUSTER-COHERENCE, M-UI-LOGIN-FORM, M-CURRENTUSER-REQUEST-CACHE.
 
 ## Progress (WIP)
 
@@ -41,6 +41,7 @@
 
 | id | title | priority | owner | file |
 |----|-------|----------|-------|------|
+| M-UI-BRAND-POLISH | Canonical BrewPage brand rollout + light palette + UI wrap/charset fixes | P2 | manager | [closed/M-UI-BRAND-POLISH.md](closed/M-UI-BRAND-POLISH.md) |
 | M-DEEP-REVIEW-COMPAT | Deep anti-regression review of feature/phase-1-vaadin-removal vs master + fix waves | P1 | manager | [closed/M-DEEP-REVIEW-COMPAT.md](closed/M-DEEP-REVIEW-COMPAT.md) |
 | M-MEMORY-SYNC-SKILL | Port memory-sync skill from finagra-site and adapt to allure-server | P2 | build-ci-qa | [closed/M-MEMORY-SYNC-SKILL.md](closed/M-MEMORY-SYNC-SKILL.md) |
 | M-QUORUM-REVIEW | Multi-agent quorum code review + iterative fixes of feature/phase-1-vaadin-removal working tree | P1 | manager | [closed/M-QUORUM-REVIEW.md](closed/M-QUORUM-REVIEW.md) |

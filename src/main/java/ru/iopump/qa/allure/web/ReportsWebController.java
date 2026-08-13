@@ -175,7 +175,10 @@ public class ReportsWebController {
     private List<ReportRow> loadRows() {
         final Collection<ReportEntity> entities = reportService.getAll();
         final String baseUrl = url(allureProperties);
+        // dir() = static content root (allure/reports/) for the uuid URL;
+        // path() = ServeRedirectHelper prefix (reports/) for the latest-redirect URL.
         final String reportsDir = allureProperties.reports().dir();
+        final String reportsPath = allureProperties.reports().path();
 
         final Comparator<ReportEntity> byCreatedDesc =
             Comparator.comparing(ReportEntity::getCreatedDateTime, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
@@ -194,7 +197,7 @@ public class ReportsWebController {
                 rawBuildUrl,
                 buildLabel(rawBuildUrl),
                 e.isActive(),
-                e.generateLatestUrl(baseUrl, reportsDir)
+                e.generateLatestUrl(baseUrl, reportsPath)
             );
         }).toList();
     }

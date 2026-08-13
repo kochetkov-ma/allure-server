@@ -2,6 +2,8 @@ package ru.iopump.qa.allure.security;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -82,6 +84,20 @@ class LegacyBasicAuthIntegrationTest {
         // THEN — not 401: the shared always-public matcher whitelists /icon.svg in BOTH modes
         // (served from classpath:/static, so a successful read is 200)
         mockMvc.perform(get("/icon.svg"))
+            .andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/favicon.ico", "/apple-touch-icon.png", "/icon-192.png"})
+    @DisplayName("should allow anonymous GET of a favicon-set asset in legacy mode (not gated)")
+    void faviconSet_anonymousAllowed_inLegacyMode(String assetPath) throws Exception {
+        // GIVEN — legacy basic.auth.enable=true; the favicon set (ico + touch/pwa pngs) is
+        // public branding referenced by layout/main.jte and the Swagger branding filter
+
+        // WHEN — anonymous GET of the favicon asset
+        // THEN — not 401: the shared always-public matcher whitelists it in BOTH modes
+        // (served from classpath:/static, so a successful read is 200)
+        mockMvc.perform(get(assetPath))
             .andExpect(status().isOk());
     }
 

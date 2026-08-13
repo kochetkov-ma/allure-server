@@ -21,6 +21,8 @@ import ru.iopump.qa.allure.security.CurrentUserProvider;
 import ru.iopump.qa.allure.service.ApiTokenService;
 import ru.iopump.qa.allure.service.JpaReportService;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -43,6 +46,7 @@ class ReportsWebControllerTest {
 
     private static final String VALID_UUID = "a1913f97-a5b5-469b-8459-d7dd66ef55bc";
     private static final String REDIRECT_REPORTS = "/app/reports";
+    private static final String REPORT_PATH = "e2e/test";
     private static final String FLASH_KEY = "flash";
     private static final String FLASH_LEVEL_KEY = "level";
     private static final String FLASH_MESSAGE_KEY = "message";
@@ -60,6 +64,37 @@ class ReportsWebControllerTest {
 
     @MockitoBean
     private CurrentUserProvider currentUserProvider;
+
+    // ─────────────────────────── index ────────────────────────────────────────
+
+    @Test
+    @DisplayName("should render latest link with redirect path prefix (not static dir) when GET /app/reports")
+    void latestLinkUsesRedirectPathPrefix() throws Exception {
+        // GIVEN — one active report under a nested path with a persisted size
+        ReportEntity entity = ReportEntity.builder()
+            .uuid(UUID.fromString(VALID_UUID))
+            .path(REPORT_PATH)
+            .createdDateTime(LocalDateTime.now())
+            .active(true)
+            .size(10L)
+            .build();
+        when(reportService.getAll()).thenReturn(List.of(entity));
+
+        // WHEN — rendering the reports page
+        String html = mockMvc.perform(get(REDIRECT_REPORTS))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+
+        // THEN — the latest link targets the ServeRedirectHelper prefix (/reports/<path>),
+        // NOT the static content dir (/allure/reports/<path>) which would 404
+        assertThat(html)
+            .as("latest link uses the redirect prefix reports/<path>")
+            .contains("href=\"http://localhost/reports/" + REPORT_PATH + "\"")
+            .doesNotContain("href=\"http://localhost/allure/reports/" + REPORT_PATH + "\"");
+        assertThat(html)
+            .as("report link uses the static dir allure/reports/<uuid>/")
+            .contains("http://localhost/allure/reports/" + VALID_UUID + "/");
+    }
 
     // ─────────────────────────── upload ───────────────────────────────────────
 
