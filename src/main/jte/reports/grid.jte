@@ -33,12 +33,12 @@
                class="h-4 w-4 rounded border-border bg-surface text-primary accent-primary focus:ring-primary">
         @endif
       </td>
-      <td class="px-3 py-3 align-top break-all text-left">
+      <td class="px-3 py-3 align-top text-left">
         <div class="flex items-start gap-2">
-          <span class="font-medium text-text">${r.path()}</span>
+          <span class="min-w-0 break-words font-medium text-text">${r.path()}</span>
           @template.partials.copy_button(value = r.path())
           @if(r.active())
-            <span class="inline-flex items-center rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success"
+            <span class="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success"
                   title="Latest report for this path">Active</span>
           @endif
         </div>

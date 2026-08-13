@@ -150,16 +150,19 @@ public class SecurityConfiguration {
             .addFilterAfter(new ApiTempPasswordGuardFilter(userRepository), AuthorizationFilter.class)
             .authorizeHttpRequests(it -> {
                 // Static assets are always public so the login page can render even in
-                // legacy lock-everything mode. /swagger/** and /icon.svg are Swagger-UI and
-                // app branding assets (referenced by layout/main.jte and SwaggerBrandingFilter)
-                // and must load pre-auth in BOTH modes — they are public by default already,
-                // but in legacy mode they would otherwise be gated to authenticated().
+                // legacy lock-everything mode. /swagger/** and the favicon set (ico/svg/pngs)
+                // are Swagger-UI and app branding assets (referenced by layout/main.jte and
+                // SwaggerBrandingFilter) and must load pre-auth in BOTH modes — they are
+                // public by default already, but in legacy mode they would otherwise be
+                // gated to authenticated() and browsers would render a blank favicon.
                 it.requestMatchers(WebConfiguration.CSS_PATH_PATTERN,
                         WebConfiguration.JS_PATH_PATTERN,
                         WebConfiguration.IMG_PATH_PATTERN,
                         "/swagger/**",
                         "/icon.svg",
-                        "/favicon.ico").permitAll();
+                        "/favicon.ico",
+                        "/apple-touch-icon.png",
+                        "/icon-192.png").permitAll();
                 // Actuator liveness/readiness: /actuator/health (and its /liveness, /readiness
                 // groups) must be reachable pre-auth in BOTH modes so the Docker HEALTHCHECK
                 // works even under legacy 'basic.auth.enable=true' (where anyRequest() would

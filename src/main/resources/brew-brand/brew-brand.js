@@ -9,10 +9,13 @@
     a.href = HOME_URL;
     a.setAttribute('aria-label', 'Brew.QA home');
 
-    var badge = document.createElement('span');
+    // Badge = canonical mark image. BrandingService copies favicon.svg into
+    // every report root, so the relative URL resolves per-report.
+    var badge = document.createElement('img');
     badge.className = 'brew-brand-badge';
     badge.setAttribute('aria-hidden', 'true');
-    badge.textContent = 'B';
+    badge.src = 'favicon.svg';
+    badge.alt = '';
 
     var word = document.createElement('span');
     word.className = 'brew-brand-word';

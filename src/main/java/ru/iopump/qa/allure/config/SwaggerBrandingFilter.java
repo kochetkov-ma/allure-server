@@ -33,6 +33,7 @@ public final class SwaggerBrandingFilter extends OncePerRequestFilter {
 
     /** {@code %s} is substituted with the request context path (empty for a root deployment). */
     private static final String HEAD_INJECT_TEMPLATE = """
+            <link rel="icon" href="%1$s/favicon.ico" sizes="48x48">
             <link rel="icon" href="%1$s/icon.svg">
             <link rel="stylesheet" type="text/css" href="%1$s/swagger/theme.css" />
             <script>(function(){try{var s=localStorage.getItem('allure-server-theme');var p=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';document.documentElement.dataset.theme=s||p;}catch(e){document.documentElement.dataset.theme='dark';}})();</script>
@@ -74,9 +75,11 @@ public final class SwaggerBrandingFilter extends OncePerRequestFilter {
         html = html.replaceFirst("(?i)</head>", Matcher.quoteReplacement(headInject));
         html = html.replaceFirst("(?i)</body>", Matcher.quoteReplacement(bodyInject));
 
-        final byte[] out = html.getBytes(charset);
-        response.setContentType(contentType);
-        response.setCharacterEncoding(charset.name());
+        // Always emit UTF-8: the upstream header may say ISO-8859-1, which would override the
+        // page's <meta charset> and mojibake non-ASCII strings set by the injected brand.js.
+        final byte[] out = html.getBytes(StandardCharsets.UTF_8);
+        response.setContentType(MediaType.TEXT_HTML_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentLength(out.length);
         response.getOutputStream().write(out);
         response.flushBuffer();

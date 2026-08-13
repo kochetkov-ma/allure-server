@@ -15,7 +15,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>${title} — Brew Reporting</title>
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
     <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="stylesheet" href="/css/app.css">
     @if(csrf != null)
     <meta name="_csrf" content="${csrf.getToken()}">
@@ -44,8 +47,8 @@
     <header class="sticky top-0 z-40 border-b border-border-subtle bg-bg-elevated/95 backdrop-blur">
       <div class="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex gap-4 items-center">
         <a href="/" class="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary rounded">
-          <span aria-hidden="true"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary font-bold text-on-primary">B</span>
+          <%-- Canonical theme-invariant mark: the SVG carries its own gold, glyph and radius. --%>
+          <img src="/icon.svg" alt="" aria-hidden="true" class="h-9 w-9">
           <span class="font-semibold text-base tracking-tight text-text">Brew<span class="text-primary">.</span><span class="text-success">QA</span></span>
         </a>
         <span class="mx-1 h-5 w-px bg-border-subtle" aria-hidden="true"></span>

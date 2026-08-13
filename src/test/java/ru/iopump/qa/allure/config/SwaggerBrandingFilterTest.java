@@ -26,6 +26,7 @@ class SwaggerBrandingFilterTest {
         <body><div id="swagger-ui"></div></body></html>
         """;
 
+    private static final String EXPECTED_HEAD_FAVICON_ICO = "<link rel=\"icon\" href=\"/favicon.ico\" sizes=\"48x48\">";
     private static final String EXPECTED_HEAD_ICON = "<link rel=\"icon\" href=\"/icon.svg\">";
     private static final String EXPECTED_HEAD_THEME = "href=\"/swagger/theme.css\"";
     private static final String EXPECTED_BODY_SCRIPT = "<script src=\"/swagger/brand.js\" defer></script>";
@@ -63,7 +64,8 @@ class SwaggerBrandingFilterTest {
         // THEN the branding head and body markup are present in the rewritten HTML
         String out = response.getContentAsString();
         assertThat(out)
-            .as("head branding (icon, theme css, theme bootstrap) injected before </head>")
+            .as("head branding (favicon.ico, svg icon, theme css, theme bootstrap) injected before </head>")
+            .contains(EXPECTED_HEAD_FAVICON_ICO)
             .contains(EXPECTED_HEAD_ICON)
             .contains(EXPECTED_HEAD_THEME)
             .contains("allure-server-theme");
@@ -95,8 +97,8 @@ class SwaggerBrandingFilterTest {
     }
 
     @Test
-    @DisplayName("should preserve a non-UTF-8 charset when rewriting the body")
-    void should_preserve_non_utf8_charset() throws ServletException, IOException {
+    @DisplayName("should re-encode a non-UTF-8 upstream body as UTF-8 without mojibake")
+    void should_reencode_non_utf8_body_as_utf8() throws ServletException, IOException {
         // GIVEN a swagger response declared as ISO-8859-1 containing a non-ASCII character
         String htmlWithAccent = SWAGGER_HTML.replace("Swagger UI", "Swägger UI");
         var request = new MockHttpServletRequest("GET", "/swagger-ui/index.html");
@@ -107,16 +109,17 @@ class SwaggerBrandingFilterTest {
         // WHEN the filter rewrites the body
         filter.doFilterInternal(request, response, chain);
 
-        // THEN the bytes round-trip through ISO-8859-1 with the accent intact (no mojibake) and branding present
+        // THEN the body is decoded with the upstream charset but always re-emitted as UTF-8
+        //   (the upstream ISO-8859-1 header must not survive and mojibake the injected brand.js strings)
         byte[] bytes = response.getContentAsByteArray();
-        String decoded = new String(bytes, StandardCharsets.ISO_8859_1);
+        String decoded = new String(bytes, StandardCharsets.UTF_8);
         assertThat(decoded)
-            .as("non-ASCII title preserved under ISO-8859-1 and branding injected")
+            .as("non-ASCII title re-encoded to UTF-8 without mojibake and branding injected")
             .contains("Swägger UI")
             .contains(EXPECTED_HEAD_ICON);
         assertThat(response.getCharacterEncoding())
-            .as("response character encoding kept as ISO-8859-1")
-            .isEqualTo(StandardCharsets.ISO_8859_1.name());
+            .as("response character encoding forced to UTF-8")
+            .isEqualTo(StandardCharsets.UTF_8.name());
     }
 
     @Test
@@ -135,12 +138,14 @@ class SwaggerBrandingFilterTest {
         // THEN every injected asset URL is prefixed with the context path so it resolves under /server
         String out = response.getContentAsString();
         assertThat(out)
-            .as("favicon, theme css and brand js URLs prefixed with the context path")
+            .as("favicon set, theme css and brand js URLs prefixed with the context path")
+            .contains("href=\"/server/favicon.ico\"")
             .contains("href=\"/server/icon.svg\"")
             .contains("href=\"/server/swagger/theme.css\"")
             .contains("<script src=\"/server/swagger/brand.js\" defer></script>");
         assertThat(out)
             .as("no root-absolute (context-less) asset URLs remain")
+            .doesNotContain("href=\"/favicon.ico\"")
             .doesNotContain("href=\"/icon.svg\"")
             .doesNotContain("src=\"/swagger/brand.js\"");
     }
