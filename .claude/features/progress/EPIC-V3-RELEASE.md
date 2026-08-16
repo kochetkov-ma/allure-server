@@ -6,7 +6,7 @@ priority: P1
 owner: manager
 created: 2026-08-16
 updated: 2026-08-16
-tags: [release, vaadin-removal, oss-hygiene]
+tags: [release, vaadin-removal, oss-hygiene, shipped]
 links: []
 spec: pending               # none | pending | full | design-only (section 10; never blank)
 ---
@@ -27,17 +27,17 @@ breakdown owned by the manager's TaskCreate graph, not duplicated here.
 | id | block | in/out | status |
 |----|-------|--------|--------|
 | S1 | Wave A -- pre-merge branch hygiene (commit outstanding working tree, final CI green) | in | done |
-| S2 | Wave B -- merge feature/phase-1-vaadin-removal into master | in | not-started |
+| S2 | Wave B -- merge feature/phase-1-vaadin-removal into master | in | done |
 | S3 | Wave C -- v2.x REST compatibility verification (contract/regression pass) | in | done |
 | S4 | Wave D -- v3.0.0 versioning, changelog, tag, release build | in | in-progress |
 | S5 | Wave E -- OSS governance docs (SECURITY.md, CONTRIBUTING.md, CODEOWNERS, issue/PR templates) | in | done |
 | S6 | Wave F -- supply-chain hardening (SBOM, signed images, dependency scanning in CI) | in | done |
 | S7 | Wave G -- docker-compose examples verified working + README actualized | in | done |
-| S8 | Wave H -- final board sync (task H3) and release retrospective | in | in-progress |
+| S8 | Wave H -- final board sync (task H3) and release retrospective | in | done |
 
 ## Acceptance
-- [ ] `feature/phase-1-vaadin-removal` merged into `master` -- gated on maintainer confirmation (PR + squash merge)
-- [ ] `v3.0.0` tagged and released -- 2.x REST endpoint compatibility already verified (`docs/COMPATIBILITY.md`, e2e script 30/30); tag + publish still gated on maintainer confirmation
+- [x] `feature/phase-1-vaadin-removal` merged into `master` -- PR #102 squash merged as `a45cd8a`
+- [ ] `v3.0.0` tagged and released -- tag pushed, release workflow completed; published-artifact verification is running separately, result still pending
 - [x] SECURITY.md, CONTRIBUTING.md, CODEOWNERS, issue/PR templates present
 - [x] SBOM generated, images signed, dependency scanning wired into CI
 - [x] docker-compose examples (Postgres + H2) verified working; README actualized
@@ -81,6 +81,41 @@ Open items carried forward (not lost):
 - `allure.support-old-format` is set in `application.yaml:104` but `AllureProperties` has no
   matching constructor parameter -- no env var can reach it. Deliberately omitted from the
   README until wired up or removed. Tracked as `todo/M-CFG-SUPPORT-OLD-FORMAT.md`.
-- Open question for the maintainer (no task filed, needs a decision not code): the repo's
-  `.github/ISSUE_TEMPLATE/config.yml` links to GitHub Discussions, which is currently disabled
-  on the repo -- that link 404s until Discussions is enabled (or the link is removed).
+- Discussions link resolved this pass: GitHub Discussions has been enabled on the repo, so the
+  `.github/ISSUE_TEMPLATE/config.yml` link no longer 404s.
+
+2026-08-16 closing pass -- v3.0.0 shipped:
+Review phase 2 (four independent verifiers re-checked every phase-1 finding) refuted five
+findings, including a claimed cosign failure-masking bug that was wrong about shell semantics.
+Two confirmed findings were fixed: a sixth breaking change missing from
+`docs/COMPATIBILITY.md` (was marked KEPT -- 2.x clients sending HTTP Basic `admin`/`admin` to
+`/api/**` now get 403, any other wrong password gets 401, no-credentials unaffected), and a
+real security defect new in 3.0.0 -- report-content authorization matched a hardcoded
+`/allure/**` while reports are served from the configurable `allure.reports.dir`, so
+customizing that path silently disabled access control even with `require-api-auth=true`;
+fixed with a regression test. Final verification: 262 tests green, 30/30 e2e, both directions
+of the matcher fix proven with curl, actionlint clean, image healthy at 3.0.0.
+
+PR #102 opened, all four checks green including the repo's first CodeQL run, squash merged to
+`master` as `a45cd8a`. A merge conflict with `master` (maintainer's LinkedIn vanity-URL commit
+touching a Vaadin file this branch deletes) was resolved by keeping the deletion and carrying
+the link forward to the About page. `origin/feature/tms` deleted.
+
+Repo brought to OSS-program standard: description rewritten, `vaadin` topic dropped and seven
+accurate topics added, dead homepage cleared, private vulnerability reporting, secret
+scanning, push protection and Dependabot security updates all enabled, Discussions enabled,
+`security` and `kubernetes` labels created. Helm ingress defaults changed from the dead
+`iopump.ru` to `example.com` placeholders (`5256fbb`).
+
+`v3.0.0` tagged and pushed; release workflow completed successfully. Published-artifact
+verification is running separately and its result is still pending -- Wave D (S4) stays
+`in-progress` and Acceptance item 2 stays unchecked until that completes.
+
+Issue triage: 10 issues closed with cited comments, 7 labelled and left open. Remaining open
+issues: #18, #48, #72, #73, #94, #98, #100. Three carry real defects and were filed as tasks
+this pass: `todo/BUG-PLUGIN-SUMMARY-500.md` (#98, highest-value open bug),
+`todo/BUG-PLUGIN-SCREEN-DIFF.md` (#72), `todo/BUG-BUILD-IMAGE-CVE.md` (#100, blocked on the
+first `security-scan.yml` run).
+
+This umbrella stays `progress` rather than `closed`: the one gating item (published-artifact
+verification) is still running. Close it once that result lands.

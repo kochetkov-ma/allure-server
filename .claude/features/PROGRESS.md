@@ -16,7 +16,7 @@ last_updated: "2026-08-13"
 > provenance and is NOT touched on a rewrite.
 
 - **Updated:** 2026-08-16
-- **In flight:** EPIC-V3-RELEASE -- waves A/C/E/F/G done, wave D in progress (tag/publish pending), wave B (merge) not started
-- **Moved since last update:** EPIC-V3-RELEASE scope S1/S3/S5/S6/S7 -> done, S4/S8 -> in-progress (was all not-started, review flagged stale board); new todo/M-CFG-SUPPORT-OLD-FORMAT.md filed
-- **Blocked:** EPIC-V3-RELEASE spec still pending; wave B merge/tag/PR/issue-triage/repo-metadata gated on explicit maintainer confirmation
-- **Next:** run /task-spec EPIC-V3-RELEASE; maintainer to confirm PR+merge, tag v3.0.0, and decide M-CFG-SUPPORT-OLD-FORMAT + Discussions link
+- **In flight:** EPIC-V3-RELEASE -- waves A/B/C/E/F/G/H done; v3.0.0 tagged, merged to master (a45cd8a), released; only published-artifact verification (running separately) still open
+- **Moved since last update:** EPIC-V3-RELEASE scope S2 -> done (merge), S8 -> done (this board sync); 3 new bugs filed from issue triage: todo/BUG-PLUGIN-SUMMARY-500.md (#98, P1), todo/BUG-PLUGIN-SCREEN-DIFF.md (#72, P2), todo/BUG-BUILD-IMAGE-CVE.md (#100, P2)
+- **Blocked:** EPIC-V3-RELEASE spec still pending; published-artifact verification result pending (keeps epic in progress)
+- **Next:** run /task-spec EPIC-V3-RELEASE; confirm published-artifact verification then close EPIC-V3-RELEASE; pick up BUG-PLUGIN-SUMMARY-500 (highest-value open bug)
