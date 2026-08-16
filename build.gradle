@@ -8,7 +8,7 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.54.0'
 
     // https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
-    id 'org.springframework.boot' version '3.4.13'
+    id 'org.springframework.boot' version '3.5.16'
     id 'io.spring.dependency-management' version '1.1.7'
 
     id "org.openapi.generator" version '7.11.0'
@@ -19,21 +19,14 @@ plugins {
 apply from: './gradle/dependencies.gradle'
 apply from: './gradle/testing.gradle'
 
-// Spring Cloud release train (2024.0.x is the train that targets Spring Boot 3.4.x).
+// Spring Cloud release train (2025.0.x is the train that targets Spring Boot 3.5.x —
+// spring-cloud-starter-parent:2025.0.3 declares spring-boot-starter-parent 3.5.15).
 // Importing the BOM here means individual Spring Cloud starters in gradle/dependencies.gradle
 // MUST be declared without an explicit version.
-ext.springCloudVersion = '2024.0.3'
-// Byte Buddy 1.17.5+ is required for Java 25 class-file version 69 support.
-// Spring Boot 3.4.x BOM still pins 1.15.11 (supports Java 24 max), so we override.
-// See https://github.com/raphw/byte-buddy/releases (1.17.5 updated ASM to 9.8).
-ext.byteBuddyVersion = '1.17.5'
+ext.springCloudVersion = '2025.0.3'
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-    }
-    dependencies {
-        dependency "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
-        dependency "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}"
     }
 }
 

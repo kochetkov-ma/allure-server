@@ -39,7 +39,7 @@ docker run -d --name allure-server \
   -p 8080:8080 \
   -v "$PWD/allure-server-store:/allure:rw" \
   -v "$PWD/ext:/ext:rw" \
-  kochetkovma/allure-server:3.0.0
+  kochetkovma/allure-server:3.0.1
 ```
 
 The container runs as non-root uid/gid `1000`, so a host bind mount must be owned by `1000:1000`
@@ -122,7 +122,7 @@ first start.
 ```yaml
 services:
   allure-server:
-    image: kochetkovma/allure-server:3.0.0
+    image: kochetkovma/allure-server:3.0.1
     ports:
       - "8080:8080"
     volumes:
@@ -139,7 +139,7 @@ difference from the H2 file:
 ```yaml
 services:
   allure-server:
-    image: kochetkovma/allure-server:3.0.0
+    image: kochetkovma/allure-server:3.0.1
     ports:
       - "8080:8080"
     volumes:
