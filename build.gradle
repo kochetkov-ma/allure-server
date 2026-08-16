@@ -26,7 +26,7 @@ ext.springCloudVersion = '2024.0.3'
 // Byte Buddy 1.17.5+ is required for Java 25 class-file version 69 support.
 // Spring Boot 3.4.x BOM still pins 1.15.11 (supports Java 24 max), so we override.
 // See https://github.com/raphw/byte-buddy/releases (1.17.5 updated ASM to 9.8).
-ext.byteBuddyVersion = '1.17.5'
+ext.byteBuddyVersion = '1.18.11'
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
