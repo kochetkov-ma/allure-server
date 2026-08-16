@@ -101,7 +101,9 @@
                             <div class="text-text">
                                 Maksim Kochetkov
                                 (<a href="https://github.com/kochetkov-ma" target="_blank" rel="noopener"
-                                    class="text-primary hover:underline">@kochetkov-ma</a>)
+                                    class="text-primary hover:underline">@kochetkov-ma</a>,
+                                <a href="https://linkedin.com/in/kochetkov-ma" target="_blank" rel="noopener"
+                                   class="text-primary hover:underline">LinkedIn</a>)
                             </div>
                         </div>
                     </li>
