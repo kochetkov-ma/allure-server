@@ -62,17 +62,17 @@ ingress:
   ## If TLS is set to true, you must declare what secret will store the key/certificate for TLS
   tls:
     - hosts:
-        - "allure.iopump.ru"
-        - "iopump.ru"
+        - "allure-server.example.com"
+        - "example.com"
       ## Must be provided if Ingress is enabled
       ## Secrets must be added manually to the namespace
       ## MY secret
       secretName: letsencrypt-prod
   ## Ingress hostnames and service paths
   hosts:
-    - name: allure.iopump.ru
+    - name: allure-server.example.com
       path: /
-    - name: iopump.ru
+    - name: example.com
       path: /
   extraPaths: { }
 

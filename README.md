@@ -75,7 +75,7 @@ in every auth mode.
 The shipped `values.yaml` still carries the maintainer's own deployment as an example, so override
 these before installing anywhere else:
 
-- `ingress.hosts[].name` and `ingress.tls[].hosts` - `allure.iopump.ru` and `iopump.ru`.
+- `ingress.hosts[].name` and `ingress.tls[].hosts` - placeholders `allure-server.example.com` and `example.com`.
 - `ingress.tls[].secretName` and `ingress.annotations."cert-manager.io/cluster-issuer"` - `letsencrypt-prod`.
 - `env.SPRING_DATASOURCE_URL` - a Yandex Cloud PostgreSQL JDBC URL.
 - `pvc.spec.storageClassName` - `yc-network-hdd`.
