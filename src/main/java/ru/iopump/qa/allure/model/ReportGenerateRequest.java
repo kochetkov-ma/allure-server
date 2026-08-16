@@ -1,6 +1,8 @@
 package ru.iopump.qa.allure.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -20,13 +22,14 @@ public class ReportGenerateRequest {
     /**
      * Information about report. Will ba added to generated report.
      */
-    @NotNull
+    @NotNull(message = "reportSpec is required")
+    @Valid
     ReportSpec reportSpec;
     /**
      * Result UUID collection to generate new report.
      */
-    @NotEmpty
-    List<@Pattern(regexp = PathUtil.UUID_PATTERN) String> results;
+    @NotEmpty(message = "results must not be empty")
+    List<@NotBlank(message = "result UUID must not be blank") @Pattern(regexp = PathUtil.UUID_PATTERN, message = "result UUID must match UUID pattern") String> results;
     /**
      * Delete result after generation.
      */

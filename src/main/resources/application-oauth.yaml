@@ -18,3 +18,9 @@ spring:
 app:
   security:
     enable-oauth2: true
+    # Bootstrap default for the oauth profile: enabling OAuth2 keeps /api/** and /allure/**
+    # closed to anonymous callers (this is only the FIRST-START seed; the runtime value lives in
+    # the system-settings DB row and is flipped via /app/admin/settings). Without this, turning on
+    # oauth would still leave the API/report surface anonymously reachable (require-api-auth
+    # defaults to false in the base profile).
+    require-api-auth: true

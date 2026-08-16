@@ -1,0 +1,24 @@
+{
+  "enabled": true,
+  "level": "fast",
+  "genericTypes": [
+    "general-purpose",
+    "worker"
+  ],
+  "neverFlag": [
+    "Explore",
+    "Plan",
+    "statusline-setup",
+    "output-style-setup",
+    "brewcode:agent-creator",
+    "brewcode:skill-creator",
+    "brewcode:hook-creator",
+    "brewcode:bash-expert"
+  ],
+  "minScore": 3,
+  "margin": 2,
+  "version": "5.6.0",
+  "content_version": "5.6.0",
+  "generated_by": "brewtools:agent-router-setup",
+  "last_updated": "2026-08-13"
+}

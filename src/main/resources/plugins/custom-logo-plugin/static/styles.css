@@ -1,4 +1,7 @@
 .side-nav__brand {
   background: url('custom-logo.svg') no-repeat left center !important;
+  /* shorthand above resets background-size to auto: the 44px SVG would clip in
+     allure's ~40px brand box — contain keeps the full mark visible standalone */
+  background-size: contain !important;
   margin-left: 10px;
 }

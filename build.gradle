@@ -4,21 +4,66 @@ plugins {
     id 'java'
     id 'idea'
 
-    id 'io.freefair.lombok' version '8.6'
-    id 'com.github.ben-manes.versions' version '0.51.0'
+    id 'io.freefair.lombok' version '9.2.0'
+    id 'com.github.ben-manes.versions' version '0.54.0'
 
     // https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
-    id 'org.springframework.boot' version '3.3.1'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.4.13'
+    id 'io.spring.dependency-management' version '1.1.7'
 
-    id "com.vaadin" version "24.4.4"
-    id "org.openapi.generator" version '7.6.0'
+    id "org.openapi.generator" version '7.11.0'
+    id "gg.jte.gradle" version "3.2.3"
+
+    id 'org.cyclonedx.bom' version '3.4.1'
 }
 apply from: './gradle/dependencies.gradle'
 apply from: './gradle/testing.gradle'
 
+// Spring Cloud release train (2024.0.x is the train that targets Spring Boot 3.4.x).
+// Importing the BOM here means individual Spring Cloud starters in gradle/dependencies.gradle
+// MUST be declared without an explicit version.
+ext.springCloudVersion = '2024.0.3'
+// Byte Buddy 1.17.5+ is required for Java 25 class-file version 69 support.
+// Spring Boot 3.4.x BOM still pins 1.15.11 (supports Java 24 max), so we override.
+// See https://github.com/raphw/byte-buddy/releases (1.17.5 updated ASM to 9.8).
+ext.byteBuddyVersion = '1.17.5'
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+    dependencies {
+        dependency "net.bytebuddy:byte-buddy:${byteBuddyVersion}"
+        dependency "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}"
+    }
+}
+
 group = theGroup
-archivesBaseName = theArchivesBaseName
+base {
+    archivesName = theArchivesBaseName
+}
+
+// Version resolution order:
+//   1. -Pversion=<tag> passed on the Gradle CLI (CI release workflow)
+//   2. RELEASE_VERSION env var
+//   3. `git describe --tags --always --dirty` (local dev / untagged snapshot)
+//   4. literal 'dev' as last-resort fallback
+def resolveProjectVersion = {
+    if (project.hasProperty('version') && project.version != 'unspecified' && !project.version.toString().isBlank()) {
+        return project.version.toString()
+    }
+    def envVersion = System.env.RELEASE_VERSION
+    if (envVersion != null && !envVersion.toString().isBlank()) return envVersion.toString()
+    try {
+        def proc = ['git', 'describe', '--tags', '--always', '--dirty'].execute(null, rootDir)
+        proc.waitFor()
+        if (proc.exitValue() == 0) {
+            def out = proc.inputStream.text.trim()
+            if (!out.isBlank()) return out
+        }
+    } catch (ignored) { }
+    return 'dev'
+}
+version = resolveProjectVersion()
 idea {
     module {
         downloadJavadoc = true
@@ -28,43 +73,55 @@ idea {
 compileJava {
     options.encoding = 'UTF-8'
 }
+// Toolchain (not raw source/targetCompatibility) so the build provisions its own JDK 25
+// regardless of the JAVA_HOME the developer or CI runner happens to have. Auto-download is
+// wired via the foojay resolver plugin in settings.gradle.
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = '8.8'
+    gradleVersion = '9.4.1'
     doLast {
         delete "$projectDir/gradlew.bat", "$projectDir/gradlew"
     }
 }
-vaadin {
-    nodeAutoUpdate = false
-    nodeVersion = 'v20.13.1'
-    pnpmEnable = true
-    productionMode = true
-    forceProductionBuild
-}
-classes {
-    doLast {
-        def resourcesDir = sourceSets.main.output.resourcesDir as File
-        def releaseVersion = System.env.RELEASE_VERSION as String
-        if (releaseVersion) {
-            new File(resourcesDir, "version.info").text = releaseVersion
-        } else {
-            new File(resourcesDir, "version.info").text = version
-        }
-    }
-}
 springBoot {
     mainClass = "ru.iopump.qa.allure.Application"
+    buildInfo {
+        properties {
+            additional = [
+                'git.commit': providers.exec {
+                    commandLine 'git', 'rev-parse', '--short', 'HEAD'
+                    ignoreExitValue = true
+                }.standardOutput.asText.map { it.trim() }.getOrElse('unknown')
+            ]
+        }
+    }
 }
 
 tasks.named("bootJar") {
     manifest {
         attributes 'Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher'
     }
+}
+
+//// CYCLONEDX SBOM ////
+
+// The release workflow attaches build/reports/bom.json + bom.xml and invokes `cyclonedxBom` by name,
+// so both output paths are pinned here instead of relying on plugin defaults (3.x dropped the old
+// `destination`/`outputName`/`outputFormat` options in favour of these two file properties).
+tasks.named('cyclonedxBom') {
+    projectType = org.cyclonedx.model.Component.Type.APPLICATION
+    xmlOutput = layout.buildDirectory.file('reports/bom.xml')
+    jsonOutput = layout.buildDirectory.file('reports/bom.json')
+}
+
+// Plain `./gradlew build` must emit the SBOM, not only an explicit task invocation.
+tasks.named('build') {
+    dependsOn tasks.named('cyclonedxBom')
 }
 
 //// OPENAPI ////
@@ -113,7 +170,64 @@ tasks.named("openApiGenerate") {
                 it.text = matcher.replaceAll { match -> 'Type(value = org.brewcode.api.youtrack.model.%s.class'.formatted(match.group(1)) }
 
             if (it.name == 'BaseBundleDto.java') {
-                it.text = it.text.readLines().withIndex().findAll { line, index -> index < 72 || index > 98 }.collect { it[0] }.join("\n")
+                // openapi-generator 7.11 emits broken artifacts on the polymorphic parent:
+                //   a) `isUpdateable(...)` and `$type(...)` fluent setters that redeclare parent
+                //      methods; `$type` is also invalid as a Java method name in many contexts.
+                //   b) `values` field + fluent setter + addValuesItem + getValues + setValues typed
+                //      as `List<BundleElementDto>`. Every subclass re-declares the same methods
+                //      with a narrower element type (e.g. `List<BuildBundleElementDto>`), causing
+                //      name-clash under type erasure. Strip the whole `values` family from the
+                //      parent — subclasses carry it and nothing in the app consumes
+                //      `BaseBundleDto.getValues()`.
+                // NOTE: use single-quoted strings (no interpolation) — Groovy slashy strings expand $type.
+                def orphanIsUpdateable = Pattern.compile(
+                    '(?s)\\n\\s*public\\s+BaseBundleDto\\s+isUpdateable\\([^)]*\\)\\s*\\{[^}]*}\\s*\\n'
+                )
+                def orphanDollarType = Pattern.compile(
+                    '(?s)\\n\\s*public\\s+BaseBundleDto\\s+\\$type\\([^)]*\\)\\s*\\{[^}]*}\\s*\\n'
+                )
+                def valuesField = Pattern.compile(
+                    '(?m)^\\s*private\\s+List<BundleElementDto>\\s+values\\s*=\\s*new\\s+ArrayList<>\\(\\)\\s*;\\s*\\n'
+                )
+                def valuesFluentSetter = Pattern.compile(
+                    '(?s)\\n\\s*public\\s+BaseBundleDto\\s+values\\(List<BundleElementDto>\\s+values\\)\\s*\\{[^}]*}\\s*\\n'
+                )
+                def addValuesItem = Pattern.compile(
+                    '(?s)\\n\\s*public\\s+BaseBundleDto\\s+addValuesItem\\(BundleElementDto\\s+valuesItem\\)\\s*\\{[^}]*\\n\\s*}\\s*\\n\\s*this\\.values\\.add\\(valuesItem\\);\\s*\\n\\s*return\\s+this;\\s*\\n\\s*}\\s*\\n'
+                )
+                def valuesGetter = Pattern.compile(
+                    '(?s)\\n\\s*/\\*\\*[^/]*\\*/\\s*\\n\\s*@Schema\\(name\\s*=\\s*"values"[^)]*\\)\\s*\\n\\s*@JsonProperty\\("values"\\)\\s*\\n\\s*public\\s+List<BundleElementDto>\\s+getValues\\(\\)\\s*\\{[^}]*}\\s*\\n'
+                )
+                def valuesSetter = Pattern.compile(
+                    '(?s)\\n\\s*public\\s+void\\s+setValues\\(List<BundleElementDto>\\s+values\\)\\s*\\{[^}]*}\\s*\\n'
+                )
+                def equalsValuesClause = Pattern.compile(
+                    '(?m)^\\s*Objects\\.equals\\(this\\.values,\\s*baseBundle\\.values\\)\\s*&&\\s*\\n'
+                )
+                def hashCodeValuesArg = Pattern.compile(
+                    '(?m)Objects\\.hash\\(id,\\s*values,\\s*super\\.hashCode\\(\\)\\)'
+                )
+                def toStringValuesLine = Pattern.compile(
+                    '(?m)^\\s*sb\\.append\\("    values: "\\)\\.append\\(toIndentedString\\(values\\)\\)\\.append\\("\\\\n"\\);\\s*\\n'
+                )
+
+                def original = it.text
+                def text = original
+                text = orphanIsUpdateable.matcher(text).replaceFirst('\n')
+                text = orphanDollarType.matcher(text).replaceFirst('\n')
+                text = valuesField.matcher(text).replaceFirst('')
+                text = valuesFluentSetter.matcher(text).replaceFirst('\n')
+                text = addValuesItem.matcher(text).replaceFirst('\n')
+                text = valuesGetter.matcher(text).replaceFirst('\n')
+                text = valuesSetter.matcher(text).replaceFirst('\n')
+                text = equalsValuesClause.matcher(text).replaceFirst('')
+                text = hashCodeValuesArg.matcher(text).replaceFirst('Objects.hash(id, super.hashCode())')
+                text = toStringValuesLine.matcher(text).replaceFirst('')
+
+                if (text == original) {
+                    throw new GradleException("BaseBundleDto.java post-processing did not mutate the file — openapi-generator output shape changed; please update build.gradle post-processing.")
+                }
+                it.text = text
             }
         }
     }
@@ -123,6 +237,122 @@ compileJava.dependsOn tasks.openApiGenerate
 compileTestJava.dependsOn tasks.openApiGenerate
 sourceSets.main.java.srcDirs += tasks.openApiGenerate
 
+//// TAILWIND CSS (standalone binary — no Node/npm/pnpm) ////
+
+ext.tailwindVersion = '3.4.19'
+ext.htmxVersion     = '2.0.9'
+ext.alpineVersion   = '3.15.11'
+
+ext.tailwindBinary = { ->
+    def osName = System.getProperty('os.name').toLowerCase()
+    def osArch = System.getProperty('os.arch').toLowerCase()
+
+    def os
+    def ext
+    if (osName.contains('mac') || osName.contains('darwin')) {
+        os = 'macos'
+        ext = ''
+    } else if (osName.contains('win')) {
+        os = 'windows'
+        ext = '.exe'
+    } else {
+        os = 'linux'
+        ext = ''
+    }
+
+    def arch
+    if (osArch in ['aarch64', 'arm64']) {
+        arch = 'arm64'
+    } else if (osArch in ['x86_64', 'amd64']) {
+        arch = 'x64'
+    } else {
+        throw new GradleException("Unsupported architecture for Tailwind standalone binary: ${osArch}")
+    }
+
+    def assetName = "tailwindcss-${os}-${arch}${ext}"
+    def binaryFile = file("${buildDir}/tailwind/${assetName}")
+    def url = "https://github.com/tailwindlabs/tailwindcss/releases/download/v${tailwindVersion}/${assetName}"
+    return [os: os, arch: arch, assetName: assetName, binary: binaryFile, url: url]
+}
+
+tasks.register('tailwindDownload') {
+    group = 'frontend'
+    description = 'Downloads the Tailwind CSS standalone binary for the current OS/arch.'
+
+    def info = tailwindBinary()
+    outputs.file(info.binary)
+    outputs.cacheIf { true }
+
+    doLast {
+        def binaryFile = info.binary as File
+        if (binaryFile.exists() && binaryFile.length() > 0) {
+            logger.lifecycle("Tailwind binary already present: ${binaryFile} (${binaryFile.length()} bytes)")
+            return
+        }
+        binaryFile.parentFile.mkdirs()
+        logger.lifecycle("Downloading Tailwind v${tailwindVersion} for ${info.os}-${info.arch}")
+        logger.lifecycle("URL: ${info.url}")
+
+        new URL(info.url).withInputStream { input ->
+            binaryFile.withOutputStream { output ->
+                output << input
+            }
+        }
+
+        if (!info.os.equals('windows')) {
+            binaryFile.setExecutable(true, false)
+        }
+        logger.lifecycle("Downloaded: ${binaryFile} (${binaryFile.length()} bytes)")
+    }
+}
+
+tasks.register('tailwindBuild') {
+    group = 'frontend'
+    description = 'Runs the Tailwind CSS standalone binary to build the application stylesheet.'
+
+    dependsOn tasks.named('tailwindDownload')
+
+    def info = tailwindBinary()
+    def inputCss = file('src/main/frontend/input.css')
+    def configFile = file('tailwind.config.js')
+    def outputCss = file('src/main/resources/static/css/app.css')
+
+    inputs.file(inputCss).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file(configFile).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.files(fileTree('src/main/jte') { include '**/*.jte' })
+        .withPathSensitivity(PathSensitivity.RELATIVE).withPropertyName('jteTemplates')
+    inputs.property('tailwindVersion', tailwindVersion)
+    outputs.file(outputCss)
+    outputs.cacheIf { true }
+
+    // Gradle 9 removed Project#exec inside doLast; use injected ExecOperations service instead.
+    def execOps = services.get(ExecOperations)
+
+    doLast {
+        outputCss.parentFile.mkdirs()
+        logger.lifecycle("Building ${outputCss} with Tailwind v${tailwindVersion}")
+        execOps.exec {
+            commandLine info.binary.absolutePath,
+                '-c', configFile.absolutePath,
+                '-i', inputCss.absolutePath,
+                '-o', outputCss.absolutePath,
+                '--minify'
+        }
+        logger.lifecycle("Built: ${outputCss} (${outputCss.length()} bytes)")
+    }
+}
+
+tasks.named('processResources').configure {
+    dependsOn tasks.named('tailwindBuild')
+}
+
+//// JTE (precompile templates for self-contained bootJar) ////
+
+jte {
+    sourceDirectory = file('src/main/jte').toPath()
+    generate()
+}
+
 bootJar {
     manifest {
         attributes 'Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher'
@@ -130,6 +360,6 @@ bootJar {
 }
 
 wrapper {
-    gradleVersion = '8.8'
+    gradleVersion = '9.4.1'
     distributionType = Wrapper.DistributionType.ALL
 }

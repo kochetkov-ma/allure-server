@@ -1,0 +1,7 @@
+# Verification-only overlay: turns on the DEPRECATED legacy lockdown (basic.auth.enable=true)
+# so the whole surface, including /api/** and /allure/**, requires authentication.
+#   docker compose -f docker-compose-h2.yml -f .claude/scripts/compose-legacy-basic.override.yml up -d
+services:
+  allure-server:
+    environment:
+      BASIC_AUTH_ENABLE: "true"

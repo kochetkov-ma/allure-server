@@ -41,7 +41,7 @@ public class CustomReportMetaPlugin implements AllureServerPlugin {
                 var customLogoDirectory = Files
                     .find(reportDirectory, 3, (path, basicFileAttributes) -> basicFileAttributes.isDirectory() && path.toString().endsWith(LOGO_DIR))
                     .findFirst()
-                    .orElseThrow(() -> new InternalError("Custom logo plugin directory not found..."));
+                    .orElseThrow(() -> new IllegalStateException("Custom logo plugin directory not found..."));
 
                 var logoName = Objects.requireNonNullElse(logo.getFilename(), LOGO_FILE);
                 var customLogoPath = customLogoDirectory.resolve(logoName);
@@ -68,7 +68,7 @@ public class CustomReportMetaPlugin implements AllureServerPlugin {
             var summaryPath = Files
                 .find(reportDirectory, 3, (path, basicFileAttributes) -> basicFileAttributes.isRegularFile() && path.toString().endsWith(SUMMARY_DIR))
                 .findFirst()
-                .orElseThrow(() -> new InternalError("Summary file not found..."));
+                .orElseThrow(() -> new IllegalStateException("Summary file not found..."));
 
             var summaryData = MAPPER.readValue(summaryPath.toFile(), SummaryData.class);
             summaryData.setReportName(title);

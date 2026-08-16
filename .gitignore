@@ -1,16 +1,16 @@
+# Un-ignore from global ~/.gitignore_global (which ignores .claude/ and CLAUDE.md)
+!.claude/
+!.claude/**
+!CLAUDE.md
+
 /.gradle
 /.idea
 /build
 /keys
 /allure
 
-# Node
-/node
 /node_modules
 /target
-package.json
-webpack.config.js
-webpack.generated.js
 
 # Gradle
 gradlew.bat
@@ -55,3 +55,31 @@ CA.pem
 **/generated/**
 *generated*
 *-private*
+
+# Tailwind standalone binary + generated CSS
+/build/tailwind/
+/src/main/resources/static/css/app.css
+
+# Claude Code runtime noise (re-ignore inside the un-ignored .claude/)
+.claude/logs/
+.claude/brewtools.log
+.claude/settings.local.json
+.claude/reports/
+.claude/tasks/*
+!.claude/tasks/DEPRECATED.md
+.claude/teams/*/trace.jsonl
+.claude/teams/*/trace.cursor
+.claude/.current-*
+# per-session state (session_id + touched files), regenerated on every run
+.claude/**/docsync/state.json
+
+# Loose UI/dev screenshots at repo root (not doc assets)
+/*.png
+# README/doc assets stay tracked
+!docs/img/*.png
+
+# Playwright MCP scratch artifacts
+/.playwright-mcp/
+
+# brewcode:semble -- index and setup state are per-machine
+.claude/semble/

@@ -1,0 +1,9 @@
+{
+  "enabled": true,
+  "defaultMinutes": 20,
+  "byAgentType": {},
+  "version": "5.6.0",
+  "content_version": "5.6.0",
+  "generated_by": "brewtools:agent-deadline-setup",
+  "last_updated": "2026-08-13"
+}

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/kochetkov-ma/allure-server/discussions
+    about: Ask usage questions and discuss ideas before opening an issue.
+  - name: Security vulnerability
+    url: https://github.com/kochetkov-ma/allure-server/blob/master/SECURITY.md
+    about: Do not open a public issue. Follow the private reporting process in SECURITY.md.

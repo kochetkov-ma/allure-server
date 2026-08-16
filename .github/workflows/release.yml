@@ -1,80 +1,119 @@
-name: Upload Release Asset
+name: Release
 
 on:
   push:
     tags:
       - 'v*.*.*'
 
+permissions: {}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write      # create the GitHub Release and upload assets
+      packages: write      # push the image to GHCR
+      id-token: write      # cosign keyless signing via OIDC
     steps:
 
       ## Build prepare ##
       - name: Fast checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Set RELEASE_VERSION
-        run: echo ::set-env name=RELEASE_VERSION::${GITHUB_REF:11}
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
+      - name: Set up JDK 25
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
-          java-version: '21'
-          distribution: 'corretto'
-      - name: Use Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+          java-version: '25'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
-      ## Build Image ##
+      ## Build the runnable jar (used as the GitHub Release asset) ##
       - name: Build with Gradle
-        uses: eskatos/gradle-command-action@v3
-        with:
-          gradle-version: ${{ env.GRADLE_VERSION }}
-          arguments: ' -Pversion=${{ env.RELEASE_VERSION }} --stacktrace bootJar'
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        run: ./gradlew -Pversion="${RELEASE_VERSION}" --stacktrace bootJar
 
-      ## Release in DockerHub ##
+      # SBOM comes from the CycloneDX Gradle plugin (build/reports/bom.{json,xml}).
+      # A skip here is not silent: the release step has fail_on_unmatched_files: true,
+      # so a missing SBOM fails the release instead of publishing it without assets.
+      - name: Generate CycloneDX SBOM
+        run: |
+          if ./gradlew -q --console=plain tasks --all | grep -qw cyclonedxBom; then
+            ./gradlew -Pversion="${RELEASE_VERSION}" cyclonedxBom
+          else
+            echo "cyclonedxBom task not present - skipping SBOM generation"
+          fi
+
+      ## Docker image — multistage Dockerfile builds the jar inside the image ##
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3.7.0
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@v5
-        env:
-          RELEASE_VERSION: ${{ env.RELEASE_VERSION }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
-          platforms: linux/amd64,linux/arm64
-          name: kochetkovma/allure-server
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          tags: "latest,${{ env.RELEASE_VERSION }}"
-          buildargs: RELEASE_VERSION
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image (Docker Hub + GHCR)
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          build-args: |
+            APP_VERSION=${{ env.RELEASE_VERSION }}
+          tags: |
+            kochetkovma/allure-server:latest
+            kochetkovma/allure-server:${{ env.RELEASE_VERSION }}
+            ghcr.io/kochetkov-ma/allure-server:latest
+            ghcr.io/kochetkov-ma/allure-server:${{ env.RELEASE_VERSION }}
+          sbom: true
+          provenance: mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      ## Supply chain — keyless (OIDC) signature over the pushed digest ##
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign image digests
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          cosign sign --yes "kochetkovma/allure-server@${DIGEST}"
+          cosign sign --yes "ghcr.io/kochetkov-ma/allure-server@${DIGEST}"
+
+      - name: Update Docker Hub description
+        uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          repository: kochetkovma/allure-server
+          readme-filepath: ./README.md
 
       ## Release in GitHub ##
       - name: Create Release
         id: create_release
-        uses: actions/create-release@latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ env.RELEASE_VERSION }}
-          body: |
-            Changes in this Release
-            - First Change
+          name: Release ${{ env.RELEASE_VERSION }}
+          generate_release_notes: true
           draft: false
           prerelease: false
-      - name: Upload Release Asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: 'true'
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
-          asset_name: allure-server.jar
-          asset_content_type: application/jar
+          fail_on_unmatched_files: true
+          files: |
+            build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
+            build/reports/bom.json
+            build/reports/bom.xml

@@ -6,6 +6,13 @@ spring:
   servlet:
     multipart.max-file-size: 100MB
     multipart.max-request-size: 100MB
+  mvc:
+    # Enable HiddenHttpMethodFilter so HTML <form method="post"> with hidden
+    # field _method=delete/put is routed to @DeleteMapping / @PutMapping handlers.
+    # Required by /app/reports confirm-delete dialog (server-rendered UI).
+    hiddenmethod:
+      filter:
+        enabled: true
   datasource:
     url: "jdbc:h2:file:./allure/db"
     # H2 default username
@@ -23,20 +30,50 @@ spring:
           default:
             loggerLevel: basic
 
-vaadin.urlMapping: "/ui/*"
 server.port: ${PORT:8080}
 
+### JTE server-side templating
+# Templates are precompiled by the gg.jte.gradle plugin (see build.gradle "jte { generate() }").
+# Generated Java sources land in build/generated-sources/jte/ and are compiled into the bootJar,
+# so runtime loads templates from the classpath — no src/main/jte on disk at runtime required.
+gg:
+  jte:
+    development-mode: false
+    use-precompiled-templates: true
+
 ### Security
+# Authentication is always enabled. The bootstrap main administrator is seeded from
+# basic.auth.username / basic.auth.password on first startup; subsequent changes are
+# managed through the /app/admin/users UI (DB is authoritative).
+#
+# basic.auth.enable is DEPRECATED. It is still honored for backward compatibility:
+# when set to true every request except public static assets (css/js/img, favicon)
+# requires authentication — this explicitly includes /api/** and /allure/** (the
+# pre-2.x behavior), so deployments that relied on it stay protected after upgrade.
+# Prefer the runtime 'require API auth' toggle at /app/admin/settings
+# (app.security.require-api-auth) and remove this flag.
 basic:
   auth:
-    username: admin
-    password: admin
+    username: ${BASIC_AUTH_USERNAME:admin}
+    password: ${BASIC_AUTH_PASSWORD:admin}
     enable: false
+
+# app.security.require-api-auth controls /api/** protection on FIRST startup only —
+# once the system-settings row is written the database value wins. Admins flip this
+# at runtime via /app/admin/settings.
+app:
+  security:
+    require-api-auth: false
+    enable-oauth2: false
 
 ### App Configuration
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    custom-css-url:
+      - /swagger/theme.css
+    custom-js-url:
+      - /swagger/brand.js
 
 # #################
 # Deprecated format. Not supported!
@@ -55,6 +92,11 @@ allure:
   # FROM FILE: file:/images/logo.png
   logo: ""
   resultsDir: allure/results/
+  # Decompression limits for the results upload (zip-bomb / disk-fill guard). Multipart limits cap
+  # only the compressed body, so cumulative decompressed size and entry count are capped separately.
+  upload:
+    max-uncompressed-bytes: ${ALLURE_UPLOAD_MAX_UNCOMPRESSED_BYTES:4294967296} # 4 GiB
+    max-entries: ${ALLURE_UPLOAD_MAX_ENTRIES:100000}
   reports:
     dir: allure/reports/
     path: reports/
@@ -72,7 +114,6 @@ allure:
 logging:
   level:
     root: INFO
-    org.atmosphere: WARN # Vaadin (GUI) Server
     org.springframework: INFO
     org.springframework.core: WARN
     org.springframework.beans.factory.support: WARN
@@ -83,6 +124,6 @@ tms:
   enabled: false
   host: tms.localhost
   api-base-url: https://${tms.host}/api
-  token: "my-token"
+  token: ${TMS_TOKEN:}
   issue-key-pattern: "[A-Za-z]+-\\d+"
   dry-run: false
