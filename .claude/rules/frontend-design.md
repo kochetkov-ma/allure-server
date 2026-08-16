@@ -8,7 +8,7 @@ paths:
 
 # Frontend Design Rules
 
-Visual source of truth: **BrewPage design system** — `/Users/maximus/IdeaProjects/brewpage-app/docs/design/DESIGN.md` + `ASSETS.md` (sibling repo; maintained in place, no versioned copies).
+Visual source of truth: **BrewPage design system** — `docs/design/DESIGN.md` + `ASSETS.md` in the sibling `brewpage-app` checkout (`../brewpage-app/` next to this repo; maintained in place, no versioned copies).
 Never hand-pick hex colors or one-off tailwind `slate-*`/`gray-*`/`emerald-*` utilities. Use the semantic token layer only.
 
 ## Color tokens — single source

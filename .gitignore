@@ -68,7 +68,10 @@ CA.pem
 .claude/tasks/*
 !.claude/tasks/DEPRECATED.md
 .claude/teams/*/trace.jsonl
+.claude/teams/*/trace.cursor
 .claude/.current-*
+# per-session state (session_id + touched files), regenerated on every run
+.claude/**/docsync/state.json
 
 # Loose UI/dev screenshots at repo root (not doc assets)
 /*.png

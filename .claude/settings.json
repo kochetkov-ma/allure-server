@@ -7,7 +7,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-deadline-guard.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-deadline-guard.mjs"
             ],
             "timeout": 5
           }
@@ -21,7 +21,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-router.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-router.mjs"
             ],
             "timeout": 5
           }
@@ -33,7 +33,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-reminder.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-reminder.mjs"
             ],
             "timeout": 5
           }
@@ -48,7 +48,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/agent-deadline-cleanup.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/agent-deadline-cleanup.mjs"
             ],
             "timeout": 3
           }
@@ -62,7 +62,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-session.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-session.mjs"
             ],
             "timeout": 5
           }
@@ -76,7 +76,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-prefetch.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-prefetch.mjs"
             ],
             "timeout": 5
           }
@@ -90,7 +90,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-stats.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-stats.mjs"
             ],
             "timeout": 5
           }
@@ -105,7 +105,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-stats.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-stats.mjs"
             ],
             "timeout": 5
           }
@@ -120,7 +120,7 @@
             "type": "command",
             "command": "node",
             "args": [
-              "/Users/mkochetkov/IdeaProjects/allure-server/.claude/hooks/semble-subagent.mjs"
+              "$CLAUDE_PROJECT_DIR/.claude/hooks/semble-subagent.mjs"
             ],
             "timeout": 5
           }
