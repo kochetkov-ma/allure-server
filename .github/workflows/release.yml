@@ -14,13 +14,19 @@ jobs:
       contents: write      # create the GitHub Release and upload assets
       packages: write      # push the image to GHCR
       id-token: write      # cosign keyless signing via OIDC
+    outputs:
+      release_version: ${{ steps.version.outputs.release_version }}
     steps:
 
       ## Build prepare ##
       - name: Fast checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - name: Set RELEASE_VERSION
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_ENV"
+        id: version
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "RELEASE_VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "release_version=${VERSION}" >> "$GITHUB_OUTPUT"
       - name: Set up JDK 25
         uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4.9.1
         with:
@@ -94,13 +100,16 @@ jobs:
           cosign sign --yes "kochetkovma/allure-server@${DIGEST}"
           cosign sign --yes "ghcr.io/kochetkov-ma/allure-server@${DIGEST}"
 
+      # docs/DOCKERHUB.md, not README.md: Docker Hub caps full_description at 25000 chars and
+      # README.md is over that, which silently truncated the page mid-sentence and dropped the
+      # screenshots. dockerhub-description.yml pushes the same file outside the release cycle.
       - name: Update Docker Hub description
         uses: peter-evans/dockerhub-description@1b9a80c056b620d92cedb9d9b5a223409c68ddfa # v5.0.0
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: kochetkovma/allure-server
-          readme-filepath: ./README.md
+          readme-filepath: ./docs/DOCKERHUB.md
 
       ## Release in GitHub ##
       - name: Create Release
@@ -117,3 +126,17 @@ jobs:
             build/libs/allure-server-${{ env.RELEASE_VERSION }}.jar
             build/reports/bom.json
             build/reports/bom.xml
+
+  # Scans the tag that was just pushed. Called directly instead of relying on a
+  # `release: published` trigger in security-scan.yml, which never fires: the release above is
+  # created under GITHUB_TOKEN and GitHub does not cascade GITHUB_TOKEN-raised events.
+  scan:
+    name: Scan the published image
+    needs: build
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    uses: ./.github/workflows/security-scan.yml
+    with:
+      image-tag: ${{ needs.build.outputs.release_version }}

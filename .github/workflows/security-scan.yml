@@ -1,8 +1,28 @@
 name: Security scan
 
+# Scans a PUBLISHED image, not a locally built one, so the findings describe exactly what
+# users pull. Three ways in:
+#   workflow_call  - release.yml calls this right after the image is pushed. A `release:
+#                    published` trigger does not work here: the release is created by
+#                    softprops/action-gh-release under GITHUB_TOKEN, and GitHub never
+#                    cascades GITHUB_TOKEN-raised events into other workflows.
+#   workflow_dispatch - on-demand scan of any tag, e.g. an already-shipped release.
+#   schedule       - weekly re-scan of :latest, to catch CVEs disclosed after the release.
+
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      image-tag:
+        description: 'Image tag to scan, without the leading v (e.g. 3.0.0)'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      image-tag:
+        description: 'Image tag to scan, without the leading v (e.g. 3.0.0)'
+        required: false
+        default: 'latest'
+        type: string
   schedule:
     - cron: '17 4 * * 1'
 
@@ -15,42 +35,37 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      security-events: write   # upload the Trivy SARIF results
+      packages: read          # pull the published image from GHCR
+      security-events: write  # upload the Trivy SARIF results
 
     steps:
       - name: Fast checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # Release -> the published tag; scheduled run -> the current default branch state.
-      - name: Set APP_VERSION
+      # Scheduled runs carry no inputs, so they fall back to :latest.
+      - name: Resolve image reference
+        id: ref
         env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          IMAGE_TAG: ${{ inputs.image-tag }}
         run: |
-          TAG="${RELEASE_TAG:-dev}"
-          echo "APP_VERSION=${TAG#v}" >> "$GITHUB_ENV"
+          set -euo pipefail
+          TAG="${IMAGE_TAG:-latest}"
+          TAG="${TAG#v}"
+          IMAGE="ghcr.io/kochetkov-ma/allure-server:${TAG}"
+          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Scanning ${IMAGE}"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
-
-      # Built locally and loaded into the daemon: the scan never depends on registry state.
-      - name: Build image for scanning
-        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
-          context: .
-          file: ./Dockerfile
-          platforms: linux/amd64
-          push: false
-          load: true
-          build-args: |
-            APP_VERSION=${{ env.APP_VERSION }}
-          tags: kochetkovma/allure-server:scan
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trivy scan (SARIF)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: kochetkovma/allure-server:scan
+          image-ref: ${{ steps.ref.outputs.image }}
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH,MEDIUM
@@ -66,7 +81,7 @@ jobs:
       - name: Trivy scan (table, printed to the log)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          image-ref: kochetkovma/allure-server:scan
+          image-ref: ${{ steps.ref.outputs.image }}
           format: table
           severity: CRITICAL,HIGH,MEDIUM
           # Unlike the SARIF scan, triage needs unfixed CVEs too: hiding them reads as an all-clear.
