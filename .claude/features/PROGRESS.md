@@ -15,8 +15,8 @@ last_updated: "2026-08-13"
 > The `Updated` field below is the SESSION snapshot date; frontmatter `last_updated` is generator
 > provenance and is NOT touched on a rewrite.
 
-- **Updated:** 2026-08-13
-- **In flight:** -- (task ids being worked right now)
-- **Moved since last update:** -- (`<ID>: todo -> progress`, one line each)
-- **Blocked:** -- (`<ID>: what blocks it / who unblocks it`)
-- **Next:** -- (the single next action for this session)
+- **Updated:** 2026-08-16
+- **In flight:** EPIC-V3-RELEASE -- waves A/C/E/F/G done, wave D in progress (tag/publish pending), wave B (merge) not started
+- **Moved since last update:** EPIC-V3-RELEASE scope S1/S3/S5/S6/S7 -> done, S4/S8 -> in-progress (was all not-started, review flagged stale board); new todo/M-CFG-SUPPORT-OLD-FORMAT.md filed
+- **Blocked:** EPIC-V3-RELEASE spec still pending; wave B merge/tag/PR/issue-triage/repo-metadata gated on explicit maintainer confirmation
+- **Next:** run /task-spec EPIC-V3-RELEASE; maintainer to confirm PR+merge, tag v3.0.0, and decide M-CFG-SUPPORT-OLD-FORMAT + Discussions link

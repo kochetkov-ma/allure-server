@@ -13,6 +13,8 @@ plugins {
 
     id "org.openapi.generator" version '7.11.0'
     id "gg.jte.gradle" version "3.2.3"
+
+    id 'org.cyclonedx.bom' version '3.4.1'
 }
 apply from: './gradle/dependencies.gradle'
 apply from: './gradle/testing.gradle'
@@ -71,9 +73,13 @@ idea {
 compileJava {
     options.encoding = 'UTF-8'
 }
+// Toolchain (not raw source/targetCompatibility) so the build provisions its own JDK 25
+// regardless of the JAVA_HOME the developer or CI runner happens to have. Auto-download is
+// wired via the foojay resolver plugin in settings.gradle.
 java {
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
 }
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
@@ -100,6 +106,22 @@ tasks.named("bootJar") {
     manifest {
         attributes 'Main-Class': 'org.springframework.boot.loader.launch.PropertiesLauncher'
     }
+}
+
+//// CYCLONEDX SBOM ////
+
+// The release workflow attaches build/reports/bom.json + bom.xml and invokes `cyclonedxBom` by name,
+// so both output paths are pinned here instead of relying on plugin defaults (3.x dropped the old
+// `destination`/`outputName`/`outputFormat` options in favour of these two file properties).
+tasks.named('cyclonedxBom') {
+    projectType = org.cyclonedx.model.Component.Type.APPLICATION
+    xmlOutput = layout.buildDirectory.file('reports/bom.xml')
+    jsonOutput = layout.buildDirectory.file('reports/bom.json')
+}
+
+// Plain `./gradlew build` must emit the SBOM, not only an explicit task invocation.
+tasks.named('build') {
+    dependsOn tasks.named('cyclonedxBom')
 }
 
 //// OPENAPI ////

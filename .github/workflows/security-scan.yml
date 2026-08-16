@@ -1,0 +1,81 @@
+name: Security scan
+
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: '17 4 * * 1'
+
+permissions: {}
+
+jobs:
+  trivy:
+    name: Trivy image scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write   # upload the Trivy SARIF results
+
+    steps:
+      - name: Fast checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Release -> the published tag; scheduled run -> the current default branch state.
+      - name: Set APP_VERSION
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          TAG="${RELEASE_TAG:-dev}"
+          echo "APP_VERSION=${TAG#v}" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      # Built locally and loaded into the daemon: the scan never depends on registry state.
+      - name: Build image for scanning
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          build-args: |
+            APP_VERSION=${{ env.APP_VERSION }}
+          tags: kochetkovma/allure-server:scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan (SARIF)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: kochetkovma/allure-server:scan
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          ignore-unfixed: true
+
+      - name: Upload SARIF to the Security tab
+        uses: github/codeql-action/upload-sarif@ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd # v4.37.7
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
+
+      # Human-readable copy for release triage; never fails the job, findings are the point.
+      - name: Trivy scan (table, printed to the log)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: kochetkovma/allure-server:scan
+          format: table
+          severity: CRITICAL,HIGH,MEDIUM
+          # Unlike the SARIF scan, triage needs unfixed CVEs too: hiding them reads as an all-clear.
+          ignore-unfixed: false
+          exit-code: '0'
+
+      - name: Upload SARIF as an artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trivy-results-sarif
+          path: trivy-results.sarif
+          retention-days: 30

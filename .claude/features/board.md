@@ -7,19 +7,20 @@
 ## Overall status
 
 - **Release line:** last tag `v2.13.9`; branch `feature/phase-1-vaadin-removal` (not yet merged to `master`) carries the unreleased modernization wave (Vaadin UI replaced with htmx + JTE + Tailwind; Java 25 / Spring Boot 3.4 / Gradle 9, exact pins in `../convention/versions.md`; CI publishes branch images to GHCR, tags to Docker Hub + GHCR).
-- **Counts:** backlog 0 | todo 11 | progress 0 | closed 6.
-- **Current focus:** M-AGENT-ROSTER-REFRESH is CLOSED -- `/brewcode:teams-setup upgrade` refreshed the 10 legacy domain agents + `team.md` for the post-Vaadin stack, added `web-ui` (replacing `vaadin-gui`) and review-only `intent-guard`; `verify-team.sh` -> VERIFY: PASS, 12/12 agents OK. M-SUPERREVIEW-SKILL is CLOSED -- project-local `superreview` deep-review skill installed and tailored (12-row routing table, new `web-ui` domain agent). M-DEEP-REVIEW-COMPAT is CLOSED -- deep anti-regression review of `feature/phase-1-vaadin-removal` vs `master v2.13.9` done, `./gradlew clean build` GREEN (251 tests). Branch additionally carries the uncommitted M-UI-BRAND-POLISH visual batch (canonical BrewPage brand + light palette + wrap/charset fixes) on top of the pushed deep-review commits. Branch is ready to commit, then merge to `master`. Deferred hardening queued: M-BOOTSTRAP-ADMIN-HARDENING + M-ENV-SECRETS (secret/default hygiene), M-FLYWAY-MIGRATIONS, M-SETTINGS-CLUSTER-COHERENCE, M-UI-LOGIN-FORM, M-CURRENTUSER-REQUEST-CACHE.
+- **Counts:** backlog 0 | todo 12 | progress 1 | closed 6.
+- **Current focus:** EPIC-V3-RELEASE is IN PROGRESS -- owner manager, umbrella over the 27-task wave A-H graph. Waves A, C, E, F, G are DONE (build/tests green 260, secret scan clean, `docs/COMPATIBILITY.md` + e2e 30/30, governance docs + GitHub templates, SBOM/signing/scanning wired, compose + Helm chart verified, README actualized, version lockstep to 3.0.0, two-phase review complete). Wave D (versioning/build) in progress -- tag + published release still pending. Wave B (merge to `master`) and the rest are deliberately NOT started, gated on explicit maintainer confirmation: open the PR, squash merge, delete `origin/feature/tms`, repo metadata/security settings, 17-issue triage, tag+verify v3.0.0. Spec still pending -- route to `/task-spec EPIC-V3-RELEASE`. Open item for maintainer decision: `allure.support-old-format` dead property, tracked as M-CFG-SUPPORT-OLD-FORMAT; also GitHub Discussions link in issue template config 404s until Discussions is enabled. Deferred hardening still queued: M-BOOTSTRAP-ADMIN-HARDENING + M-ENV-SECRETS (secret/default hygiene), M-FLYWAY-MIGRATIONS, M-SETTINGS-CLUSTER-COHERENCE, M-UI-LOGIN-FORM, M-CURRENTUSER-REQUEST-CACHE.
 
 ## Progress (WIP)
 
 | id | title | priority | owner | file | spec |
 |----|-------|----------|-------|------|------|
-| _none_ | -- | -- | -- | -- | -- |
+| EPIC-V3-RELEASE | Merge phase-1-vaadin-removal, ship v3.0.0 with full 2.x REST compat, bring repo to OSS-program standard | P1 | manager | [progress/EPIC-V3-RELEASE.md](progress/EPIC-V3-RELEASE.md) | pending |
 
 ## Todo
 
 | id | title | priority | owner | file | spec |
 |----|-------|----------|-------|------|------|
+| M-CFG-SUPPORT-OLD-FORMAT | Wire up or remove the orphaned allure.support-old-format property | P2 | | [todo/M-CFG-SUPPORT-OLD-FORMAT.md](todo/M-CFG-SUPPORT-OLD-FORMAT.md) | none |
 | M-FLYWAY-MIGRATIONS | Introduce Flyway migrations; stop relying on ddl-auto update | P2 | | [todo/M-FLYWAY-MIGRATIONS.md](todo/M-FLYWAY-MIGRATIONS.md) | pending |
 | M-ENV-SECRETS | Remove hardcoded secrets/defaults from application.yaml (`my-token`, admin/admin) | P2 | | [todo/M-ENV-SECRETS.md](todo/M-ENV-SECRETS.md) | pending |
 | M-BOOTSTRAP-ADMIN-HARDENING | Harden admin bootstrap credential (random one-time password or refuse default login) | P2 | | [todo/M-BOOTSTRAP-ADMIN-HARDENING.md](todo/M-BOOTSTRAP-ADMIN-HARDENING.md) | pending |

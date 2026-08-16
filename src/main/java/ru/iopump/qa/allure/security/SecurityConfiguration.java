@@ -29,20 +29,28 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import ru.iopump.qa.allure.config.WebConfiguration;
 import ru.iopump.qa.allure.entity.SystemSettingsEntity;
 import ru.iopump.qa.allure.entity.UserRole;
+import ru.iopump.qa.allure.properties.AllureProperties;
 import ru.iopump.qa.allure.properties.AppSecurityProperties;
 import ru.iopump.qa.allure.properties.BasicProperties;
 import ru.iopump.qa.allure.repo.SystemSettingsRepository;
 import ru.iopump.qa.allure.repo.UserRepository;
 import ru.iopump.qa.allure.service.SystemSettingsService;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import static org.springframework.security.config.Customizer.withDefaults;
+import static ru.iopump.qa.allure.helper.Util.join;
 
 /**
  * Security wiring. Auth is always on; anonymous traffic is accepted for read-only
  * {@code /app/**} GET traffic (guest read-only UI) and for {@code /api/**} and
  * {@code /allure/**} while the runtime flag {@code requireApiAuth} is {@code false}.
- * Both {@code /api/**} and {@code /allure/**} share the same {@link #apiAuthorizationManager()}
- * rule, so toggling {@code requireApiAuth} to {@code true} re-gates report content as well.
+ * Both {@code /api/**} and the report content share the same {@link #apiAuthorizationManager()}
+ * rule, so toggling {@code requireApiAuth} to {@code true} re-gates report content as well. The
+ * report matchers are derived from {@code allure.reports.dir} (the same value
+ * {@link ru.iopump.qa.allure.config.RedirectConfiguration} serves from) so a custom storage
+ * prefix cannot drift out of the gate.
  * <p>
  * Mutations are protected at the matcher level: every POST/DELETE under
  * {@code /app/reports/**} and {@code /app/results/**}, the token-minting
@@ -59,9 +67,9 @@ import static org.springframework.security.config.Customizer.withDefaults;
  * ({@code ignoringRequestMatchers}) so token/Basic clients need not carry a CSRF token.
  * <p>
  * A temporary (admin-issued / default) password must be rotated before it can authenticate
- * against the stateless surfaces: {@link ApiTempPasswordGuardFilter} rejects such principals on
- * {@code /api/**} and {@code /allure/**} (Basic/session logins), while the {@code /app} rotation
- * flow stays reachable so the user can set a new password.
+ * against the write API: {@link ApiTempPasswordGuardFilter} rejects such principals on
+ * {@code /api/**} only (Basic/session logins). Read-only report content is deliberately left
+ * reachable, as is the {@code /app} rotation flow so the user can set a new password.
  * <p>
  * Legacy {@code basic.auth.enable} is honored for backward compatibility: when set
  * to {@code true} every request that is not an unauthenticated static asset
@@ -89,6 +97,7 @@ public class SecurityConfiguration {
     private final boolean enableOAuth2;
     private final boolean legacyBasicAuthEnabled;
     private final boolean apiAuthBootstrapDefault;
+    private final Set<String> reportContentPatterns;
 
     public SecurityConfiguration(ApiTokenAuthenticationFilter apiTokenFilter,
                                  UserRepository userRepository,
@@ -97,7 +106,8 @@ public class SecurityConfiguration {
                                  SystemSettingsService systemSettingsService,
                                  SystemSettingsRepository systemSettingsRepository,
                                  BasicProperties basicProperties,
-                                 AppSecurityProperties appSecurityProperties) {
+                                 AppSecurityProperties appSecurityProperties,
+                                 AllureProperties allureProperties) {
         this.apiTokenFilter = apiTokenFilter;
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
@@ -107,6 +117,14 @@ public class SecurityConfiguration {
         this.enableOAuth2 = appSecurityProperties.enableOauth2();
         this.legacyBasicAuthEnabled = basicProperties.enable();
         this.apiAuthBootstrapDefault = appSecurityProperties.requireApiAuth();
+        // Report content is served under a CONFIGURABLE prefix; the gate must be derived from the
+        // very same value (and the same join() normalisation) RedirectConfiguration uses for its
+        // resource handler, otherwise a non-default 'allure.reports.dir' serves reports on a path
+        // no matcher covers and they fall through to permitAll. The literal /allure/** is kept for
+        // the default layout and for 2.x compatibility.
+        this.reportContentPatterns = new LinkedHashSet<>();
+        this.reportContentPatterns.add(LEGACY_ALLURE_PATTERN);
+        this.reportContentPatterns.add(join("/", allureProperties.reports().dir(), "**"));
 
         if (legacyBasicAuthEnabled) {
             log.warn("[ALLURE SERVER SECURITY] 'basic.auth.enable=true' is DEPRECATED. For backward "
@@ -143,10 +161,10 @@ public class SecurityConfiguration {
             // Force-password-change runs AFTER authorization so only the resolved authenticated
             // principal is inspected. Unauthenticated requests are never redirected.
             .addFilterAfter(new ForcePasswordChangeFilter(userRepository), AuthorizationFilter.class)
-            // Same ordering rationale as above: block a temporary/default password on the
-            // stateless /api/** and /allure/** surfaces (Basic/session) until it is rotated. A
-            // deliberately-minted API token is exempt (see the filter). /app/** is untouched so
-            // the rotation flow stays reachable.
+            // Same ordering rationale as above: block a temporary/default password on /api/**
+            // (Basic/session) until it is rotated. A deliberately-minted API token is exempt, and
+            // read-only report content is out of scope by design (see the filter javadoc).
+            // /app/** is untouched so the rotation flow stays reachable.
             .addFilterAfter(new ApiTempPasswordGuardFilter(userRepository), AuthorizationFilter.class)
             .authorizeHttpRequests(it -> {
                 // Static assets are always public so the login page can render even in
@@ -181,16 +199,18 @@ public class SecurityConfiguration {
                         .requestMatchers("/app/signin").authenticated()
                         .anyRequest().authenticated();
                 } else {
-                    // /allure/** (generated report content) is gated by the SAME runtime
-                    // toggle as /api/**: when requireApiAuth is true, anonymous report reads
-                    // are blocked (401); when false, the guest read-only fallback still serves
-                    // them. Without this, report content stayed anonymously open regardless of
-                    // the toggle (F9).
-                    it.requestMatchers("/allure/**").access(apiAuthorizationManager)
+                    // Generated report content is gated by the SAME runtime toggle as /api/**:
+                    // when requireApiAuth is true, anonymous report reads are blocked (401); when
+                    // false, the guest read-only fallback still serves them. Without this, report
+                    // content stayed anonymously open regardless of the toggle (F9). The patterns
+                    // are derived from 'allure.reports.dir' so a custom storage prefix cannot
+                    // silently escape the gate (H2).
+                    it.requestMatchers(reportContentPatterns.toArray(String[]::new))
+                            .access(apiAuthorizationManager)
                         .requestMatchers("/api/**").access(apiAuthorizationManager)
                         .requestMatchers("/app/signin").authenticated();
-                    // Mutations require an authenticated, non-guest principal even though
-                    // CSRF is disabled — these matcher rules are what guard write paths.
+                    // Mutations additionally require an authenticated, non-guest principal:
+                    // CSRF alone only proves same-origin, not who is acting.
                     it.requestMatchers(HttpMethod.POST, "/app/reports/**", "/app/results/**")
                             .access(mutationAuthorizationManager)
                         .requestMatchers(HttpMethod.DELETE, "/app/reports/**", "/app/results/**")
@@ -309,8 +329,8 @@ public class SecurityConfiguration {
      * Grants only to a non-anonymous principal that is NOT the shared {@code GUEST}
      * role. Protects mutating {@code /app/**} handlers (upload, delete, generate,
      * token minting) so an anonymous visitor resolving to the seeded guest cannot
-     * perform writes or mint API tokens. CSRF is disabled, so this is the guard
-     * that actually protects write paths.
+     * perform writes or mint API tokens. CSRF protects those paths against cross-site
+     * forgery; this manager is what establishes <em>who</em> may write.
      */
     private AuthorizationManager<RequestAuthorizationContext> mutationAuthorizationManager() {
         final AuthenticationTrustResolver trustResolver = new AuthenticationTrustResolverImpl();
@@ -327,5 +347,8 @@ public class SecurityConfiguration {
     }
 
     private static final String ROLE_GUEST = "ROLE_" + UserRole.GUEST.name();
+
+    /** Report path of the default layout; kept unconditionally for 2.x compatibility. */
+    private static final String LEGACY_ALLURE_PATTERN = "/allure/**";
 
 }

@@ -17,8 +17,11 @@ COPY gradlew build.gradle settings.gradle gradle.properties ./
 COPY src/ src/
 COPY tailwind.config.js ./
 
+# No .git in this stage, so the build.gradle git-describe fallback would bake "dev".
+# CI passes the release tag via --build-arg APP_VERSION=<tag>.
+ARG APP_VERSION=dev
 RUN chmod +x gradlew \
-    && ./gradlew bootJar -x test --no-daemon
+    && ./gradlew -Pversion=$APP_VERSION bootJar -x test --no-daemon
 
 ###############################################################################
 # Stage 2 — runtime

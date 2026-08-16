@@ -75,6 +75,8 @@ CA.pem
 
 # Loose UI/dev screenshots at repo root (not doc assets)
 /*.png
+# README/doc assets stay tracked
+!docs/img/*.png
 
 # Playwright MCP scratch artifacts
 /.playwright-mcp/

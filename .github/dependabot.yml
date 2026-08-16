@@ -1,0 +1,32 @@
+version: 2
+
+# No npm/yarn ecosystem on purpose: this project has no Node and no package.json.
+# Tailwind is a standalone binary downloaded by the `tailwindDownload` Gradle task,
+# and HTMX / Alpine.js are pinned assets - all tracked in build.gradle, i.e. Gradle.
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    commit-message:
+      prefix: "build"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: "ci"
