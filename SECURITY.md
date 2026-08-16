@@ -19,22 +19,22 @@ instead of the legacy `sha256-<digest>.sig` tag, so cosign 2.x reports `no signa
 images even though the signature is present and valid. If you see that error, upgrade the client
 before concluding anything about the image.
 
-Verify a tag before running it, replacing `3.0.0` with the version you pulled:
+Verify a tag before running it, replacing `3.0.1` with the version you pulled:
 
 ```bash
 cosign verify \
-  --certificate-identity "https://github.com/kochetkov-ma/allure-server/.github/workflows/release.yml@refs/tags/v3.0.0" \
+  --certificate-identity "https://github.com/kochetkov-ma/allure-server/.github/workflows/release.yml@refs/tags/v3.0.1" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  kochetkovma/allure-server:3.0.0
+  kochetkovma/allure-server:3.0.1
 ```
 
 The same image is published to GHCR and signed in the same run:
 
 ```bash
 cosign verify \
-  --certificate-identity "https://github.com/kochetkov-ma/allure-server/.github/workflows/release.yml@refs/tags/v3.0.0" \
+  --certificate-identity "https://github.com/kochetkov-ma/allure-server/.github/workflows/release.yml@refs/tags/v3.0.1" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  ghcr.io/kochetkov-ma/allure-server:3.0.0
+  ghcr.io/kochetkov-ma/allure-server:3.0.1
 ```
 
 The certificate identity is the tag being verified, so it changes with every version.

@@ -42,7 +42,7 @@ docker run -d --name allure-server \
   -p 8080:8080 \
   -v "$PWD/allure-server-store:/allure:rw" \
   -v "$PWD/ext:/ext:rw" \
-  kochetkovma/allure-server:3.0.0
+  kochetkovma/allure-server:3.0.1
 ```
 
 The container runs as non-root uid/gid `1000` (`Dockerfile:35`, `Dockerfile:48`), so a host bind
@@ -615,8 +615,8 @@ services:
     build:
       context: .
       args:
-        APP_VERSION: "3.0.0"
-    image: kochetkovma/allure-server:3.0.0
+        APP_VERSION: "3.0.1"
+    image: kochetkovma/allure-server:3.0.1
     ports:
       - "8080:8080"
     volumes:
@@ -639,8 +639,8 @@ services:
     build:
       context: .
       args:
-        APP_VERSION: "3.0.0"
-    image: kochetkovma/allure-server:3.0.0
+        APP_VERSION: "3.0.1"
+    image: kochetkovma/allure-server:3.0.1
     ports:
       - "8080:8080"
     volumes:
