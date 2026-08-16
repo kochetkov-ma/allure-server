@@ -73,21 +73,23 @@ All other deps (Spring starters, security, JPA, hibernate-validator, h2, postgre
 
 | Action | Version | Commit SHA | Used by |
 |--------|---------|------------|---------|
-| `actions/checkout` | v4.4.0 | `11d5960a326750d5838078e36cf38b85af677262` | release, codeql, security-scan, check, branch-image |
+| `actions/checkout` | v4.4.0 | `11d5960a326750d5838078e36cf38b85af677262` | release, codeql, security-scan, check, branch-image, dockerhub-description |
 | `actions/setup-java` | v4.9.1 | `cf277c60eb25467037889841efdb72551f06f6c3` | release, codeql, check |
 | `gradle/actions/setup-gradle` | v4.4.4 | `748248ddd2a24f49513d8f472f81c3a07d4d50e1` | release, codeql, check |
 | `docker/setup-qemu-action` | v3.7.0 | `c7c53464625b32c7a7e944ae62b3e17d2b600130` | release |
-| `docker/setup-buildx-action` | v3.12.0 | `8d2750c68a42422c14e847fe6c8ac0403b4cbd6f` | release, security-scan, branch-image |
-| `docker/login-action` | v3.7.0 | `c94ce9fb468520275223c153574b00df6fe4bcc9` | release, branch-image |
-| `docker/build-push-action` | v6.19.2 | `10e90e3645eae34f1e60eeb005ba3a3d33f178e8` | release, security-scan, branch-image |
+| `docker/setup-buildx-action` | v3.12.0 | `8d2750c68a42422c14e847fe6c8ac0403b4cbd6f` | release, branch-image |
+| `docker/login-action` | v3.7.0 | `c94ce9fb468520275223c153574b00df6fe4bcc9` | release, security-scan, branch-image |
+| `docker/build-push-action` | v6.19.2 | `10e90e3645eae34f1e60eeb005ba3a3d33f178e8` | release, branch-image |
 | `sigstore/cosign-installer` | v4.1.2 | `6f9f17788090df1f26f669e9d70d6ae9567deba6` | release |
-| `peter-evans/dockerhub-description` | v5.0.0 | `1b9a80c056b620d92cedb9d9b5a223409c68ddfa` | release |
+| `peter-evans/dockerhub-description` | v5.0.0 | `1b9a80c056b620d92cedb9d9b5a223409c68ddfa` | release, dockerhub-description |
 | `softprops/action-gh-release` | v2.6.2 | `3bb12739c298aeb8a4eeaf626c5b8d85266b0e65` | release |
 | `github/codeql-action` (`init`, `analyze`, `upload-sarif`) | v4.37.7 | `ff2f1c621b7f889edc0d3c761ac2e6a3f8cdb0dd` | codeql, security-scan |
 | `aquasecurity/trivy-action` | v0.36.0 | `ed142fd0673e97e23eac54620cfb913e5ce36c25` | security-scan |
 | `actions/upload-artifact` | v7.0.1 | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | security-scan |
 
-All five workflows are fully SHA-pinned — no floating major refs remain.
+All six workflows are fully SHA-pinned — no floating major refs remain. No new third-party action was introduced by `dockerhub-description.yml`; it reuses the `actions/checkout` and `peter-evans/dockerhub-description` pins above.
+
+`release.yml` calls `security-scan.yml` as a reusable workflow (`uses: ./.github/workflows/security-scan.yml`), which is a local path and therefore not SHA-pinnable — it always resolves to the workflow file at the triggering ref.
 
 ## Dependabot ecosystems (`.github/dependabot.yml`)
 

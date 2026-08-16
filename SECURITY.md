@@ -13,8 +13,13 @@ Docker image tag. There are no backports to older lines.
 
 ## Verifying Releases
 
-Every release image is signed with keyless cosign (Sigstore) by the release workflow. Verify a tag
-before running it, replacing `3.0.0` with the version you pulled:
+Every release image is signed with keyless cosign (Sigstore) by the release workflow. Verification
+requires cosign 3.0 or later. Cosign 3 stores a container signature as an OCI 1.1 referring artifact
+instead of the legacy `sha256-<digest>.sig` tag, so cosign 2.x reports `no signatures found` on these
+images even though the signature is present and valid. If you see that error, upgrade the client
+before concluding anything about the image.
+
+Verify a tag before running it, replacing `3.0.0` with the version you pulled:
 
 ```bash
 cosign verify \
