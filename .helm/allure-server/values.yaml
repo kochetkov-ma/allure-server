@@ -3,8 +3,8 @@ replicaCount: 1
 image:
   repository: kochetkovma/allure-server
   pullPolicy: IfNotPresent
-  ## Don't use 'latest' ;)
-  tag: 2.13.9
+  ## Empty = use Chart.yaml appVersion (the pinned release). Never 'latest'.
+  tag: ""
 
 ## Add 'key: value collection' and delete '{ }' if need
 ## Uncomment and remove '{ }' if need
@@ -135,8 +135,9 @@ databaseCrt:
   crt:
     ## Use crt as text (first priority)
     sourceText: ""
-    ## Read crt from local file in helm chart (second priority)
-    sourcePath: "crt/CA.pem"
+    ## Read crt from local file in helm chart (second priority).
+    ## Default points at the shipped sample so the chart renders out of the box - replace it.
+    sourcePath: "crt/CA-SAMPLE.pem"
     ## Mount crt to this dir in container
     targetDir: "~/.postgresql/"
 

@@ -1,20 +1,95 @@
-version: '3.7'
+# Allure Server - H2 quickstart (single container, file-based database).
+#
+# Runs THIS source tree: `build: .` compiles the bootJar inside the Dockerfile and tags the
+# result as the image below. To run a published release instead, delete the `build:` block.
+#
+#   docker compose -f docker-compose-h2.yml up --build
+#
+# Every environment entry below is commented out and carries the value the application already
+# uses by default (src/main/resources/application.yaml). Uncomment only what you change.
+# Env var names follow Spring relaxed binding: uppercase, dots and dashes become underscores.
 services:
   allure-server:
-    # For local debug #
-    # build: .
-    image: kochetkovma/allure-server:2.13.9
+    build:
+      context: .
+      args:
+        # Baked into the jar name and reported by the app; keep in lockstep with the image tag.
+        APP_VERSION: "3.0.0"
+    image: kochetkovma/allure-server:3.0.0
     ports:
-      - 8080:8080
+      # Container listens on 8080; the Dockerfile HEALTHCHECK also probes 8080, so change PORT
+      # only together with the healthcheck.
+      - "8080:8080"
     volumes:
-      - ./tmp/allure:/allure/:rw
-    # Default H2 quickstart: no profile needed. Authentication is DB-backed -
-    # a bootstrap admin (admin/admin) is seeded on first start and must be changed at login.
-    #
-    # Optional: enable Google OAuth2 login by activating the 'oauth' profile. Both
-    # credentials are REQUIRED when the profile is on (see application-oauth.yaml),
-    # otherwise the application context fails to start. Uncomment the block below:
-    # environment:
-    #   SPRING_PROFILES_ACTIVE: oauth
-    #   OAUTH2_GOOGLE_ALLURE_CLIENT_ID: <your-google-client-id>
-    #   OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET: <your-google-client-secret>
+      # All application data (H2 db file, allure/results, allure/reports) lives under /allure.
+      # The runtime user is non-root uid/gid 1000 - run `chown -R 1000:1000 ./allure-server-store`
+      # on the host before first start, otherwise the container cannot write.
+      - ./allure-server-store:/allure:rw
+      # Optional: drop external AllureServerPlugin jars here (-Dloader.path=/ext).
+      - ./ext:/ext:rw
+    restart: unless-stopped
+    environment:
+      # JVM sizing. Dockerfile default is the same value.
+      JAVA_OPTS: "-Xms256m -Xmx2048m"
+
+      ### Storage paths (relative to the container working dir /allure)
+      # ALLURE_RESULTS_DIR: allure/results/          # unpacked allure-results uploads
+      # ALLURE_REPORTS_DIR: allure/reports/          # generated reports on disk
+      # ALLURE_REPORTS_PATH: reports/                # url path segment reports are served under
+
+      ### Report generation
+      # ALLURE_REPORTS_HISTORY_LEVEL: 20             # how many previous runs feed report history
+      # ALLURE_DATE_FORMAT: "yy/MM/dd HH:mm:ss"      # timestamp format in listings and the UI
+      # ALLURE_SERVER_BASE_URL: https://allure.example.com  # absolute base url in generated links; empty = infer from request
+      # ALLURE_TITLE: "BrewCode | Allure Report"     # browser/page title
+      # ALLURE_LOGO: file:/images/logo.png           # logo resource; also accepts an https url
+      # allure.support-old-format exists in application.yaml but is NOT bound to any field in
+      # AllureProperties, so no env var affects it. Legacy key, inert in 3.0.0.
+
+      ### Upload limits (zip-bomb guard; multipart caps the compressed body only)
+      # SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 100MB      # max compressed upload size
+      # SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 100MB   # max compressed request size
+      # ALLURE_UPLOAD_MAX_UNCOMPRESSED_BYTES: 4294967296   # 4 GiB cumulative decompressed size
+      # ALLURE_UPLOAD_MAX_ENTRIES: 100000                  # max entries in one results archive
+
+      ### Scheduled cleanup of old results and reports
+      # ALLURE_CLEAN_DRY_RUN: 'false'                # true = log what would be deleted, delete nothing
+      # ALLURE_CLEAN_TIME: "00:00"                   # daily run time, server local time
+      # ALLURE_CLEAN_AGE_DAYS: 90                    # global retention in days
+      # ALLURE_CLEAN_PATHS_0_PATH: manual_uploaded   # per-path override, indexed list entry 0
+      # ALLURE_CLEAN_PATHS_0_AGE_DAYS: 30            # retention for that path
+
+      ### Authentication
+      # Auth is always on. A bootstrap main administrator is seeded on first start from the two
+      # values below (defaults admin/admin) and must be changed at first login. Later user
+      # management happens in the UI at /app/admin/users; the database is authoritative.
+      # BASIC_AUTH_USERNAME: admin                   # bootstrap admin login, default admin
+      # BASIC_AUTH_PASSWORD: admin                   # bootstrap admin password, default admin
+      # BASIC_AUTH_ENABLE: 'false'                   # DEPRECATED legacy lockdown: true forces auth on every path incl. /api/** and /allure/**
+      # APP_SECURITY_REQUIRE_API_AUTH: 'false'       # FIRST-START seed for the /api/** and /allure/** gate; afterwards the value set at /app/admin/settings wins
+      # Machine clients authenticate with the X-API-Token header. Tokens are issued per user in
+      # the UI at /app/profile/tokens - there is no env var for them.
+
+      ### OAuth2 login (optional)
+      # Activating the profile loads application-oauth.yaml, which sets enable-oauth2 and seeds
+      # require-api-auth: true. Both credentials are REQUIRED - the context fails to start without them.
+      # SPRING_PROFILES_ACTIVE: oauth
+      # OAUTH2_GOOGLE_ALLURE_CLIENT_ID: your-google-client-id
+      # OAUTH2_GOOGLE_ALLURE_CLIENT_SECRET: your-google-client-secret
+
+      ### YouTrack TMS integration (optional)
+      # Links test cases in reports to TMS issues. Disabled by default.
+      # TMS_ENABLED: 'true'                          # master switch
+      # TMS_HOST: tms.example.com                    # host only, no scheme
+      # TMS_API_BASE_URL: https://tms.example.com/api  # defaults to https://${tms.host}/api
+      # TMS_PROJECT: ALLURE                          # YouTrack project short name
+      # TMS_TOKEN: your-youtrack-permanent-token     # keep out of version control; prefer a .env file
+      # TMS_ISSUE_KEY_PATTERN: "[A-Za-z]+-\\d+"      # regex matching issue keys in test names
+      # TMS_DRY_RUN: 'false'                         # true = resolve issues but never write back
+
+      ### Database
+      # H2 file database under /allure/allure/db, created on first start. No configuration needed.
+      # Use docker-compose.yml for the PostgreSQL variant.
+      # SPRING_DATASOURCE_URL: "jdbc:h2:file:./allure/db"
+      # SPRING_DATASOURCE_USERNAME: sa
+      # SPRING_DATASOURCE_PASSWORD: ""

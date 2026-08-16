@@ -10,6 +10,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import ru.iopump.qa.allure.model.ResultResponse;
 import ru.iopump.qa.allure.properties.AllureProperties;
 
 import java.io.ByteArrayInputStream;
@@ -32,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ResultServiceTest {
 
     private static final String ZIP_SLIP_ENTRY = "../escape.txt";
+    private static final String MISSING_UUID = "11111111-1111-4111-8111-111111111111";
     private static final String EMPTY_FOLDER_ENTRY_NAME = "allure-results";
 
     /**
@@ -219,6 +221,41 @@ class ResultServiceTest {
         assertThat(listChildren(storagePath))
             .as("partial extraction must be fully cleaned up after the byte cap is tripped")
             .isEmpty();
+    }
+
+    @Test
+    @DisplayName("should fail with 404 when deleting a result uuid that has no directory on disk")
+    void internalDeleteByUuidMissing_fails404() {
+        // GIVEN — a well-formed uuid that was never uploaded
+
+        // WHEN / THEN — rejected as not found instead of blowing up on sizeOfDirectory
+        assertThatThrownBy(() -> resultService.internalDeleteByUUID(MISSING_UUID))
+            .as("deleting an unknown result uuid must be reported as not found")
+            .isInstanceOf(ResponseStatusException.class)
+            .extracting(ex -> ((ResponseStatusException) ex).getStatusCode())
+            .as("rejection status must be 404 Not Found")
+            .isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("should delete an existing result directory and return its metadata")
+    void internalDeleteByUuidExisting_deletesAndReturnsMetadata() throws IOException {
+        // GIVEN — an uploaded fixture under the storage root
+        final Path resultDirectory = resultService.unzipAndStore(new ClassPathResource("allure-results.zip").getInputStream());
+        final String uuid = resultDirectory.getFileName().toString();
+
+        // WHEN — deleting it by uuid
+        final ResultResponse response = resultService.internalDeleteByUUID(uuid);
+
+        // THEN — the response describes the removed directory
+        assertThat(response.getUuid())
+            .as("response must carry the deleted result uuid")
+            .isEqualTo(uuid);
+
+        // AND — nothing is left on disk
+        assertThat(resultDirectory)
+            .as("deleted result directory must be gone from the storage root")
+            .doesNotExist();
     }
 
     ///// helpers /////

@@ -56,8 +56,21 @@ public class ResultService {
         this.maxEntries = upload.maxEntries();
     }
 
+    /**
+     * Delete a single uploaded result directory by UUID. Fails with HTTP 404 if it does not exist,
+     * mirroring {@link JpaReportService#deleteByUuid(String)}.
+     *
+     * @param uuid result UUID as string (pattern-validated by the caller)
+     * @return metadata of the directory that was deleted
+     * @throws ResponseStatusException 404 if no directory exists for this UUID
+     * @throws IOException             if the directory cannot be removed
+     */
     public ResultResponse internalDeleteByUUID(String uuid) throws IOException {
         var p = storagePath.resolve(uuid);
+        if (!isDirectory(p)) {
+            log.warn("Result '{}' not found at '{}'", uuid, p);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Result '" + uuid + "' not found");
+        }
         long size = FileUtils.sizeOfDirectory(p.toFile()) / 1024;
         LocalDateTime localDateTime = LocalDateTime.MIN;
         try {

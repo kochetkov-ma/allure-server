@@ -40,49 +40,50 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+          # /actuator/health is permitAll in both auth modes (SecurityConfiguration), same as the image HEALTHCHECK.
           startupProbe:
             httpGet:
-              path: /api/result
+              path: /actuator/health
               port: http
             initialDelaySeconds: {{ .Values.startupInitialDelay }}
             periodSeconds: 10
           livenessProbe:
             httpGet:
-              path: /api/result
+              path: /actuator/health
               port: http
             initialDelaySeconds: {{ .Values.livenessInitialDelay }}
             periodSeconds: 30
           readinessProbe:
             httpGet:
-              path: /api/result
+              path: /actuator/health
               port: http
             initialDelaySeconds: {{ .Values.readinessInitialDelay }}
             periodSeconds: 30
           resources:
           {{- toYaml .Values.resources | nindent 12 }}
+          {{- if or .Values.databaseCrt.enabled .Values.pvc.enabled }}
           volumeMounts:
-            # ConfigMap mount
             {{- if .Values.databaseCrt.enabled }}
             - name: crt
               mountPath: {{ .Values.databaseCrt.crt.targetDir }}
             {{- end }}
-            # PVC mount
             {{- if .Values.pvc.enabled }}
             - name: storage
               mountPath: /allure
-      {{- end }}
+            {{- end }}
+          {{- end }}
+      {{- if or .Values.databaseCrt.enabled .Values.pvc.enabled }}
       volumes:
-        # ConfigMap
         {{- if .Values.databaseCrt.enabled }}
         - name: crt
           configMap:
             name: allure-server-crt
         {{- end }}
-        # PVC
         {{- if .Values.pvc.enabled }}
         - name: storage
           persistentVolumeClaim:
             claimName: allure-server-storagepvc
+        {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
