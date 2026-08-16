@@ -4,7 +4,7 @@ plugins {
     id 'java'
     id 'idea'
 
-    id 'io.freefair.lombok' version '9.2.0'
+    id 'io.freefair.lombok' version '9.5.0'
     id 'com.github.ben-manes.versions' version '0.54.0'
 
     // https://docs.spring.io/spring-boot/docs/current/reference/html/dependency-versions.html
