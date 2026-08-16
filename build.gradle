@@ -23,7 +23,7 @@ apply from: './gradle/testing.gradle'
 // spring-cloud-starter-parent:2025.0.3 declares spring-boot-starter-parent 3.5.15).
 // Importing the BOM here means individual Spring Cloud starters in gradle/dependencies.gradle
 // MUST be declared without an explicit version.
-ext.springCloudVersion = '2025.0.3'
+ext.springCloudVersion = '2025.1.2'
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
