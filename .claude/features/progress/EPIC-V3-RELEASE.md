@@ -135,3 +135,27 @@ rather than `closed`: `spec:` is still `pending` (never written) and three real 
 found during triage remain open as tasks (`BUG-PLUGIN-SUMMARY-500`,
 `BUG-PLUGIN-SCREEN-DIFF`, `BUG-BUILD-IMAGE-CVE`) -- closing the epic is a separate decision
 for whoever owns that call, not implied by verification landing.
+
+2026-08-16: `v3.0.1` patch shipped under this release line, sole purpose clearing the 5
+CRITICAL CVEs `BUG-BUILD-IMAGE-CVE` filed against `v3.0.0`. Spring Boot 3.4.13 -> 3.5.16,
+Spring Cloud 2024.0.3 -> 2025.0.3 (verified-compatible from the real POMs: `spring-cloud-
+starter-parent:2025.0.3` declares `spring-boot-starter-parent:3.5.15`; next train 2025.1.x
+needs Boot 4.0), `byteBuddyVersion` override dropped (superseded by the new BOM). Zero
+source files changed, 262 tests green, 30/30 e2e. Read-only Spring Security 6.4 -> 6.5
+review found no behaviour change (PathPattern matcher stays opt-in, `AuthorizationManager`/
+CSRF/filter-order classes byte-identical, `oauth` profile hand-verified: starts, `/oauth2/
+authorization/google` returns 302). Debt noted, not a defect: `DaoAuthenticationProvider`
+no-arg constructor + `setUserDetailsService` deprecated in 6.5 (Spring Security 7 prep,
+`security/SecurityConfiguration.java:268-269`). Merged `3b25d7b` via PR #116, tagged
+`v3.0.1`, released; published-artifact verification 7/7 pass (SBOM, both registries, cosign,
+healthy pull at 3.0.1/Boot 3.5.16). Re-scan from inside the release (job "Scan the published
+image", run 31966977964) landed CRITICAL 0/HIGH 13/MEDIUM 27/total 40 against the 3.0.0
+baseline of 5/32/48/85 -- exactly the locally predicted figures.
+
+`BUG-BUILD-IMAGE-CVE` is re-scoped, not closed: the remaining 4 HIGH CVEs live in the
+checked-in Allure 2.29.0 plugin jars and need a coordinated generator+plugin bump to 2.45.0,
+which is report-rendering scope (Behaviors/Packages/screen-diff tabs) and therefore targets
+`3.1.0`, not another patch. Cross-linked to `BUG-PLUGIN-SCREEN-DIFF` (#72): the same bump
+may close it outright. Two real defects from triage now remain open as tasks
+(`BUG-PLUGIN-SUMMARY-500`, and the linked pair `BUG-BUILD-IMAGE-CVE`/`BUG-PLUGIN-SCREEN-
+DIFF`).

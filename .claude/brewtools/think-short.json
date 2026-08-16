@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "enabled": false,
+  "profile": "aggressive",
+  "blacklist": [
+    "debate",
+    "docs-writer",
+    "architect"
+  ],
+  "updated_at": "2026-04-20T19:04:52.314Z"
+}

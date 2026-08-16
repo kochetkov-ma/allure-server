@@ -16,7 +16,7 @@ last_updated: "2026-08-13"
 > provenance and is NOT touched on a rewrite.
 
 - **Updated:** 2026-08-16
-- **In flight:** EPIC-V3-RELEASE -- all waves A-H done incl. D; v3.0.0 verified on ghcr.io, 2 post-publish defects fixed in 88b0014 (DOCKERHUB.md, security-scan.yml workflow_call); epic stays progress (spec pending, 3 triage bugs open)
-- **Moved since last update:** EPIC-V3-RELEASE scope S4 -> done (verification complete); BUG-BUILD-IMAGE-CVE filled in with first Trivy scan evidence (5 CRITICAL/32 HIGH/48 MEDIUM), spec none -> pending, Scope expanded S1-S7 with concrete remediation paths
-- **Blocked:** EPIC-V3-RELEASE spec still pending; BUG-BUILD-IMAGE-CVE spec pending (route to /task-spec)
-- **Next:** run /task-spec EPIC-V3-RELEASE; run /task-spec BUG-BUILD-IMAGE-CVE (spec required: multi-domain dependency train bump with regression risk); pick up BUG-PLUGIN-SUMMARY-500 (highest-value open bug)
+- **In flight:** EPIC-V3-RELEASE -- v3.0.1 patch shipped under it (5 CRITICAL CVEs cleared, Boot 3.4.13->3.5.16, Cloud 2024.0.3->2025.0.3, merged 3b25d7b/PR#116/tag v3.0.1, 262 tests + 30/30 e2e); epic stays progress (spec pending, 2 triage bugs open)
+- **Moved since last update:** BUG-BUILD-IMAGE-CVE re-scoped: S2/S3/S6 -> done (v3.0.1 criticals shipped), S4 rewritten to coordinated Allure 2.39.0->2.45.0 bump targeting 3.1.0; cross-linked to BUG-PLUGIN-SCREEN-DIFF (S1 -> done, likely root cause found); board release line + current focus updated to v3.0.1
+- **Blocked:** EPIC-V3-RELEASE spec still pending; BUG-BUILD-IMAGE-CVE spec still pending (route to /task-spec)
+- **Next:** run /task-spec EPIC-V3-RELEASE; run /task-spec BUG-BUILD-IMAGE-CVE (spec required: multi-domain Allure bump with regression risk); pick up BUG-PLUGIN-SUMMARY-500 (highest-value open bug)

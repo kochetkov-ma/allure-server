@@ -1,12 +1,12 @@
 ---
 id: BUG-BUILD-IMAGE-CVE
-title: Address image CVEs surfaced by the first security-scan.yml run
+title: Coordinated Allure 2.39.0 -> 2.45.0 bump to clear remaining plugin-jar HIGH CVEs
 status: todo
 priority: P2
 owner:
 created: 2026-08-16
 updated: 2026-08-16
-tags: [build, security, docker, 3.0.0]
+tags: [build, security, docker, generation-pipeline, 3.0.1, 3.1.0]
 links: ["https://github.com/kochetkov-ma/allure-server/issues/100", "https://github.com/kochetkov-ma/allure-server/issues/100#issuecomment-5308895743"]
 spec: pending               # none | pending | full | design-only (section 10; never blank)
 ---
@@ -39,40 +39,76 @@ All 5 criticals are in the application jar layer, none in the base image:
 tomcat CVE-2025-24813, spring-security CVE-2024-38821). Four are still shipping at newer
 but still-affected versions, and bcprov is new. 3.0.0 is better, not clean.
 
-## Remediation paths (identified, none applied)
+## v3.0.1 -- criticals resolved (shipped)
+All 5 CRITICAL are resolved: Spring Boot 3.4.13 -> 3.5.16, Spring Cloud 2024.0.3 -> 2025.0.3
+(`build.gradle:11,21-30`), verified-compatible from the real POMs (`spring-cloud-starter-
+parent:2025.0.3` declares `spring-boot-starter-parent:3.5.15`; next train 2025.1.x needs Boot
+4.0), `byteBuddyVersion` override dropped. Zero source files changed, 262 tests green, 30/30
+e2e. Resolved: `tomcat-embed-core` 10.1.55, `spring-security-web` 6.5.11, `bcprov-jdk18on`
+1.80.2. Merged `3b25d7b` via PR #116, tagged `v3.0.1`, released, published-artifact
+verification 7/7 pass. Re-scan from inside the release (job "Scan the published image", run
+31966977964) landed **CRITICAL 0, HIGH 13, MEDIUM 27, total 40** against the 3.0.0 baseline
+of 5/32/48/85 -- exactly the locally predicted figures.
 
-1. **Spring Boot train bump** off `3.4.13` (`build.gradle:11`) -- clears the tomcat
-   (CVE-2026-41293/43512/43515) and spring-security (CVE-2026-22732) criticals. The fixed
-   spring-security-web version sits on a newer Boot train, so this is a real upgrade, not a
-   patch-level bump -- carries regression risk. Requires a full `./gradlew build` plus the
-   e2e run at `.claude/scripts/e2e-api.sh` before it ships. Natural content of a 3.0.1 or
-   3.1.0 release, not a hotfix.
-2. **Matching Spring Cloud bump** off `2024.0.3` (`build.gradle:25`), tracking whichever
-   train the Spring Boot bump lands on -- clears the bcprov critical (CVE-2025-14813).
-3. **Replace the checked-in Allure plugin jars** at 2.29.0 in `src/main/resources/plugins/`
-   -- clears 3 of the 32 HIGH findings.
-4. **Base image rebuild** for the 3 OS-layer highs: libexpat and p11-kit (twice).
+## Remaining -- plugin-jar HIGH CVEs (not shipped, needs a coordinated bump)
+Four HIGH CVEs live in the checked-in Allure plugin jars at 2.29.0, deliberately excluded
+from the v3.0.1 patch:
+
+| CVE | Component | Installed | Fixed | Notes |
+|-----|-----------|-----------|-------|-------|
+| CVE-2025-52888 | xunit XML parser (XXE) | 2.29.0 | 2.34.1 | affects `junit-xml-plugin`, `trx-plugin`, `xunit-xml-plugin` |
+| CVE-2026-54512 | jackson-databind/core | 2.17.0 | 2.21.4 | bundled in `jira-plugin/lib/`, `xray-plugin/lib/` |
+| CVE-2026-54513 | jackson-databind/core | 2.17.0 | 2.21.4 | bundled in `jira-plugin/lib/`, `xray-plugin/lib/` |
+| GHSA-r7wm-3cxj-wff9 | jackson-databind/core | 2.17.0 | 2.21.4 | bundled in `jira-plugin/lib/`, `xray-plugin/lib/` |
+
+It cannot ship as a plugin-only swap. Allure 2.45.0 plugin jars no longer carry their own
+`static/index.js` -- the plugin frontends moved into the generator bundle. Verified by
+unpacking both generators: `allure-generator-2.39.0` `app.js` has zero occurrences of
+`screen-diff`, `behaviors.json`, `packages.json`; `allure-generator-2.45.0` `assets/index-
+*.js` has 28, 1 and 1. `screen-diff-plugin-2.45.0.jar` contains only its manifest. Dropping
+the new jars onto the 2.39.0 generator would silently remove the Behaviors tab, the Packages
+tab and screen-diff rendering, with no exception and no failing test. Matching the core
+version at 2.39.0 does not help either -- it bundles jackson 2.21.2, below the 2.21.4 fix.
+
+This also explains issue #72 (`BUG-PLUGIN-SCREEN-DIFF`): the `screen-diff-plugin` jar at
+2.29.0 is empty apart from its manifest, so enabling it at
+`src/main/resources/config/allure.yml:7` was never sufficient -- rendering lives entirely in
+the generator frontend. The coordinated 2.45.0 bump may close #72 outright; the two tasks
+are now cross-linked.
+
+Required: coordinated bump of `gradle/dependencies.gradle:9` `allureVersion` 2.39.0 -> 2.45.0
+together with all ten plugin directories, keeping the repo-branded `custom-logo-plugin`
+assets (`src/main/resources/plugins/custom-logo-plugin/static/styles.css:2` and its svg).
+Allure 2.45.0 verified current at the GitHub releases API, published 2026-08-06, sha256
+`a0a840979b6d212e9eee031563d669985eb353cfde60557343b2903bf08570a6`; its jira/xray plugins
+bundle jackson 2.22.1. This is a report-rendering change, so it ships as `3.1.0`, not a
+patch.
+
+Base image OS-layer highs (libexpat, p11-kit x2, 3 of the original 32 HIGH) are untouched by
+v3.0.1 -- no Dockerfile/base-image change shipped. Status against the new 13-HIGH total is
+unconfirmed; only the 4 plugin-jar CVEs above are itemized.
 
 ## Scope
 
 | id | block | in/out | status |
 |----|-------|--------|--------|
 | S1 | Review the security-scan.yml results for the 3.0.0 image | in | done |
-| S2 | Bump Spring Boot train off 3.4.13 (build.gradle:11) | in | not-started |
-| S3 | Bump Spring Cloud off 2024.0.3 to match (build.gradle:25) | in | not-started |
-| S4 | Replace checked-in Allure plugin jars (2.29.0, src/main/resources/plugins/) | in | not-started |
-| S5 | Rebuild base image for the 3 OS highs (libexpat, p11-kit) | in | not-started |
-| S6 | Full build + `.claude/scripts/e2e-api.sh` e2e run as the regression gate for the Boot bump | in | not-started |
-| S7 | Update issue #100 with the remediation outcome | in | not-started |
+| S2 | Bump Spring Boot train off 3.4.13 (build.gradle:11) | in | done |
+| S3 | Bump Spring Cloud off 2024.0.3 to match (build.gradle:25) | in | done |
+| S4 | Coordinated Allure bump 2.39.0 -> 2.45.0: generator + all 10 plugin dirs (gradle/dependencies.gradle:9), keep custom-logo-plugin assets | in | not-started |
+| S5 | Rebuild base image for the OS-layer highs (libexpat, p11-kit) | in | not-started |
+| S6 | Full build + `.claude/scripts/e2e-api.sh` e2e run as the regression gate for the Boot bump | in | done |
+| S7 | Update issue #100 with the v3.0.1 outcome and the remaining plugin-CVE plan | in | not-started |
 
 ## Acceptance
-- [x] security-scan.yml results reviewed (85 findings: 5 CRITICAL, 32 HIGH, 48 MEDIUM)
-- [ ] Spring Boot train bumped past 3.4.13, clearing the 3 tomcat + 1 spring-security criticals
-- [ ] Spring Cloud bumped to match, clearing the bcprov critical
-- [ ] Allure plugin jars replaced past 2.29.0, clearing 3 HIGH
-- [ ] Base image rebuilt, clearing the 3 OS highs (libexpat, p11-kit)
-- [ ] Full build + e2e green after the Boot train bump
-- [ ] Issue #100 updated or closed with the remediation outcome, shipped as 3.0.1 or 3.1.0
+- [x] security-scan.yml results reviewed (85 findings: 5 CRITICAL, 32 HIGH, 48 MEDIUM on 3.0.0)
+- [x] Spring Boot train bumped past 3.4.13, clearing the 3 tomcat + 1 spring-security criticals -- shipped v3.0.1
+- [x] Spring Cloud bumped to match, clearing the bcprov critical -- shipped v3.0.1
+- [x] Full build + e2e green after the Boot train bump -- 262 tests, 30/30 e2e (v3.0.1)
+- [x] Re-scan confirms 0 CRITICAL -- CRITICAL 0, HIGH 13, MEDIUM 27, total 40 (run 31966977964)
+- [ ] Coordinated Allure bump 2.39.0 -> 2.45.0 (generator + 10 plugin dirs), clearing the 4 plugin-jar HIGH CVEs, shipped as 3.1.0
+- [ ] Base image rebuilt, clearing the OS-layer highs (libexpat, p11-kit) if still present
+- [ ] Issue #100 updated with the v3.0.1 remediation outcome and the remaining plugin-CVE plan
 
 ## Notes
 Filed 2026-08-16 during v3.0.0 release closing pass, as a placeholder blocked on the first
@@ -84,3 +120,11 @@ from that run's evidence, posted on issue #100. Re-triaged spec verdict from `no
 config-security (spring-security-web) and generation-pipeline (Allure plugin SPI/jars)
 domains, is a real train upgrade with regression risk, and gates a release (3.0.1/3.1.0) --
 needs a spec before work starts.
+
+2026-08-16: `v3.0.1` shipped, clearing S2/S3/S6 (all 5 CRITICAL). Merged `3b25d7b` via PR
+#116, tagged `v3.0.1`, released, published-artifact verification 7/7 pass. Re-scoped: S4
+rewritten from a plugin-jar-only swap to the coordinated Allure 2.45.0 generator+plugin bump
+(the jar-only swap silently breaks Behaviors/Packages/screen-diff rendering), targeting
+3.1.0. Cross-linked to `BUG-PLUGIN-SCREEN-DIFF` (#72) -- same root cause, same fix. Spec
+verdict stays `pending`: still multi-domain (build-ci-qa + generation-pipeline), still
+>5 files (10 plugin dirs + generator + dependencies.gradle), no spec doc written yet.
