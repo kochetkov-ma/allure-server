@@ -15,8 +15,8 @@ services:
       context: .
       args:
         # Baked into the jar name and reported by the app; keep in lockstep with the image tag.
-        APP_VERSION: "3.0.0"
-    image: kochetkovma/allure-server:3.0.0
+        APP_VERSION: "3.0.1"
+    image: kochetkovma/allure-server:3.0.1
     ports:
       # Container listens on 8080; the Dockerfile HEALTHCHECK also probes 8080, so change PORT
       # only together with the healthcheck.

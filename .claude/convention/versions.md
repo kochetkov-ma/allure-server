@@ -1,6 +1,6 @@
 # Pinned Versions — allure-server
 
-> SINGLE source of truth for every version number in this repo. != inline version literals in any other `.claude/**` doc — point here. != floating tags (`latest`, `+`, ranges). Verified against code 2026-06-11.
+> SINGLE source of truth for every version number in this repo. != inline version literals in any other `.claude/**` doc — point here. != floating tags (`latest`, `+`, ranges). Verified against code 2026-08-16 (release 3.0.1).
 
 ## Toolchain
 
@@ -15,7 +15,7 @@
 
 | Plugin | Version |
 |--------|---------|
-| `org.springframework.boot` | 3.4.13 |
+| `org.springframework.boot` | 3.5.16 |
 | `io.spring.dependency-management` | 1.1.7 |
 | `io.freefair.lombok` | 9.2.0 |
 | `com.github.ben-manes.versions` | 0.54.0 |
@@ -35,8 +35,17 @@
 
 | Item | Version | Why |
 |------|---------|-----|
-| Spring Cloud BOM (`ext.springCloudVersion`) | 2024.0.3 | Release train for Boot 3.4.x; Spring Cloud starters MUST be declared version-less |
-| Byte Buddy + agent (`ext.byteBuddyVersion`) | 1.17.5 | Boot 3.4 BOM pins 1.15.11 (Java 24 max); 1.17.5+ required for Java 25 class-file version 69 |
+| Spring Cloud BOM (`ext.springCloudVersion`) | 2025.0.3 | Release train for Boot 3.5.x (`spring-cloud-starter-parent:2025.0.3` -> `spring-boot-starter-parent:3.5.15`); Spring Cloud starters MUST be declared version-less |
+
+> Byte Buddy override removed in 3.0.1: the Boot 3.5.16 BOM pins 1.17.8, which already covers Java 25 class-file version 69. Re-add an override only if a future Boot train regresses below 1.17.5.
+
+Resolved via the BOMs above, tracked because 3.0.1 was a CVE patch release (verify with `./gradlew dependencyInsight --configuration runtimeClasspath --dependency <name>`):
+
+| Transitive | Resolved | CVE cleared |
+|------------|----------|-------------|
+| `org.apache.tomcat.embed:tomcat-embed-core` | 10.1.55 | CVE-2026-41293, CVE-2026-43512, CVE-2026-43515 |
+| `org.springframework.security:spring-security-web` | 6.5.11 | CVE-2026-22732 (needs >= 6.5.9, i.e. the Boot 3.5 train) |
+| `org.bouncycastle:bcprov-jdk18on` | 1.80.2 | CVE-2025-14813 (transitive via `spring-cloud-starter:4.3.3`) |
 
 ## Libraries (`gradle/dependencies.gradle`)
 
@@ -66,7 +75,7 @@ All other deps (Spring starters, security, JPA, hibernate-validator, h2, postgre
 
 | Image | Tag |
 |-------|-----|
-| `kochetkovma/allure-server` | 3.0.0 — pinned in `docker-compose.yml` / `docker-compose-h2.yml` (`image:` + `build.args.APP_VERSION`, both files carry an active `build: .`, so the tag names the locally built image) and in `.helm/allure-server/Chart.yaml` `appVersion` (helm `values.yaml` `image.tag` is intentionally empty and falls back to `.Chart.AppVersion`). Chart `version` tracks `appVersion` 1:1 |
+| `kochetkovma/allure-server` | 3.0.1 — pinned in `docker-compose.yml` / `docker-compose-h2.yml` (`image:` + `build.args.APP_VERSION`, both files carry an active `build: .`, so the tag names the locally built image) and in `.helm/allure-server/Chart.yaml` `appVersion` (helm `values.yaml` `image.tag` is intentionally empty and falls back to `.Chart.AppVersion`). Chart `version` tracks `appVersion` 1:1 |
 | `postgres` | 16.15-alpine (`docker-compose.yml`) |
 
 ## GitHub Actions (`.github/workflows/*.yml` — SHA-pinned, comment carries the tag)
