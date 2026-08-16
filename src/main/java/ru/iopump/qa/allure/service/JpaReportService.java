@@ -8,7 +8,6 @@ import com.google.common.collect.ImmutableList;
 import io.qameta.allure.entity.ExecutorInfo;
 import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
-import jakarta.transaction.Transactional;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,7 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+import ru.iopump.qa.allure.config.BrandingService;
 import ru.iopump.qa.allure.entity.ReportEntity;
 import ru.iopump.qa.allure.helper.AllureReportGenerator;
 import ru.iopump.qa.allure.helper.ServeRedirectHelper;
@@ -29,6 +32,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +42,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.io.FileUtils.deleteQuietly;
-import static ru.iopump.qa.allure.gui.DateTimeResolver.zeroZone;
 import static ru.iopump.qa.allure.helper.ExecutorCiPlugin.JSON_FILE_NAME;
 import static ru.iopump.qa.allure.helper.Util.join;
 import static ru.iopump.qa.allure.service.PathUtil.str;
@@ -55,7 +58,8 @@ public class JpaReportService {
     private final AllureReportGenerator reportGenerator;
     private final ServeRedirectHelper redirection;
     private final JpaReportRepository repository;
-    private final ResultService reportUnzipService;
+    private final ResultService resultService;
+    private final BrandingService branding;
 
     private final AtomicBoolean init = new AtomicBoolean();
 
@@ -63,7 +67,9 @@ public class JpaReportService {
                             ObjectMapper objectMapper,
                             JpaReportRepository repository,
                             AllureReportGenerator reportGenerator,
-                            ServeRedirectHelper redirection
+                            ServeRedirectHelper redirection,
+                            ResultService resultService,
+                            BrandingService branding
     ) {
         this.reportsDir = cfg.reports().dirPath();
         this.cfg = cfg;
@@ -71,7 +77,8 @@ public class JpaReportService {
         this.repository = repository;
         this.reportGenerator = reportGenerator;
         this.redirection = redirection;
-        this.reportUnzipService = new ResultService(reportsDir);
+        this.resultService = resultService;
+        this.branding = branding;
     }
 
     @PostConstruct
@@ -101,6 +108,24 @@ public class JpaReportService {
         FileUtils.deleteDirectory(reportsDir.resolve(uuid.toString()).toFile());
     }
 
+    /**
+     * Delete a single report by UUID. Fails with HTTP 404 if the report does not exist.
+     *
+     * @param uuid report UUID as string (validated by caller)
+     * @return the deleted entity
+     * @throws ResponseStatusException 404 if the report is not found
+     * @throws IOException             if the report directory cannot be removed
+     */
+    public ReportEntity deleteByUuid(@NonNull String uuid) throws IOException {
+        final UUID id = UUID.fromString(uuid);
+        final ReportEntity entity = repository.findOneByUuid(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report '" + uuid + "' not found"));
+        repository.deleteById(id);
+        FileUtils.deleteDirectory(reportsDir.resolve(id.toString()).toFile());
+        log.info("Report '{}' deleted", id);
+        return entity;
+    }
+
     public Collection<ReportEntity> deleteAll() throws IOException {
         var res = getAll();
         repository.deleteAll();
@@ -121,19 +146,48 @@ public class JpaReportService {
         return repository.findAll(Sort.by("createdDateTime").descending());
     }
 
+    /**
+     * On-disk size (bytes) for a legacy report whose persisted {@link ReportEntity#getSize()} is
+     * unset (zero). Computed once via a directory walk and backfilled so subsequent renders read
+     * the persisted value instead of walking the report directory again. Callers with a non-zero
+     * persisted size should use it directly and never reach here.
+     *
+     * @param uuid report UUID as string
+     * @return size in bytes, or 0 when the report or its directory is gone
+     */
+    public long backfillReportSize(@NonNull String uuid) {
+        final UUID id = UUID.fromString(uuid);
+        return repository.findOneByUuid(id)
+            .map(entity -> {
+                final long computedKb = ReportEntity.sizeKB(reportsDir.resolve(id.toString()));
+                if (computedKb > 0L) {
+                    entity.setSize(computedKb);
+                    repository.saveAndFlush(entity);
+                }
+                return computedKb * 1024L;
+            })
+            .orElse(0L);
+    }
+
     @SneakyThrows
     public ReportEntity uploadReport(@NonNull String reportPath,
                                      @NonNull InputStream archiveInputStream,
                                      @Nullable ExecutorInfo executorInfo,
                                      String baseUrl) {
 
-        // New report destination and entity
-        final Path destination = reportUnzipService.unzipAndStore(archiveInputStream);
+        // New report destination and entity — unzip pre-built report archive into the reports dir
+        // (uploadReport consumes an already-generated Allure report, not raw results).
+        final Path destination = resultService.unzipAndStore(archiveInputStream, reportsDir);
         final UUID uuid = UUID.fromString(destination.getFileName().toString());
-        Preconditions.checkArgument(
-            Files.list(destination).anyMatch(path -> path.endsWith("index.html")),
-            "Uploaded archive is not an Allure Report"
-        );
+        final boolean hasIndex;
+        try (var paths = Files.list(destination)) {
+            hasIndex = paths.anyMatch(path -> path.getFileName().toString().equals("index.html"));
+        }
+        Preconditions.checkArgument(hasIndex, "Uploaded archive is not an Allure Report");
+
+        // Uploaded reports skip generation, so branding is applied here to match generated reports
+        // instead of waiting for the next startup sweep. Idempotent (marker-file guarded).
+        branding.applyBranding(destination);
 
         // Find prev report if present
         final Optional<ReportEntity> prevEntity = repository.findByPathOrderByCreatedDateTimeDesc(reportPath)
@@ -154,7 +208,7 @@ public class JpaReportService {
         final ReportEntity newEntity = ReportEntity.builder()
             .uuid(uuid)
             .path(reportPath)
-            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .createdDateTime(LocalDateTime.now(ZoneOffset.UTC))
             .url(join(baseUrl, cfg.reports().dir(), uuid.toString()) + "/")
             .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
             .active(true)
@@ -242,7 +296,7 @@ public class JpaReportService {
         final ReportEntity newEntity = ReportEntity.builder()
             .uuid(uuid)
             .path(reportPath)
-            .createdDateTime(LocalDateTime.now(zeroZone()))
+            .createdDateTime(LocalDateTime.now(ZoneOffset.UTC))
             .url(reportUrl)
             .level(prevEntity.map(e -> e.getLevel() + 1).orElse(0L))
             .active(true)
@@ -290,15 +344,15 @@ public class JpaReportService {
                 );
 
                 // Delete last after max history
-                long deleted = allReports.stream()
-                    .skip(max)
-                    .peek(e -> log.info("Report '{}' will be deleted", e))
-                    .peek(e -> deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile()))
-                    .peek(repository::delete)
-                    .count();
+                final var toDelete = allReports.stream().skip(max).toList();
+                toDelete.forEach(e -> {
+                    log.info("Report '{}' will be deleted", e);
+                    deleteQuietly(reportsDir.resolve(e.getUuid().toString()).toFile());
+                    repository.delete(e);
+                });
 
                 // Update level (safety)
-                created.setLevel(Math.max(created.getLevel() - deleted, 0));
+                created.setLevel(Math.max(created.getLevel() - (long) toDelete.size(), 0L));
             }
         }
     }

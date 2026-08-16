@@ -3,16 +3,11 @@ repositories {
 }
 ext {
     qaLibVersion = '1.2.0'
-    vaadinVersion = '24.4.4'
-    guavaVersion = '33.2.1-jre'
-    apacheIoVersion = '2.16.1'
+    guavaVersion = '33.6.0-jre'
+    apacheIoVersion = '2.21.0'
     openApiVersion = '1.8.0'
-    allureVersion = '2.29.0'
-}
-dependencyManagement {
-    imports {
-        mavenBom "com.vaadin:vaadin-bom:$vaadinVersion"
-    }
+    allureVersion = '2.39.0'
+    jteVersion = '3.2.3'
 }
 
 dependencies {
@@ -21,65 +16,45 @@ dependencies {
     implementation "io.qameta.allure:allure-generator:$allureVersion"
     /* QA lib */
     implementation("ru.iopump.qa:qa-tools:$qaLibVersion") { transitive false }
+    /* Required by qa-tools ReflectionUtil for classpath scanning of AllureServerPlugin impls. */
+    implementation 'io.github.classgraph:classgraph:4.8.184'
     /* Guava */
     implementation "com.google.guava:guava:$guavaVersion"
-    /* Open API */
-    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.2'
-    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0"
+    /* Open API — spring-cloud-starter-openfeign version managed by Spring Cloud BOM (see build.gradle). */
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.17'
 
-    /* OAuth2 */
+    /* OAuth2 — versions managed by Spring Boot BOM. */
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.security:spring-security-oauth2-client'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
 
-    /* Spring Boot */
+    /* Spring Boot — all versions managed by Spring Boot BOM. */
     implementation('org.springframework.boot:spring-boot-starter-web') { exclude group: 'ch.qos.logback' }
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    /* Actuator — exposes /actuator/health for the Docker HEALTHCHECK. */
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
-    implementation 'org.hibernate:hibernate-validator:8.0.1.Final'
+    implementation 'org.hibernate.validator:hibernate-validator'
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     implementation 'org.jooq:joor:0.9.15'
 
-    implementation('com.vaadin:vaadin-spring-boot-starter') {
-
-        ["com.vaadin.webjar",
-         "org.webjars.bowergithub.insites",
-         "org.webjars.bowergithub.polymer",
-         "org.webjars.bowergithub.polymerelements",
-         "org.webjars.bowergithub.vaadin",
-         "org.webjars.bowergithub.webcomponents"].forEach { group -> exclude(group: group) }
-
-        ['vaadin-accordion-flow',
-         'vaadin-avatar-flow',
-         'vaadin-date-picker-flow',
-         'vaadin-date-time-picker-flow',
-         'vaadin-details-flow',
-         'vaadin-login-flow',
-         'vaadin-material-theme',
-         'vaadin-virtual-list-flow',
-         'vaadin-time-picker-flow',
-         'vaadin-split-layout-flow',
-         'vaadin-radio-button-flow',
-         'vaadin-list-box-flow',
-         'vaadin-iron-list-flow',
-         'vaadin-combo-box-flow',
-         'flow-polymer-template',
-         'flow-lit-template',
-         'flow-dnd',
-         'android-json'].forEach { module -> exclude(module: module) }
-    }
+    /* JTE - server-side templating */
+    implementation "gg.jte:jte:$jteVersion"
+    implementation "gg.jte:jte-spring-boot-starter-3:$jteVersion"
 
     implementation "commons-io:commons-io:$apacheIoVersion"
     /* Logging API*/
     implementation 'org.slf4j:slf4j-api'
-    /* Logging IMPL*/
+    /* Logging IMPL — versions managed by Spring Boot BOM. */
     runtimeOnly 'ch.qos.logback:logback-classic'
-    runtimeOnly 'com.h2database:h2:2.2.224'
+    runtimeOnly 'com.h2database:h2'
     runtimeOnly 'org.postgresql:postgresql'
-    /* Testing */
+    /* Testing — versions managed by Spring Boot BOM. */
     testImplementation 'org.assertj:assertj-core'
     testImplementation('org.springframework.boot:spring-boot-starter-test')
+    testImplementation 'org.springframework.security:spring-security-test'
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.springframework.boot:spring-boot-loader-tools'

@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================================
+   Design tokens — BrewPage v5 language (dark default, light opt-in).
+   Values are RGB channel triples so Tailwind's `rgb(var(--x) / <alpha>)`
+   utilities can derive any opacity.
+   ========================================================================= */
+:root {
+  --bg: 20 20 20;               /* #141414 */
+  --bg-elevated: 10 10 10;      /* #0a0a0a */
+  --card: 28 26 20;             /* #1C1A14 */
+  --surface: 39 35 24;          /* #272318 */
+  --border: 140 112 57;         /* #8C7039 */
+  --border-subtle: 39 35 24;    /* #272318 */
+  --primary: 235 187 64;        /* #EBBB40 */
+  --primary-hi: 250 233 111;    /* #FAE96F */
+  --text: 214 211 209;          /* #D6D3D1 */
+  --text-muted: 154 149 142;    /* rgba(214,211,209,0.6) flattened */
+  --success: 100 156 103;       /* #649c67 */
+  --warning: 223 141 3;         /* #DF8D03 */
+  --error: 207 102 121;         /* #cf6679 */
+}
+
+/* Light theme — values ported from brewpage-app frontend/src/css/tokens.css.
+   Gold #EBBB40 is unreadable on white, so --primary becomes the warm orange
+   accent (#C65029) exactly as in brewpage; the LOGO stays literal gold inside
+   the SVG assets and never follows --primary. --warning/--error inherit their
+   dark values (brewpage minimal-switch policy: no light override). --success
+   takes brewpage's deeper-green light override (#2E7D33) because it doubles as
+   small text (wordmark "QA", toasts). */
+[data-theme="light"] {
+  --bg: 250 250 249;            /* #FAFAF9 */
+  --bg-elevated: 255 255 255;   /* #FFFFFF */
+  --card: 255 255 255;          /* #FFFFFF */
+  --surface: 245 243 238;       /* #F5F3EE */
+  --border: 212 197 169;        /* #D4C5A9 */
+  --border-subtle: 231 229 228; /* #E7E5E4 */
+  --primary: 198 80 41;         /* #C65029 — readable-on-white brand accent */
+  --primary-hi: 181 67 30;      /* #B5431E — headings / hover / extra contrast */
+  --text: 28 26 20;             /* #1C1A14 */
+  --text-muted: 82 78 70;       /* rgba(28,26,20,0.72) flattened */
+  --success: 46 125 51;         /* #2E7D33 */
+}
+
+html {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+  color-scheme: dark;
+}
+[data-theme="light"] { color-scheme: light; }
+
+body {
+  background-color: rgb(var(--bg));
+  color: rgb(var(--text));
+}
+
+[x-cloak] { display: none !important; }
+
+/* Theme-toggle icons: keyed on the real [data-theme="light"] selector, not a
+   dark: variant. Dark is default -> show moon; light opt-in -> show sun. */
+.theme-icon--moon { display: block; }
+.theme-icon--sun { display: none; }
+[data-theme="light"] .theme-icon--moon { display: none; }
+[data-theme="light"] .theme-icon--sun { display: block; }
+
+/* =========================================================================
+   Components — semantic building blocks used across JTE templates.
+   ========================================================================= */
+@layer components {
+  .card {
+    @apply rounded-lg border border-border-subtle bg-card shadow-sm;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1 rounded-md bg-primary px-4 py-1.5 text-sm font-semibold text-bg shadow-sm transition-colors hover:bg-primary-hi focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-bordered {
+    @apply inline-flex items-center justify-center gap-1 rounded-md border border-border bg-transparent px-4 py-1.5 text-sm font-medium text-text transition-colors hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-bg disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-text {
+    @apply inline-flex items-center justify-center gap-1 rounded-md bg-transparent px-2 py-1 text-sm font-medium text-text-muted transition-colors hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+
+  .drop-zone {
+    @apply relative flex min-h-[180px] cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-border bg-surface px-6 py-8 text-center transition-colors hover:border-primary hover:bg-card focus:outline-none focus:ring-2 focus:ring-primary;
+  }
+
+  .drop-zone--loaded {
+    @apply border-success bg-card;
+  }
+
+  .drop-zone--active {
+    @apply border-primary bg-card ring-2 ring-primary/40;
+  }
+
+  .toast {
+    @apply pointer-events-auto flex items-start gap-3 rounded-md border border-border-subtle bg-card px-4 py-2 text-sm text-text shadow-lg;
+  }
+
+  .toast--success {
+    @apply border-success/60 bg-card text-success;
+  }
+
+  .toast--error {
+    @apply border-error/60 bg-card text-error;
+  }
+
+  .toast--warning {
+    @apply border-warning/60 bg-card text-warning;
+  }
+
+  .form-field {
+    @apply w-full rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary;
+  }
+}
+
+/* htmx swap/indicator helpers preserved from previous setup */
+@layer utilities {
+  .htmx-swapping { opacity: 0; transition: opacity 0.15s ease-out; }
+  .htmx-settling { opacity: 1; transition: opacity 0.15s ease-in; }
+  .htmx-request .htmx-indicator { display: inline-block; }
+  .htmx-indicator { display: none; }
+}

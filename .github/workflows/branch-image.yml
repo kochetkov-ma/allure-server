@@ -1,0 +1,73 @@
+name: Branch Image
+
+# Publishes a GHCR-only Docker image for pushes to the default branch, plus any
+# branch on explicit manual request. Feature branches never publish on their own.
+# Tag format: <last-reachable-git-tag-without-v>-<sanitized-branch>.<run_number>
+# Tags (v*.*.*) are handled by release.yml — this workflow skips them.
+
+on:
+  push:
+    branches:
+      - master
+    tags-ignore:
+      - '**'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # push the branch image to GHCR
+    steps:
+
+      - name: Full checkout (need tags for git describe)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Compute image tag
+        id: meta
+        run: |
+          set -euo pipefail
+          LAST_TAG="$(git describe --tags --abbrev=0 2>/dev/null || echo v0.0.0)"
+          BASE_VERSION="${LAST_TAG#v}"
+          RAW_BRANCH="${GITHUB_REF_NAME}"
+          # Docker tag charset: [a-zA-Z0-9_.-], max 128, no leading '.' or '-'.
+          SANITIZED_BRANCH="$(echo "$RAW_BRANCH" \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's#[^a-z0-9._-]+#-#g' \
+            | sed -E 's#^[.-]+##; s#[.-]+$##')"
+          IMAGE_TAG="${BASE_VERSION}-${SANITIZED_BRANCH}.${GITHUB_RUN_NUMBER}"
+          # Hard cap at 128 chars.
+          IMAGE_TAG="${IMAGE_TAG:0:128}"
+          echo "base_version=${BASE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Last tag: ${LAST_TAG} | branch: ${RAW_BRANCH} -> ${SANITIZED_BRANCH} | run: ${GITHUB_RUN_NUMBER}"
+          echo "Resolved image tag: ${IMAGE_TAG}"
+
+      # TODO: re-enable linux/arm64 once QEMU build time is acceptable or a native arm64 runner is available.
+      # Server deployments are amd64, so branch builds are amd64-only for speed.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image (GHCR only)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ghcr.io/kochetkov-ma/allure-server:${{ steps.meta.outputs.image_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

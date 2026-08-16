@@ -1,0 +1,52 @@
+/* Brew.QA branding — overrides Allure sidebar brand only. Do not change Allure palette/layout. */
+:root {
+  /* Wordmark accent colors only — the badge mark itself is favicon.svg. */
+  --brew-gold: #EBBB40;
+  --brew-green: #649c67;
+}
+
+/* Hide original Allure brand text/logo */
+.side-nav__brand > * { display: none !important; }
+
+/* Paint our brand into the existing .side-nav__brand slot.
+   background/padding reset: the bundled custom-logo plugin paints the mark as a
+   background-image on this element and allure core adds padding-left — without
+   the reset the badge below would render as a SECOND mark next to it. This file
+   is injected after the plugin bundle, so it wins the cascade. */
+.side-nav__brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  background: none !important;
+  padding-left: 0 !important;
+}
+.side-nav__brand .brew-brand-link {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  text-decoration: none !important;
+  /* Explicit color: as a nested anchor the UA default (blue link) would beat
+     inheritance from .side-nav__brand. Allure's sidebar is always dark. */
+  color: #fff !important;
+}
+/* Badge is an <img> of the report-local favicon.svg (canonical mark): the SVG
+   carries gold, glyph and corner radius itself — CSS only sizes the box. */
+.side-nav__brand .brew-brand-badge {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+}
+.side-nav__brand .brew-brand-word {
+  font-weight: 600;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 15px;
+  letter-spacing: -0.01em;
+  color: inherit;
+}
+.side-nav__brand .brew-brand-word .brew-dot { color: var(--brew-gold); }
+.side-nav__brand .brew-brand-word .brew-qa  { color: var(--brew-green); }
+
+/* Collapsed sidebar — hide wordmark, keep badge */
+.side-nav_collapsed .side-nav__brand .brew-brand-word { display: none !important; }

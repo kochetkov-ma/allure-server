@@ -1,0 +1,79 @@
+name: Bug report
+description: Report a defect in allure-server.
+title: "[bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the open issues first. For security vulnerabilities use SECURITY.md, not this form.
+  - type: input
+    id: version
+    attributes:
+      label: allure-server version
+      description: Image tag, jar version or chart appVersion. Exact value, not "latest".
+      placeholder: "3.5.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment mode
+      options:
+        - docker
+        - docker-compose
+        - helm
+        - standalone jar
+    validations:
+      required: true
+  - type: dropdown
+    id: auth
+    attributes:
+      label: Auth mode
+      options:
+        - anonymous
+        - basic.auth
+        - API token
+        - OAuth2
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, including the exact requests or commands used.
+      placeholder: |
+        1. Start the server with ...
+        2. POST /api/result with ...
+        3. GET /api/report/...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: Include HTTP status codes and error messages where relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant server log excerpt. Remove tokens, passwords and other secrets.
+      render: shell
+    validations:
+      required: false
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: JVM, OS, database (H2 or Postgres), reverse proxy, anything non-default.
+    validations:
+      required: false

@@ -1,0 +1,207 @@
+# brewcode-meta: version=5.6.0 content_version=5.6.0 generated_by=brewcode:semble-setup
+# brewcode:semble — managed file. Regenerate with
+#   semble-guidance.sh install --part ignore --force
+# Edit it freely: any change makes it `user_modified`, and the installer then
+# leaves it alone (a backup is taken before --force overwrites).
+#
+# WHY THIS FILE EXISTS
+# semble 0.5.4 builds its ignore set in index/file_walker.py:_load_ignore_for_dir
+# from exactly two files per directory — ./.gitignore and ./.sembleignore. It
+# never reads the user's global excludes file (core.excludesFile / ~/.gitignore*)
+# and never asks git. So a directory that is invisible to `git status` only
+# because of a GLOBAL ignore rule is still fully indexed and still comes back as
+# search evidence. `.claude/` is the common case.
+#
+# ORDER MATTERS, AND IT WORKS IN OUR FAVOUR
+# _load_ignore_for_dir concatenates ./.gitignore lines FIRST and ./.sembleignore
+# lines SECOND into one GitIgnoreSpec, and _is_ignored keeps the LAST pattern
+# that matched. A rule here therefore overrides a conflicting rule in the
+# sibling .gitignore — including a `!` un-ignore. That is the only lever for the
+# bypass described next.
+#
+# THE NEGATION BYPASS (file_walker.py:_is_ignored, the `found` flag)
+# A `!` un-ignore pattern whose text ends in a file extension — `!keep.png`,
+# `!web/docs/package-lock.json`, `!*.json` — sets `found = True`, and `_walk`
+# then yields the file **even though its suffix belongs to no content type**.
+# So a .gitignore negation can drag binaries and lockfiles into the corpus that
+# `--content` alone can never reach, and no change to the content set removes
+# them. Measured on this workspace: one negated `package-lock.json` was 552
+# chunks (5.9% of the whole index) and two negated `.png` files added 143 chunks
+# of decoded binary garbage. The two blocks below exist to re-ignore exactly
+# that class of file.
+#
+# Only paths that are never project source belong here. Leaving noise indexed is
+# cheaper than hiding something you wanted to find.
+
+# --- Claude Code working directories ---------------------------------------
+# Scratch, vendored upstream copies, generated reports and machine state.
+# NOT excluded, because they are project-authored: .claude/skills/,
+# .claude/agents/, .claude/rules/, .claude/commands/, .claude/hooks/,
+# .claude/scripts/, .claude/tasks/.
+.claude/tmp/
+.claude/reports/
+.claude/backups/
+.claude/logs/
+.claude/semble/
+.claude/projects/
+.claude/history/
+.claude/file-history/
+.claude/shell-snapshots/
+.claude/statsig/
+.claude/todos/
+.claude/ide/
+
+# --- Build output and caches semble does not skip by default ----------------
+# Its built-in list already covers .git .hg .svn __pycache__ node_modules
+# .venv venv .tox .mypy_cache .pytest_cache .ruff_cache .cache .semble .next
+# dist build .eggs — these are the ones it misses.
+target/
+coverage/
+htmlcov/
+.gradle/
+.astro/
+.turbo/
+.parcel-cache/
+.nuxt/
+.svelte-kit/
+.output/
+.docusaurus/
+.terraform/
+.dart_tool/
+_site/
+
+# --- Vendored dependency trees ----------------------------------------------
+# Conventional names for "someone else's source, copied in". Every one of these
+# is upstream code the question is never about.
+vendor/
+third_party/
+bower_components/
+.yarn/
+Godeps/
+
+# --- Generated bundles ------------------------------------------------------
+*.min.js
+*.min.css
+*.bundle.js
+*.map
+
+# --- Binary and non-text assets ---------------------------------------------
+# GENERIC AND ZERO-RISK. None of these suffixes maps to a language, so with a
+# plain .gitignore these lines are a no-op. They earn their place only against
+# the negation bypass above: when a `!logo.png` slips one through, semble reads
+# it with errors="replace" and indexes the mojibake. There is no repo in which
+# decoded binary is the answer to a question.
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.webp
+*.avif
+*.ico
+*.icns
+*.svgz
+*.pdf
+*.woff
+*.woff2
+*.ttf
+*.otf
+*.eot
+*.mp3
+*.mp4
+*.wav
+*.mov
+*.webm
+*.zip
+*.gz
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.jar
+*.war
+*.class
+*.so
+*.dylib
+*.dll
+*.exe
+*.bin
+*.o
+*.a
+*.pyc
+*.pyo
+*.wasm
+*.db
+*.sqlite
+*.sqlite3
+*.parquet
+*.avro
+*.pack
+*.idx
+
+# --- Dependency lockfiles ---------------------------------------------------
+# Machine-written dependency resolution. `pnpm-lock.yaml` is a .yaml and so is
+# in the config bucket outright; the rest reach the corpus only through the
+# negation bypass. No lockfile has ever been the answer to a "how does this
+# work" question, and one of them was 5.9% of this workspace's index.
+package-lock.json
+npm-shrinkwrap.json
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+composer.lock
+Gemfile.lock
+Cargo.lock
+poetry.lock
+uv.lock
+Pipfile.lock
+pdm.lock
+go.sum
+gradle.lockfile
+packages.lock.json
+
+# --- Per-repo exclusions ----------------------------------------------------
+# NOTHING BELOW THIS LINE SHIPS PRE-FILLED. The rules above hold in any repo;
+# the two biggest sources of wasted result slots do not, because they are
+# layout-specific and no static pattern can recognise them:
+#
+#   1. DUPLICATE TREES — the same file committed at two or three paths (a
+#      mirror for another agent runtime, a vendored copy of your own plugin, a
+#      generated port). Semble has no dedup: N copies means N chances to fill a
+#      result slot with the same text. On this workspace three mirrors of one
+#      plugin tree were 2202 chunks and took 15 of 80 result slots across 16
+#      queries.
+#   2. LONG CHANGELOGS — RELEASE-NOTES.md / CHANGELOG.md. Genuinely useful for
+#      "when did X land", genuinely ruinous for "how does X work": a 24k-line
+#      changelog here was 503 chunks and took 9 of 80 slots. Exclude it only if
+#      you do not ask semble history questions.
+#
+# `semble-guidance.sh install --part ignore` MEASURES this repo and appends what
+# it found below, in a delimited "measured candidates" block:
+# duplicate trees (byte-identical copies of files that live somewhere else) and
+# paths carrying a disproportionate share of the corpus, with exact chunk counts
+# when an index exists and byte share before that. Every proposal is written
+# COMMENTED OUT and excludes nothing until you uncomment it - a wrong exclusion
+# fails silently, so the scan proposes and you decide. Re-running only ever adds
+# paths it has never proposed; your edits inside that block survive.
+#
+# To see the same measurement without installing:
+#
+#   scripts/semble-project.sh candidates
+#
+# Then add them here, one per line, with a comment saying why. Root-anchor a
+# path that must not match deeper copies of the same name (`/skills/` hits only
+# the top-level directory; `skills/` would hit every `*/skills/` in the repo).
+
+# --- brewcode:semble measured candidates ---
+# Measured in THIS repo by `semble-project.sh candidates` (exact chunk counts, 298 files scanned).
+# PROPOSALS ONLY - every line below is commented out and excludes nothing.
+# Uncomment what you agree with; delete what you do not. A re-run only ever
+# adds paths it has never proposed, so your edits here survive.
+# /.claude/   heavy-dir  36.7%  37% of the corpus bytes sits under this one directory; most of it is /.claude/skills/ at 18%
+# /src/test/resources/cb5193c3-bd9f-4e1f-9d0b-c4d667bc3dd8/ee6fb80e-3fb5-4f04-bf8f-40e22b8ee985-attachment.html   heavy-file  4.7%  one file is 5% of the corpus bytes
+# /src/main/resources/plugins/   duplicate-tree  1%  14 of 15 files are byte-identical copies of files under allure
+# /.claude/skills/superreview/SKILL.md   heavy-file  4.6%  one file is 5% of the corpus chunks
+# --- end brewcode:semble measured candidates ---
