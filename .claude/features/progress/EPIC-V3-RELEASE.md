@@ -29,7 +29,7 @@ breakdown owned by the manager's TaskCreate graph, not duplicated here.
 | S1 | Wave A -- pre-merge branch hygiene (commit outstanding working tree, final CI green) | in | done |
 | S2 | Wave B -- merge feature/phase-1-vaadin-removal into master | in | done |
 | S3 | Wave C -- v2.x REST compatibility verification (contract/regression pass) | in | done |
-| S4 | Wave D -- v3.0.0 versioning, changelog, tag, release build | in | in-progress |
+| S4 | Wave D -- v3.0.0 versioning, changelog, tag, release build | in | done |
 | S5 | Wave E -- OSS governance docs (SECURITY.md, CONTRIBUTING.md, CODEOWNERS, issue/PR templates) | in | done |
 | S6 | Wave F -- supply-chain hardening (SBOM, signed images, dependency scanning in CI) | in | done |
 | S7 | Wave G -- docker-compose examples verified working + README actualized | in | done |
@@ -37,7 +37,7 @@ breakdown owned by the manager's TaskCreate graph, not duplicated here.
 
 ## Acceptance
 - [x] `feature/phase-1-vaadin-removal` merged into `master` -- PR #102 squash merged as `a45cd8a`
-- [ ] `v3.0.0` tagged and released -- tag pushed, release workflow completed; published-artifact verification is running separately, result still pending
+- [x] `v3.0.0` tagged and released -- tag pushed, release workflow completed, published-artifact verification complete (see Notes)
 - [x] SECURITY.md, CONTRIBUTING.md, CODEOWNERS, issue/PR templates present
 - [x] SBOM generated, images signed, dependency scanning wired into CI
 - [x] docker-compose examples (Postgres + H2) verified working; README actualized
@@ -117,5 +117,21 @@ this pass: `todo/BUG-PLUGIN-SUMMARY-500.md` (#98, highest-value open bug),
 `todo/BUG-PLUGIN-SCREEN-DIFF.md` (#72), `todo/BUG-BUILD-IMAGE-CVE.md` (#100, blocked on the
 first `security-scan.yml` run).
 
-This umbrella stays `progress` rather than `closed`: the one gating item (published-artifact
-verification) is still running. Close it once that result lands.
+2026-08-16: published-artifact verification complete. `v3.0.0` verified correct on
+`ghcr.io/kochetkov-ma/allure-server:3.0.0`, with two defects found and fixed after the fact,
+both landed in `88b0014`:
+- Docker Hub description was truncated at 25000 characters and lost all three screenshots --
+  now served from a purpose-built `docs/DOCKERHUB.md` instead of the truncated inline text.
+- `security-scan.yml` could never fire on `release: published` because events raised by the
+  default `GITHUB_TOKEN` do not cascade to other workflows -- now invoked from `release.yml`
+  via `workflow_call`. This is what produced the first-ever Trivy run (31963225205) against
+  the 3.0.0 image, filed as `todo/BUG-BUILD-IMAGE-CVE.md` (5 CRITICAL, 32 HIGH, 48 MEDIUM,
+  all with upstream fixes).
+- `SECURITY.md` now states verification requires cosign 3.0 or later: 3.x attaches signatures
+  as OCI 1.1 referrers, 2.x reports "no signatures found" against a correctly signed image.
+
+Wave D (S4) flipped to `done`, Acceptance item 2 checked. This umbrella stays `progress`
+rather than `closed`: `spec:` is still `pending` (never written) and three real defects
+found during triage remain open as tasks (`BUG-PLUGIN-SUMMARY-500`,
+`BUG-PLUGIN-SCREEN-DIFF`, `BUG-BUILD-IMAGE-CVE`) -- closing the epic is a separate decision
+for whoever owns that call, not implied by verification landing.

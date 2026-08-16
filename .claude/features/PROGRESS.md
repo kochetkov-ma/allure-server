@@ -16,7 +16,7 @@ last_updated: "2026-08-13"
 > provenance and is NOT touched on a rewrite.
 
 - **Updated:** 2026-08-16
-- **In flight:** EPIC-V3-RELEASE -- waves A/B/C/E/F/G/H done; v3.0.0 tagged, merged to master (a45cd8a), released; only published-artifact verification (running separately) still open
-- **Moved since last update:** EPIC-V3-RELEASE scope S2 -> done (merge), S8 -> done (this board sync); 3 new bugs filed from issue triage: todo/BUG-PLUGIN-SUMMARY-500.md (#98, P1), todo/BUG-PLUGIN-SCREEN-DIFF.md (#72, P2), todo/BUG-BUILD-IMAGE-CVE.md (#100, P2)
-- **Blocked:** EPIC-V3-RELEASE spec still pending; published-artifact verification result pending (keeps epic in progress)
-- **Next:** run /task-spec EPIC-V3-RELEASE; confirm published-artifact verification then close EPIC-V3-RELEASE; pick up BUG-PLUGIN-SUMMARY-500 (highest-value open bug)
+- **In flight:** EPIC-V3-RELEASE -- all waves A-H done incl. D; v3.0.0 verified on ghcr.io, 2 post-publish defects fixed in 88b0014 (DOCKERHUB.md, security-scan.yml workflow_call); epic stays progress (spec pending, 3 triage bugs open)
+- **Moved since last update:** EPIC-V3-RELEASE scope S4 -> done (verification complete); BUG-BUILD-IMAGE-CVE filled in with first Trivy scan evidence (5 CRITICAL/32 HIGH/48 MEDIUM), spec none -> pending, Scope expanded S1-S7 with concrete remediation paths
+- **Blocked:** EPIC-V3-RELEASE spec still pending; BUG-BUILD-IMAGE-CVE spec pending (route to /task-spec)
+- **Next:** run /task-spec EPIC-V3-RELEASE; run /task-spec BUG-BUILD-IMAGE-CVE (spec required: multi-domain dependency train bump with regression risk); pick up BUG-PLUGIN-SUMMARY-500 (highest-value open bug)
