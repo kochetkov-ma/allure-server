@@ -119,8 +119,8 @@ A pull request that gets merged quickly looks like this:
 - Tests covering the new behavior, written to the rules above.
 - No formatting churn in files the change does not touch.
 - A description saying what changed and why, and how it was verified.
-- A pinned exact version for any new dependency, plugin, Docker tag or frontend asset, recorded in
-  `.claude/convention/versions.md` in the same commit. Never `latest`, never a range.
+- A pinned exact version for any new dependency, plugin, Docker tag or frontend asset. Never
+  `latest`, never a range.
 - Documentation updated when behavior visible to a user changes.
 
 CI runs `./gradlew build` on every push and pull request. A red build will not be reviewed.

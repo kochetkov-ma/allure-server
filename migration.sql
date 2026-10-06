@@ -12,7 +12,7 @@ ALTER TABLE REPORT_ENTITY
 -- version 2.11.0
 -- Auth tables (app_user, app_api_token, app_system_settings). Idempotent so it
 -- coexists with ddl-auto:update. DEBT: replace ddl-auto:update with a versioned
--- Flyway migration (see .claude/rules/avoid.md #11).
+-- Flyway migration.
 CREATE TABLE IF NOT EXISTS app_user (
     id uuid PRIMARY KEY,
     version bigint NOT NULL DEFAULT 0,

@@ -1,6 +1,7 @@
-# Claude Code config stays local-only
+# Local-only editor/tooling config
 /.claude/
 /CLAUDE.md
+/.sembleignore
 
 /.gradle
 /.idea
@@ -64,5 +65,5 @@ CA.pem
 # README/doc assets stay tracked
 !docs/img/*.png
 
-# Playwright MCP scratch artifacts
+# Local browser-tool scratch artifacts
 /.playwright-mcp/
