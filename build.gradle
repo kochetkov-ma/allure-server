@@ -14,7 +14,7 @@ plugins {
     id "org.openapi.generator" version '7.11.0'
     id "gg.jte.gradle" version "3.2.3"
 
-    id 'org.cyclonedx.bom' version '3.4.1'
+    id 'org.cyclonedx.bom' version '3.5.1'
 }
 apply from: './gradle/dependencies.gradle'
 apply from: './gradle/testing.gradle'
