@@ -67,3 +67,6 @@ CA.pem
 
 # Local browser-tool scratch artifacts
 /.playwright-mcp/
+
+# brewcode:semble
+.claude/semble/
