@@ -74,13 +74,6 @@ java {
         languageVersion = JavaLanguageVersion.of(25)
     }
 }
-wrapper {
-    distributionType = Wrapper.DistributionType.ALL
-    gradleVersion = '9.4.1'
-    doLast {
-        delete "$projectDir/gradlew.bat", "$projectDir/gradlew"
-    }
-}
 springBoot {
     mainClass = "ru.iopump.qa.allure.Application"
     buildInfo {

@@ -39,11 +39,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       # Overrides the H2 default in application.yaml so Hibernate picks the PostgreSQL dialect.
       SPRING_JPA_DATABASE: postgresql
-      # SPRING_JPA_HIBERNATE_DDL_AUTO is deliberately not set here. application.yaml already
-      # sets ddl-auto: update for every profile and there is no Flyway/Liquibase in the project,
-      # so the schema is created and evolved by Hibernate on both H2 and PostgreSQL. Note the
-      # old value in this file was spelled SPRING_JPA_HIBERNATE_DDL-AUTO, which is not a valid
-      # env var name; the correct spelling is SPRING_JPA_HIBERNATE_DDL_AUTO.
+      # SPRING_JPA_HIBERNATE_DDL_AUTO unset on purpose: application.yaml sets ddl-auto: update for
+      # every profile (no Flyway/Liquibase); use the _AUTO spelling, a shell cannot export DDL-AUTO.
 
       # JVM sizing. Dockerfile default is the same value.
       JAVA_OPTS: "-Xms256m -Xmx2048m"

@@ -1,8 +1,7 @@
 version: 2
 
-# No npm/yarn ecosystem on purpose: this project has no Node and no package.json.
-# Tailwind is a standalone binary downloaded by the `tailwindDownload` Gradle task,
-# and HTMX / Alpine.js are pinned assets - all tracked in build.gradle, i.e. Gradle.
+# No npm ecosystem: no Node; Tailwind binary + vendored HTMX/Alpine (static/js) are pinned in
+# build.gradle ext vars, which Dependabot cannot update -> bump them by hand.
 updates:
   - package-ecosystem: gradle
     directory: "/"

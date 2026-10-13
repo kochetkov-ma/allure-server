@@ -121,11 +121,8 @@ class UserDeletionDataJpaTest {
     }
 
     private UserEntity persistUser(String username) {
-        // entityManager.persist (true JPA persist) is used instead of repository.save:
-        // these entities carry an assigned UUID id with no @Version, so Spring Data's
-        // isNew() heuristic treats them as detached and issues a merge — which returns a
-        // managed copy while leaving the original reference detached, breaking the
-        // @ManyToOne cascade check on flush.
+        // persist, not repository.save: primitive @Version -> isNew() checks the assigned UUID -> merge,
+        // which leaves this reference detached and breaks the @ManyToOne cascade check on flush.
         final UserEntity user = UserEntity.builder()
             .id(UUID.randomUUID())
             .username(username)
